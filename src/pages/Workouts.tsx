@@ -3,10 +3,10 @@ import { useVideoStore } from '../store/video';
 import { useAuthStore } from '../store/auth';
 import { Play, Lock, Clock, ChevronDown, ChevronUp, Filter, ArrowRight } from 'lucide-react';
 import { Auth } from '../components/Auth';
-import { Link } from 'react-router-dom';
 import workoutVideo from '../assets/videos/working-out.mp4';
 
-const DIFFICULTY_LEVELS = ['Beginner', 'Intermediate', 'Advanced'];
+const DIFFICULTY_LEVELS = ['Beginner', 'Intermediate', 'Advanced'] as const;
+type DifficultyLevel = typeof DIFFICULTY_LEVELS[number];
 
 const Workouts = () => {
   const { user } = useAuthStore();
@@ -24,7 +24,7 @@ const Workouts = () => {
   } = useVideoStore();
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel | 'all'>('all');
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
@@ -203,7 +203,7 @@ const Workouts = () => {
                   </label>
                   <select
                     value={selectedDifficulty}
-                    onChange={(e) => setSelectedDifficulty(e.target.value)}
+                    onChange={(e) => setSelectedDifficulty(e.target.value as DifficultyLevel | 'all')}
                     className="w-full p-2 border rounded-md"
                   >
                     <option value="all">All Levels</option>

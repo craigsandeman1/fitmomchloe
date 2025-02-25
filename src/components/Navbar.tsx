@@ -3,11 +3,14 @@ import { Link } from 'react-router-dom';
 import { Menu, X, LogOut } from 'lucide-react';
 import { useAuthStore } from '../store/auth';
 import { supabase } from '../lib/supabase';
-import logo from '../assets/images/fitmomchloelogo.png';
+
+// Import the image
+const logoUrl = new URL('../assets/images/fitmomchloelogo.png', import.meta.url).href;
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const { user, signOut } = useAuthStore();
 
   useEffect(() => {
@@ -52,7 +55,16 @@ const Navbar = () => {
       <div className="section-container">
         <div className="flex justify-between items-center h-20">
           <Link to="/" className="flex items-center space-x-2">
-            <img src={logo} alt="Fit Mom Chloe Logo" className="h-12 w-auto" />
+            <img 
+              src={logoUrl}
+              alt="Fit Mom Chloe Logo" 
+              className="h-12 w-auto"
+              onError={(e) => {
+                console.error('Error loading logo:', e);
+                setImgError(true);
+              }}
+              style={{ display: imgError ? 'none' : 'block' }}
+            />
             <span className="font-playfair text-2xl text-primary">
               Fit Mom Chloe
             </span>

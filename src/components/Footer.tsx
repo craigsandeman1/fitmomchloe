@@ -1,7 +1,9 @@
 import { Instagram, Facebook, Youtube, Mail, MapPin, Phone, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
-import logo from '../assets/images/fitmomchloelogo.png';
+
+// Import the image
+const logoUrl = new URL('../assets/images/fitmomchloelogo.png', import.meta.url).href;
 
 const Footer = () => {
   const [email, setEmail] = useState('');
@@ -46,7 +48,11 @@ const Footer = () => {
           {/* Brand Column */}
           <div className="space-y-6">
             <Link to="/" className="flex items-center space-x-2">
-              <img src={logo} alt="Fit Mom Chloe Logo" className="h-12 w-auto" />
+              <img 
+                src={logoUrl}
+                alt="Fit Mom Chloe Logo" 
+                className="h-12 w-auto"
+              />
               <span className="font-playfair text-2xl text-primary">
                 Fit Mom Chloe
               </span>
