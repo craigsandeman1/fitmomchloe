@@ -1,0 +1,122 @@
+import { useState } from 'react';
+import { useAuthStore } from '../store/auth';
+
+export const Auth = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn, signUp } = useAuthStore();
+
+  const validatePassword = (password: string) => {
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters long';
+    }
+    return null;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    // Validate password
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      if (isSignUp) {
+        await signUp(email, password);
+        setError('Please check your email to verify your account');
+      } else {
+        await signIn(email, password);
+      }
+    } catch (error: any) {
+      console.error('Authentication error:', error);
+      if (error.message === 'Invalid login credentials') {
+        setError('Invalid email or password. Please try again.');
+      } else if (error.message?.includes('Email not confirmed')) {
+        setError('Please verify your email address before signing in.');
+      } else {
+        setError('Authentication failed. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-2xl font-playfair mb-6">{isSignUp ? 'Create Account' : 'Sign In'}</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+            required
+            disabled={isLoading}
+          />
+        </div>
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+            required
+            minLength={6}
+            disabled={isLoading}
+          />
+          {isSignUp && (
+            <p className="mt-1 text-sm text-gray-500">
+              Password must be at least 6 characters long
+            </p>
+          )}
+        </div>
+        {error && (
+          <div className={`text-sm ${error.includes('verify') ? 'text-blue-600' : 'text-red-500'}`}>
+            {error}
+          </div>
+        )}
+        <button
+          type="submit"
+          className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            'Please wait...'
+          ) : (
+            isSignUp ? 'Sign Up' : 'Sign In'
+          )}
+        </button>
+      </form>
+      <button
+        onClick={() => {
+          setIsSignUp(!isSignUp);
+          setError('');
+          setEmail('');
+          setPassword('');
+        }}
+        className="mt-4 text-primary hover:text-primary/80 text-sm"
+        disabled={isLoading}
+      >
+        {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+      </button>
+    </div>
+  );
+};

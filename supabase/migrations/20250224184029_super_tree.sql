@@ -1,0 +1,79 @@
+/*
+  # Booking System Implementation
+
+  1. New Tables
+    - `bookings`
+      - `id` (uuid, primary key)
+      - `user_id` (uuid, references auth.users)
+      - `date` (timestamptz)
+      - `status` (text)
+      - `name` (text)
+      - `email` (text)
+      - `notes` (text)
+      - `created_at` (timestamptz)
+      - `updated_at` (timestamptz)
+
+  2. Security
+    - Enable RLS on `bookings` table
+    - Add policies for:
+      - Users can read their own bookings
+      - Users can create bookings
+      - Users can update their own bookings
+
+  3. Triggers
+    - Automatic update of `updated_at` timestamp
+*/
+
+-- Drop existing table if it exists
+DROP TABLE IF EXISTS bookings;
+
+-- Create bookings table
+CREATE TABLE bookings (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  date timestamptz NOT NULL,
+  status text NOT NULL DEFAULT 'pending',
+  name text NOT NULL,
+  email text NOT NULL,
+  notes text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Enable RLS
+ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
+
+-- Create policies
+CREATE POLICY "Users can view own bookings"
+  ON bookings
+  FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create bookings"
+  ON bookings
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own bookings"
+  ON bookings
+  FOR UPDATE
+  TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- Add a function to automatically update the updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_bookings_updated_at
+  BEFORE UPDATE
+  ON bookings
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();

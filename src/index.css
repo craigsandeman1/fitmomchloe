@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #B0826E;
+  --color-background: #F2E9E0;
+}
+
+body {
+  background-color: var(--color-background);
+}
+
+.font-playfair {
+  font-family: 'Playfair Display', serif;
+}
+
+.btn-primary {
+  @apply bg-[#B0826E] text-white px-6 py-3 rounded-md hover:bg-[#9A715F] transition-colors duration-300;
+}
+
+.section-container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.hero-section {
+  @apply relative h-[90vh] flex items-center justify-center;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
