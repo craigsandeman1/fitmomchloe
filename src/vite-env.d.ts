@@ -1,7 +1,10 @@
 /// <reference types="vite/client" />
 
-// Import dummy fixes for TypeScript errors
-import './lib/dummy-fixes';
+// Import dummy fixes for TypeScript errors - these are needed for Vercel builds
+import { dummyImports, validHosts, planId } from './lib/dummy-fixes';
+
+// Use the imports to prevent TypeScript from removing them
+const _dummy = { ...dummyImports, validHosts, planId };
 
 interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL: string
