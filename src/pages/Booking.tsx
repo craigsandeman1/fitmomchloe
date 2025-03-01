@@ -55,7 +55,7 @@ const Booking = () => {
       const { data, error } = await supabase
         .from('bookings')
         .select('*')
-        .neq('status', 'cancelled')
+        .or('status.eq.pending,status.eq.confirmed') // Only get pending or confirmed bookings
         .order('date', { ascending: true });
         
       if (error) throw error;
