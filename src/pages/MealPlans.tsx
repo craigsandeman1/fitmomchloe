@@ -231,6 +231,43 @@ const MealPlans = () => {
     <div>
       <MealPlansHero />
       
+      {/* Chloe's Approach Section */}
+      <div className="bg-background py-20">
+        <div className="section-container">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="order-2 md:order-1">
+              <h2 className="font-playfair text-4xl mb-6">My Approach to Nutrition</h2>
+              <p className="text-lg mb-6">
+                I believe in a balanced approach to nutrition that doesn't involve obsessively counting carbs or following restrictive diets.
+              </p>
+              <p className="text-lg mb-6">
+                My meal plans are designed to nourish your body with whole, nutrient-dense foods that fuel your workouts and support your overall health goals.
+              </p>
+              <p className="text-lg mb-6">
+                Instead of focusing on what you can't eat, I'll show you how to create delicious, satisfying meals that support your fitness journey while still enjoying the foods you love.
+              </p>
+              <div className="flex items-center gap-4 mt-8">
+                <div className="h-1 w-12 bg-primary"></div>
+                <p className="font-medium text-primary">Chloe, Fitness & Nutrition Coach</p>
+              </div>
+            </div>
+            <div className="order-1 md:order-2 mx-auto md:mx-0">
+              <div className="relative w-full max-w-[300px] aspect-[9/16] rounded-xl overflow-hidden shadow-xl">
+                <video 
+                  className="w-full h-full object-cover"
+                  controls
+                  playsInline
+                  preload="metadata"
+                >
+                  <source src={new URL('../assets/videos/meal-plans.mp4', import.meta.url).href} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       {/* Premium Meal Plans Section */}
       <div id="premium-plans" className="section-container py-20">
         <h2 className="font-playfair text-4xl mb-12 text-center">Premium Meal Plans</h2>
