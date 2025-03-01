@@ -17,6 +17,7 @@ interface BookingStore {
   createBooking: (booking: Partial<Booking>) => Promise<Booking | null>;
   updateBooking: (id: string, updates: Partial<Booking>) => Promise<void>;
   cancelBooking: (id: string) => Promise<void>;
+  deleteBooking: (id: string) => Promise<void>;
   // Admin time slot functions
   fetchAvailableTimeSlots: () => Promise<void>;
   addTimeSlot: (slot: Partial<AvailableTimeSlot>) => Promise<void>;
@@ -80,6 +81,13 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
         throw new Error('You must be logged in to book a session');
       }
       
+      // Get user's email from auth
+      if (!bookingData.email) {
+        // Try to get email from bookingData first
+        // If not provided, use the email from Supabase auth
+        bookingData.email = user.email;
+      }
+      
       // Create the booking
       const { data, error } = await supabase
         .from('bookings')
@@ -135,6 +143,27 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
 
       if (error) throw error;
       await get().fetchUserBookings();
+    } catch (error) {
+      set({ error: (error as Error).message });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  deleteBooking: async (id: string) => {
+    set({ loading: true, error: null });
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      // Update bookings state by filtering out the deleted booking
+      set(state => ({
+        bookings: state.bookings.filter(booking => booking.id !== id)
+      }));
     } catch (error) {
       set({ error: (error as Error).message });
     } finally {

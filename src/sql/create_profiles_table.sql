@@ -72,6 +72,25 @@ AFTER INSERT ON auth.users
 FOR EACH ROW
 EXECUTE FUNCTION public.handle_new_user();
 
--- Insert a sample admin user (optional)
--- This is commented out by default. Uncomment and modify with your user ID to create an admin
--- UPDATE profiles SET is_admin = true WHERE id = '00000000-0000-0000-0000-000000000000'; 
+-- Insert existing users into profiles table if they don't already exist
+INSERT INTO profiles (id, email, full_name, is_admin)
+SELECT 
+  id, 
+  email, 
+  raw_user_meta_data->>'full_name', 
+  false
+FROM 
+  auth.users
+ON CONFLICT (id) DO NOTHING;
+
+-- Set the first user as admin
+UPDATE profiles 
+SET is_admin = true 
+WHERE id IN (
+  SELECT id FROM profiles 
+  ORDER BY created_at 
+  LIMIT 1
+);
+
+-- Alternatively, you can specify a specific user to be admin
+-- UPDATE profiles SET is_admin = true WHERE email = 'your-admin-email@example.com'; 

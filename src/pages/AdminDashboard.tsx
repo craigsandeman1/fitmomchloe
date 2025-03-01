@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Plus, UserCircle, Calendar, LucideClipboardList, LogOut, Clock } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Plus, UserCircle, Calendar, LucideClipboardList, LogOut, Clock, Film } from 'lucide-react';
 import { useAuthStore } from '../store/auth';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '../store/user';
+import { verifyAdminStatus, debugAdminStatus } from '../lib/adminUtils';
+import { useBookingStore } from '../store/booking';
 
 // Import admin components
 import BookingsList from '../components/admin/BookingsList';
@@ -13,6 +15,7 @@ import VideoForm from '../components/admin/VideoForm';
 import VideosList from '../components/admin/VideosList';
 import UsersList from '../components/admin/UsersList';
 import AdminTimeSlots from '../components/admin/AdminTimeSlots';
+import AdminDebug from '../components/AdminDebug';
 
 // Import types
 import { Booking, BookingStatus } from '../types/booking';
@@ -33,44 +36,69 @@ const AdminDashboard = () => {
   const { user: authUser } = useAuthStore();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
+  const adminCheckInProgress = useRef(false);
   const navigate = useNavigate();
+  const { deleteBooking } = useBookingStore();
 
   useEffect(() => {
     const checkAdmin = async () => {
+      // Prevent multiple simultaneous admin checks
+      if (adminCheckInProgress.current) return;
+      
       try {
+        // Set the flag to indicate admin check is in progress
+        adminCheckInProgress.current = true;
+        
+        // Skip check if we've already verified the user is an admin
+        if (isAdmin) {
+          setIsCheckingAdmin(false);
+          adminCheckInProgress.current = false;
+          return;
+        }
+        
         if (!authUser) {
-          navigate('/login');
+          navigate('/login', { state: { from: '/admin' } });
+          adminCheckInProgress.current = false;
           return;
         }
 
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', authUser.id)
-          .single();
-
-        if (error) {
-          console.error('Error checking admin status:', error);
+        const adminStatus = await verifyAdminStatus();
+        
+        // Log admin status for debugging
+        console.log('Admin status check result:', adminStatus);
+        
+        if (!adminStatus.isAuthenticated) {
+          navigate('/login', { state: { from: '/admin' } });
+          adminCheckInProgress.current = false;
+          return;
+        }
+        
+        if (!adminStatus.profilesIsAdmin) {
+          // Extra debugging to help troubleshoot admin access issues
+          if (adminStatus.inAdminUsersTable) {
+            console.warn('User is in admin_users table but profiles.is_admin is false. Inconsistent admin status detected.');
+          }
+          
+          console.error('Access denied: User is not an admin.');
           navigate('/');
+          adminCheckInProgress.current = false;
           return;
         }
-
-        if (!data?.is_admin) {
-          navigate('/');
-          return;
-        }
-
+        
         setIsAdmin(true);
         setIsCheckingAdmin(false);
         fetchData();
       } catch (err) {
         console.error('Error in admin check:', err);
         navigate('/');
+      } finally {
+        // Always reset the flag when done
+        adminCheckInProgress.current = false;
       }
     };
 
     checkAdmin();
-  }, [authUser, navigate]);
+  }, [authUser, navigate, isAdmin]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -195,19 +223,39 @@ const AdminDashboard = () => {
         // Update existing video
         const { error } = await supabase
           .from('videos')
-          .update(video)
+          .update({
+            title: video.title,
+            description: video.description,
+            video_url: video.video_url,
+            thumbnail_url: video.thumbnail_url,
+            duration: video.duration,
+            difficulty_level: video.difficulty_level,
+            category_id: video.category_id,
+            individual_price: video.individual_price,
+            is_premium: video.is_premium
+          })
           .eq('id', video.id);
 
         if (error) throw error;
 
         setVideos(videos.map(v => 
-          v.id === video.id ? video : v
+          v.id === video.id ? { ...v, ...video } : v
         ));
       } else {
         // Create new video
         const { data, error } = await supabase
           .from('videos')
-          .insert([{ ...video, id: undefined }])
+          .insert([{
+            title: video.title,
+            description: video.description,
+            video_url: video.video_url,
+            thumbnail_url: video.thumbnail_url,
+            duration: video.duration,
+            difficulty_level: video.difficulty_level,
+            category_id: video.category_id,
+            individual_price: video.individual_price,
+            is_premium: video.is_premium
+          }])
           .select();
 
         if (error) throw error;
@@ -242,6 +290,17 @@ const AdminDashboard = () => {
   const handleSignOut = () => {
     signOut();
     navigate('/login');
+  };
+
+  const handleDeleteBooking = async (id: string) => {
+    try {
+      await deleteBooking(id);
+      // Update local state to remove the deleted booking
+      setBookings(bookings.filter(booking => booking.id !== id));
+    } catch (err) {
+      console.error('Error deleting booking:', err);
+      setError('Failed to delete booking.');
+    }
   };
 
   if (isCheckingAdmin) {
@@ -281,6 +340,9 @@ const AdminDashboard = () => {
             Sign Out
           </button>
         </div>
+
+        {/* Debug component for development - remove in production */}
+        {process.env.NODE_ENV !== 'production' && <AdminDebug />}
 
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-800 rounded-md p-4">
@@ -335,6 +397,17 @@ const AdminDashboard = () => {
                 <Clock className="mr-2 h-5 w-5" />
                 Time Slots
               </button>
+              <button
+                className={`${
+                  activeTab === 'videos'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm flex items-center`}
+                onClick={() => setActiveTab('videos')}
+              >
+                <Film className="mr-2 h-5 w-5" />
+                Videos
+              </button>
             </nav>
           </div>
 
@@ -382,9 +455,55 @@ const AdminDashboard = () => {
               <BookingsList
                 bookings={bookings}
                 updateBookingStatus={updateBookingStatus}
+                deleteBooking={handleDeleteBooking}
               />
             )}
             {activeTab === 'timeSlots' && <AdminTimeSlots />}
+            {activeTab === 'videos' && (
+              <div>
+                {!editingVideo ? (
+                  <div className="mb-4 flex justify-between items-center">
+                    <h2 className="text-2xl font-semibold">Videos</h2>
+                    <button
+                      onClick={() => setEditingVideo({
+                        id: null as unknown as string,
+                        title: '',
+                        description: '',
+                        video_url: '',
+                        thumbnail_url: null,
+                        video_source: 'default',
+                        duration: '',
+                        difficulty_level: '',
+                        category_id: null,
+                        individual_price: null,
+                        is_premium: false,
+                        created_at: '',
+                        updated_at: ''
+                      })}
+                      className="btn-primary flex items-center"
+                    >
+                      <Plus size={16} className="mr-2" />
+                      Add New Video
+                    </button>
+                  </div>
+                ) : null}
+                
+                {editingVideo ? (
+                  <VideoForm
+                    editingVideo={editingVideo}
+                    videoCategories={videoCategories}
+                    onSubmit={handleVideoSubmit}
+                    onCancel={() => setEditingVideo(null)}
+                  />
+                ) : (
+                  <VideosList
+                    videos={videos}
+                    onEdit={setEditingVideo}
+                    onDelete={deleteVideo}
+                  />
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

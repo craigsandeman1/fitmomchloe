@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Auth } from '../components/Auth';
 import { useAuthStore } from '../store/auth';
 import AuthDebug from '../components/AuthDebug';
+import SEO from '../components/SEO';
 import { verifyAdminStatus } from '../lib/adminUtils';
 
 const Login = () => {
@@ -80,6 +81,11 @@ const Login = () => {
 
   return (
     <div className="pt-8 pb-16 bg-background">
+      <SEO 
+        title="Access Exclusive Fitness Content | Member Login | Fit Mom Chloe" 
+        description="Sign in to unlock premium workout videos, personalized meal plans, and exclusive fitness content. What transformations are waiting for you on the other side?" 
+        canonicalUrl="/login"
+      />
       <div className="section-container">
         <div className="max-w-md mx-auto bg-white shadow-md rounded-lg p-8">
           <h1 className="text-2xl font-playfair text-primary mb-6 text-center">

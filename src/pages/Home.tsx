@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import HeroSection from '../components/HeroSection';
+import SEO from '../components/SEO';
 
 // Import the image
 const backgroundImageUrl = new URL('../assets/images/background-homepage.webp', import.meta.url).href;
@@ -31,6 +32,11 @@ const Home = () => {
 
   return (
     <div>
+      <SEO 
+        title="Unlock Your Dream Body: Mom-Friendly Fitness That Actually Works | Fit Mom Chloe" 
+        description="Discover the proven transformation system helping busy moms reclaim their bodies in just 30 minutes a day. Ready to see what your body is truly capable of?" 
+        canonicalUrl="/"
+      />
       <HeroSection />
 
       {/* Programs Section */}

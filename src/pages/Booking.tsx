@@ -6,6 +6,7 @@ import useWeb3Forms from '@web3forms/react';
 import { AlertCircle, CheckCircle, Calendar, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Auth } from '../components/Auth';
+import SEO from '../components/SEO';
 import { type Booking as BookingType, BookingStatus } from '../types/booking';
 
 const Booking = () => {
@@ -380,6 +381,11 @@ const Booking = () => {
 
   return (
     <div className="section-container py-20">
+      <SEO 
+        title="Book Your Personal Transformation Session | Limited Slots Available | Fit Mom Chloe" 
+        description="Schedule your one-on-one fitness consultation with Chloe and start your transformation journey today. How would it feel to finally achieve the body you deserve?" 
+        canonicalUrl="/book"
+      />
       <h1 className="font-playfair text-4xl mb-8 text-center">Book a Session</h1>
       
       {!user ? (

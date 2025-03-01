@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import SEO from '../components/SEO';
 
 const PrivacyPolicy = () => {
   useEffect(() => {
@@ -8,6 +9,11 @@ const PrivacyPolicy = () => {
 
   return (
     <div className="section-container py-16 max-w-4xl mx-auto">
+      <SEO 
+        title="Privacy Policy | Your Data Security Matters | Fit Mom Chloe" 
+        description="Learn how we protect your personal information and ensure your data security. Curious about how we handle your fitness journey data?" 
+        canonicalUrl="/privacy-policy"
+      />
       <h1 className="font-playfair text-4xl mb-8">Privacy Policy</h1>
       
       <div className="prose prose-lg max-w-none">

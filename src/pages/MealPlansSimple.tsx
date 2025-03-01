@@ -1,8 +1,14 @@
 import React from 'react';
+import SEO from '../components/SEO';
 
 const MealPlansSimple = () => {
   return (
     <div className="container mx-auto p-8">
+      <SEO 
+        title="Simple Meal Plans for Busy Moms | Quick & Healthy Recipes | Fit Mom Chloe" 
+        description="No-fuss, easy-to-follow meal plans designed for busy moms who don't have time to count calories. What if eating healthy could actually be simple?" 
+        canonicalUrl="/meal-plans-simple"
+      />
       <h1 className="text-3xl font-bold mb-6">Meal Plans</h1>
       
       <div className="bg-gray-100 p-6 rounded-lg mb-8">

@@ -22,9 +22,10 @@ const Navbar = () => {
 
       try {
         const { data, error } = await supabase
-          .from('admin_users')
-          .select('*')
-          .eq('id', user.id);
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', user.id)
+          .single();
 
         if (error) {
           console.error('Error checking admin status:', error);
@@ -32,7 +33,7 @@ const Navbar = () => {
           return;
         }
 
-        setIsAdmin(Array.isArray(data) && data.length > 0);
+        setIsAdmin(!!data?.is_admin);
       } catch (error) {
         console.error('Error checking admin status:', error);
         setIsAdmin(false);

@@ -1,13 +1,28 @@
 import { format, parseISO } from 'date-fns';
-import { Calendar, Clock, Mail, User, Check, X } from 'lucide-react';
+import { Calendar, Clock, Mail, User, Check, X, Trash2, Loader } from 'lucide-react';
+import { useState } from 'react';
 import { Booking } from '../../types/booking';
 
 interface BookingsListProps {
   bookings: Booking[];
   updateBookingStatus: (id: string, status: 'confirmed' | 'cancelled') => Promise<void>;
+  deleteBooking?: (id: string) => Promise<void>;
 }
 
-const BookingsList = ({ bookings, updateBookingStatus }: BookingsListProps) => {
+const BookingsList = ({ bookings, updateBookingStatus, deleteBooking }: BookingsListProps) => {
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to permanently delete this booking? This action cannot be undone.')) {
+      try {
+        setDeletingId(id);
+        await deleteBooking?.(id);
+      } finally {
+        setDeletingId(null);
+      }
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-semibold mb-6">All Bookings</h2>
@@ -65,6 +80,30 @@ const BookingsList = ({ bookings, updateBookingStatus }: BookingsListProps) => {
                         Cancel
                       </button>
                     </>
+                  )}
+                  {deleteBooking && (
+                    <button
+                      onClick={() => handleDelete(booking.id)}
+                      disabled={deletingId === booking.id}
+                      className={`inline-flex items-center px-3 py-1 ${
+                        deletingId === booking.id 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-gray-600 hover:bg-gray-700'
+                      } text-white rounded-md`}
+                      title="Permanently delete this booking"
+                    >
+                      {deletingId === booking.id ? (
+                        <>
+                          <Loader size={16} className="mr-1 animate-spin" />
+                          Deleting...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 size={16} className="mr-1" />
+                          Delete
+                        </>
+                      )}
+                    </button>
                   )}
                 </div>
                 <div className="mt-2">

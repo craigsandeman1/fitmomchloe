@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/auth';
 import { Lock, ArrowRight, Utensils, Clock, ChevronRight, Play, Pause, Quote, ArrowDown } from 'lucide-react';
 import { Auth } from '../components/Auth';
 import RecipeModal from '../components/RecipeModal';
+import SEO from '../components/SEO';
 import { testMealPlanAccess, verifySupabaseConnection } from '../lib/supabase';
 import chloeFood from '../assets/images/chloe-food.jpg';
 
@@ -96,6 +97,12 @@ const MealPlans = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-hidden">
+      <SEO 
+        title="Eat What You Love & Still Lose Weight: Mom-Friendly Meal Plans Revealed | Fit Mom Chloe" 
+        description="Discover the secret meal plans that help moms burn fat without giving up their favorite foods. Struggling to find a diet that actually fits your life?" 
+        canonicalUrl="/meal-plans"
+        ogImage={chloeFood}
+      />
       {/* Hero Section with Video Overlay */}
       <div className="relative bg-black w-full">
         {/* Background Image with Parallax Effect */}

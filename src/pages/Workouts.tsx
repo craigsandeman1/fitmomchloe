@@ -3,6 +3,7 @@ import { useVideoStore } from '../store/video';
 import { useAuthStore } from '../store/auth';
 import { Play, Lock, Clock, ChevronDown, ChevronUp, Filter, ArrowRight } from 'lucide-react';
 import { Auth } from '../components/Auth';
+import SEO from '../components/SEO';
 import workoutVideo from '../assets/videos/working-out.mp4';
 
 const DIFFICULTY_LEVELS = ['Beginner', 'Intermediate', 'Advanced'] as const;
@@ -49,7 +50,12 @@ const Workouts = () => {
   };
 
   return (
-    <div>
+    <div className="min-h-screen bg-background">
+      <SEO 
+        title="30-Minute Workouts That Melt Mom Belly Fat | No Gym Required | Fit Mom Chloe" 
+        description="Discover how busy moms are transforming their bodies with these quick, effective workouts you can do at home. Tired of workouts that don't deliver results?" 
+        canonicalUrl="/workouts"
+      />
       {/* Hero Section - Visible to all */}
       <div className="relative overflow-hidden bg-background min-h-[85vh]">
         {/* Video Background */}

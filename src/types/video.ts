@@ -6,12 +6,17 @@ export interface VideoCategory {
   updated_at: string;
 }
 
+export type VideoSource = 'default' | 'youtube' | 'vimeo';
+
 export interface Video {
   id: string;
   title: string;
   description: string;
   thumbnail_url: string | null;
   video_url: string;
+  video_source: VideoSource;
+  youtube_url?: string;
+  vimeo_url?: string;
   duration: string | null;
   difficulty_level: string | null;
   category_id: string | null;

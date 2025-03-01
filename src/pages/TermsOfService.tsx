@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import SEO from '../components/SEO';
 
 const TermsOfService = () => {
   useEffect(() => {
@@ -8,6 +9,11 @@ const TermsOfService = () => {
 
   return (
     <div className="section-container py-16 max-w-4xl mx-auto">
+      <SEO 
+        title="Terms of Service | Legal Protection for Your Fitness Journey | Fit Mom Chloe" 
+        description="Review our terms of service to understand your rights and responsibilities as a member. Want to know what makes our fitness platform legally secure?" 
+        canonicalUrl="/terms-of-service"
+      />
       <h1 className="font-playfair text-4xl mb-8">Terms of Service</h1>
       
       <div className="prose prose-lg max-w-none">
