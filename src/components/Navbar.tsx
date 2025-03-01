@@ -16,7 +16,6 @@ console.log('Navbar fallback logo URL:', getImagePath('logo'));
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [imgError, setImgError] = useState(false);
   const { user, signOut } = useAuthStore();
 
   useEffect(() => {
