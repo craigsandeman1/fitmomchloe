@@ -1,0 +1,10 @@
+This directory should contain optimized versions of the video files for production.
+
+The original video files are likely too large for efficient deployment.
+Consider compressing the videos with a tool like HandBrake or FFmpeg before deployment.
+
+Recommended sizes:
+- working-out.mp4: Aim for 5-10MB max (currently 59MB)
+- Meal-Plan.mp4: Aim for 3-5MB max (currently 21MB)
+
+These videos should be compressed and placed in this directory. 

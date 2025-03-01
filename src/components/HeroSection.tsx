@@ -1,8 +1,15 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import withkids from '../assets/images/withkids.jpg';
-import workingout from '../assets/images/workingout.jpg';
+// ... existing code ...
+
+// Replace imports with public paths
+// import withkids from '../assets/images/withkids.jpg';
+// import workingout from '../assets/images/workingout.jpg';
+
+// Use public folder paths
+const withkidsPath = '/images/withkids.jpg';
+const workingoutPath = '/images/workingout.jpg';
 
 interface HeroProps {
   variant?: 'default' | 'alternative';
@@ -18,7 +25,7 @@ const HeroSection = ({ variant = 'default' }: HeroProps) => {
         <div className="absolute inset-0 h-[85vh] grid grid-cols-2 md:grid-cols-4 grid-rows-1">
           <div className="relative">
             <img 
-              src={withkids}
+              src={withkidsPath}
               alt="Training with kids"
               className="w-full h-full object-cover"
             />
@@ -34,7 +41,7 @@ const HeroSection = ({ variant = 'default' }: HeroProps) => {
           </div>
           <div className="relative hidden md:block">
             <img 
-              src={workingout}
+              src={workingoutPath}
               alt="Working out"
               className="w-full h-full object-cover object-top"
             />
@@ -131,7 +138,7 @@ const HeroSection = ({ variant = 'default' }: HeroProps) => {
       <div className="absolute inset-0 grid grid-cols-2 grid-rows-2">
         <div className="relative">
           <img 
-            src={withkids}
+            src={withkidsPath}
             alt="Training with kids"
             className="w-full h-full object-cover"
           />
@@ -147,7 +154,7 @@ const HeroSection = ({ variant = 'default' }: HeroProps) => {
         </div>
         <div className="relative">
           <img 
-            src={workingout}
+            src={workingoutPath}
             alt="Working out"
             className="w-full h-full object-cover"
           />

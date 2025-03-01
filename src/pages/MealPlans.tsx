@@ -344,10 +344,10 @@ const MealPlans = () => {
               controls
               loop
               playsInline
-              poster={new URL('../assets/images/meal-plan.jpg', import.meta.url).href}
+              poster="/images/meal-plan.jpg"
               onError={(e) => console.error('Video loading error:', e)}
             >
-              <source src={new URL('../assets/videos/Meal-Plan.mp4', import.meta.url).href} type="video/mp4" />
+              <source src="/videos/Meal-Plan.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </div>

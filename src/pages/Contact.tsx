@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
-import heroImage from '../assets/images/chloe-with-sky.jpg';
+// import heroImage from '../assets/images/chloe-with-sky.jpg';
+
+// Use public folder path instead
+const heroImage = '/images/chloe-with-sky.jpg';
 
 const Contact = () => {
   const [formData, setFormData] = useState({

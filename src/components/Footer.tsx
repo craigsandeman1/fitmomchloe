@@ -1,8 +1,9 @@
 import { Instagram, Facebook, Youtube, Mail, MapPin, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-// Import the image
-const logoUrl = new URL('../assets/images/fitmomchloelogo.png', import.meta.url).href;
+// Update logo path to use public folder
+// const logoUrl = new URL('../assets/images/fitmomchloelogo.png', import.meta.url).href;
+const logoUrl = '/images/fitmomchloelogo.png';
 
 const Footer = () => {
   const scrollToTop = () => {

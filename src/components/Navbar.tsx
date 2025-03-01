@@ -4,8 +4,9 @@ import { Menu, X, LogOut } from 'lucide-react';
 import { useAuthStore } from '../store/auth';
 import { supabase } from '../lib/supabase';
 
-// Import the image
-const logoUrl = new URL('../assets/images/fitmomchloelogo.png', import.meta.url).href;
+// Update logo path to use public folder
+// const logoUrl = new URL('../assets/images/fitmomchloelogo.png', import.meta.url).href;
+const logoUrl = '/images/fitmomchloelogo.png';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);

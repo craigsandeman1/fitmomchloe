@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import HeroSection from '../components/HeroSection';
 
-// Import the image
-const backgroundImageUrl = new URL('../assets/images/background-homepage.webp', import.meta.url).href;
+// Use public path instead of URL import
+// const backgroundImageUrl = new URL('../assets/images/background-homepage.webp', import.meta.url).href;
+const backgroundImageUrl = '/images/background-homepage.webp';
 
 const Home = () => {
   useEffect(() => {
