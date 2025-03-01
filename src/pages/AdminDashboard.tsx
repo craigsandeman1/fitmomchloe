@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, UserCircle, Calendar, LucideClipboardList, LogOut, Clock } from 'lucide-react';
 import { useAuthStore } from '../store/auth';
 import { supabase } from '../lib/supabase';
-import { Booking } from '../types/booking';
 import { useNavigate } from 'react-router-dom';
-import { Auth } from '../components/Auth';
-import { MealPlan } from '../types/meal-plan';
-import { Video as VideoType, VideoCategory } from '../types/video';
+import { useUserStore } from '../store/user';
 
 // Import admin components
 import BookingsList from '../components/admin/BookingsList';
@@ -14,6 +11,13 @@ import MealPlanForm from '../components/admin/MealPlanForm';
 import MealPlansList from '../components/admin/MealPlansList';
 import VideoForm from '../components/admin/VideoForm';
 import VideosList from '../components/admin/VideosList';
+import UsersList from '../components/admin/UsersList';
+import AdminTimeSlots from '../components/admin/AdminTimeSlots';
+
+// Import types
+import { Booking, BookingStatus } from '../types/booking';
+import { MealPlan } from '../types/meal-plan';
+import { Video as VideoType, VideoCategory } from '../types/video';
 
 const AdminDashboard = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -22,448 +26,368 @@ const AdminDashboard = () => {
   const [videoCategories, setVideoCategories] = useState<VideoCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'bookings' | 'meal-plans' | 'videos'>('bookings');
+  const [activeTab, setActiveTab] = useState('bookings');
   const [editingMealPlan, setEditingMealPlan] = useState<MealPlan | null>(null);
   const [editingVideo, setEditingVideo] = useState<VideoType | null>(null);
-  const { user } = useAuthStore();
+  const { user, signOut } = useUserStore();
+  const { user: authUser } = useAuthStore();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!user) {
-        setIsCheckingAdmin(false);
-        return;
-      }
-
+    const checkAdmin = async () => {
       try {
-        const { data, error } = await supabase
-          .from('admin_users')
-          .select('*')
-          .eq('id', user.id);
-
-        if (error) {
-          console.error('Error checking admin status:', error);
-          setIsAdmin(false);
-          setIsCheckingAdmin(false);
+        if (!authUser) {
+          navigate('/login');
           return;
         }
 
-        const isUserAdmin = Array.isArray(data) && data.length > 0;
-        setIsAdmin(isUserAdmin);
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', authUser.id)
+          .single();
 
-        if (isUserAdmin) {
-          fetchAllBookings();
-          fetchMealPlans();
-          fetchVideos();
-          fetchVideoCategories();
+        if (error) {
+          console.error('Error checking admin status:', error);
+          navigate('/');
+          return;
         }
-      } catch (error) {
-        console.error('Error checking admin status:', error);
-        setIsAdmin(false);
-      } finally {
+
+        if (!data?.is_admin) {
+          navigate('/');
+          return;
+        }
+
+        setIsAdmin(true);
         setIsCheckingAdmin(false);
+        fetchData();
+      } catch (err) {
+        console.error('Error in admin check:', err);
+        navigate('/');
       }
     };
 
-    checkAdminStatus();
-  }, [user, navigate]);
+    checkAdmin();
+  }, [authUser, navigate]);
 
-  const fetchAllBookings = async () => {
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+
     try {
-      const { data, error } = await supabase
+      // Fetch bookings
+      const { data: bookingsData, error: bookingsError } = await supabase
         .from('bookings')
         .select('*')
-        .order('date', { ascending: true });
+        .order('date', { ascending: false });
 
-      if (error) throw error;
-      setBookings(data || []);
-    } catch (error) {
-      setError('Failed to fetch bookings');
-      console.error('Error:', error);
+      if (bookingsError) throw bookingsError;
+      setBookings(bookingsData || []);
+
+      // Fetch meal plans
+      const { data: mealPlansData, error: mealPlansError } = await supabase
+        .from('meal_plans')
+        .select('*')
+        .order('title');
+
+      if (mealPlansError) throw mealPlansError;
+      setMealPlans(mealPlansData || []);
+
+      // Fetch videos
+      const { data: videosData, error: videosError } = await supabase
+        .from('videos')
+        .select('*')
+        .order('title');
+
+      if (videosError) throw videosError;
+      setVideos(videosData || []);
+
+      // Fetch video categories
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('video_categories')
+        .select('*')
+        .order('name');
+
+      if (categoriesError) throw categoriesError;
+      setVideoCategories(categoriesData || []);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError('Failed to load data. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchMealPlans = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('meal_plans')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setMealPlans(data || []);
-    } catch (error) {
-      console.error('Error fetching meal plans:', error);
-      setError('Failed to fetch meal plans');
-    }
-  };
-
-  const fetchVideos = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('videos')
-        .select(`
-          *,
-          category:video_categories(*)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setVideos(data || []);
-    } catch (error) {
-      console.error('Error fetching videos:', error);
-      setError('Failed to fetch videos');
-    }
-  };
-
-  const fetchVideoCategories = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('video_categories')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      setVideoCategories(data || []);
-    } catch (error) {
-      console.error('Error fetching video categories:', error);
-      setError('Failed to fetch video categories');
-    }
-  };
-
-  const handleVideoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    
-    const videoData = {
-      title: formData.get('title') as string,
-      description: formData.get('description') as string,
-      video_url: formData.get('video_url') as string,
-      thumbnail_url: formData.get('thumbnail_url') as string || null,
-      duration: formData.get('duration') as string || null,
-      difficulty_level: formData.get('difficulty_level') as string || null,
-      category_id: formData.get('category_id') as string || null,
-      individual_price: formData.get('individual_price') ? parseFloat(formData.get('individual_price') as string) : null,
-      is_premium: formData.get('is_premium') === 'true'
-    };
-
-    try {
-      if (editingVideo) {
-        const { error } = await supabase
-          .from('videos')
-          .update(videoData)
-          .eq('id', editingVideo.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('videos')
-          .insert([videoData]);
-
-        if (error) throw error;
-      }
-
-      fetchVideos();
-      setEditingVideo(null);
-      form.reset();
-    } catch (error) {
-      console.error('Error saving video:', error);
-      setError('Failed to save video');
-    }
-  };
-
-  const deleteVideo = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this video?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('videos')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      fetchVideos();
-    } catch (error) {
-      console.error('Error deleting video:', error);
-      setError('Failed to delete video');
-    }
-  };
-
-  const handleMealPlanSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    
-    const mealPlanData = {
-      title: formData.get('title') as string,
-      description: formData.get('description') as string,
-      price: parseFloat(formData.get('price') as string),
-      dietary_type: formData.get('dietary_type') as string || undefined,
-      difficulty_level: formData.get('difficulty_level') as string || undefined,
-      preparation_time: formData.get('preparation_time') as string || undefined,
-      duration_weeks: formData.get('duration_weeks') ? parseInt(formData.get('duration_weeks') as string) : undefined,
-      total_calories: formData.get('total_calories') ? parseInt(formData.get('total_calories') as string) : undefined,
-      total_protein: formData.get('total_protein') ? parseInt(formData.get('total_protein') as string) : undefined,
-      total_carbs: formData.get('total_carbs') ? parseInt(formData.get('total_carbs') as string) : undefined,
-      total_fat: formData.get('total_fat') ? parseInt(formData.get('total_fat') as string) : undefined,
-      includes_grocery_list: formData.get('includes_grocery_list') === 'true',
-      includes_recipes: formData.get('includes_recipes') === 'true',
-      content: {
-        weeks: [
-          {
-            weekNumber: 1,
-            days: [
-              {
-                day: "Sample Day",
-                meals: [
-                  {
-                    type: "breakfast",
-                    name: "Sample Breakfast",
-                    ingredients: ["Ingredient 1", "Ingredient 2"],
-                    instructions: ["Step 1", "Step 2"],
-                    nutritionalInfo: {
-                      calories: 300,
-                      protein: 15,
-                      carbs: 30,
-                      fats: 10
-                    }
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    };
-
-    console.log('Submitting meal plan data:', mealPlanData);
-
-    try {
-      if (editingMealPlan?.id && editingMealPlan.id.trim() !== '') {
-        console.log('Updating existing meal plan:', editingMealPlan.id);
-        const { data, error } = await supabase
-          .from('meal_plans')
-          .update(mealPlanData)
-          .eq('id', editingMealPlan.id)
-          .select();
-
-        if (error) {
-          console.error('Supabase error while updating meal plan:', error);
-          throw error;
-        }
-        console.log('Meal plan updated successfully:', data);
-      } else {
-        console.log('Creating new meal plan');
-        const { data, error } = await supabase
-          .from('meal_plans')
-          .insert([mealPlanData])
-          .select();
-
-        if (error) {
-          console.error('Supabase error while inserting meal plan:', error);
-          throw error;
-        }
-        console.log('Meal plan created successfully:', data);
-      }
-
-      fetchMealPlans();
-      setEditingMealPlan(null);
-      form.reset();
-    } catch (error) {
-      console.error('Error saving meal plan:', error);
-      setError(`Failed to save meal plan: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  };
-
-  const deleteMealPlan = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this meal plan?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('meal_plans')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      fetchMealPlans();
-    } catch (error) {
-      console.error('Error deleting meal plan:', error);
-      setError('Failed to delete meal plan');
-    }
-  };
-
-  const updateBookingStatus = async (bookingId: string, status: 'confirmed' | 'cancelled') => {
+  const updateBookingStatus = async (id: string, status: BookingStatus) => {
     try {
       const { error } = await supabase
         .from('bookings')
         .update({ status })
-        .eq('id', bookingId);
+        .eq('id', id);
 
       if (error) throw error;
-      fetchAllBookings();
-    } catch (error) {
-      console.error('Error updating booking:', error);
-      setError('Failed to update booking status');
+
+      // Update local state
+      setBookings(bookings.map(booking => 
+        booking.id === id ? { ...booking, status } : booking
+      ));
+    } catch (err) {
+      console.error('Error updating booking status:', err);
+      setError('Failed to update booking status.');
     }
+  };
+
+  const handleMealPlanSubmit = async (mealPlan: MealPlan) => {
+    try {
+      if (mealPlan.id) {
+        // Update existing meal plan
+        const { error } = await supabase
+          .from('meal_plans')
+          .update(mealPlan)
+          .eq('id', mealPlan.id);
+
+        if (error) throw error;
+
+        setMealPlans(mealPlans.map(mp => 
+          mp.id === mealPlan.id ? mealPlan : mp
+        ));
+      } else {
+        // Create new meal plan
+        const { data, error } = await supabase
+          .from('meal_plans')
+          .insert([{ ...mealPlan, id: undefined }])
+          .select();
+
+        if (error) throw error;
+        if (data) {
+          setMealPlans([...mealPlans, data[0]]);
+        }
+      }
+
+      setEditingMealPlan(null);
+    } catch (err) {
+      console.error('Error saving meal plan:', err);
+      setError('Failed to save meal plan.');
+    }
+  };
+
+  const deleteMealPlan = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('meal_plans')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setMealPlans(mealPlans.filter(mp => mp.id !== id));
+    } catch (err) {
+      console.error('Error deleting meal plan:', err);
+      setError('Failed to delete meal plan.');
+    }
+  };
+
+  const handleVideoSubmit = async (video: VideoType) => {
+    try {
+      if (video.id) {
+        // Update existing video
+        const { error } = await supabase
+          .from('videos')
+          .update(video)
+          .eq('id', video.id);
+
+        if (error) throw error;
+
+        setVideos(videos.map(v => 
+          v.id === video.id ? video : v
+        ));
+      } else {
+        // Create new video
+        const { data, error } = await supabase
+          .from('videos')
+          .insert([{ ...video, id: undefined }])
+          .select();
+
+        if (error) throw error;
+        if (data) {
+          setVideos([...videos, data[0]]);
+        }
+      }
+
+      setEditingVideo(null);
+    } catch (err) {
+      console.error('Error saving video:', err);
+      setError('Failed to save video.');
+    }
+  };
+
+  const deleteVideo = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('videos')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setVideos(videos.filter(v => v.id !== id));
+    } catch (err) {
+      console.error('Error deleting video:', err);
+      setError('Failed to delete video.');
+    }
+  };
+
+  const handleSignOut = () => {
+    signOut();
+    navigate('/login');
   };
 
   if (isCheckingAdmin) {
     return (
-      <div className="section-container py-20">
-        <p className="text-center">Loading...</p>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="section-container py-20">
-        <h1 className="font-playfair text-4xl mb-8 text-center">Admin Login</h1>
-        <div className="max-w-md mx-auto">
-          <Auth />
-        </div>
+      <div className="min-h-screen flex justify-center items-center">
+        <p>Checking administrator privileges...</p>
       </div>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="section-container py-20">
-        <h1 className="font-playfair text-4xl mb-8 text-center">Access Denied</h1>
-        <p className="text-center text-gray-600">
-          You do not have permission to access this area.
-        </p>
+      <div className="min-h-screen flex justify-center items-center">
+        <p>You do not have administrator privileges.</p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        <p>Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="section-container py-20">
-      <h1 className="font-playfair text-4xl mb-8">Admin Dashboard</h1>
-      
-      {/* Tab Navigation */}
-      <div className="mb-8">
-        <div className="border-b">
-          <nav className="-mb-px flex space-x-8">
-            <button
-              onClick={() => setActiveTab('bookings')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'bookings'
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Bookings
-            </button>
-            <button
-              onClick={() => setActiveTab('meal-plans')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'meal-plans'
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Meal Plans
-            </button>
-            <button
-              onClick={() => setActiveTab('videos')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'videos'
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Videos
-            </button>
-          </nav>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4 md:mb-0">Admin Dashboard</h1>
+          <button
+            onClick={handleSignOut}
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </button>
+        </div>
+
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 rounded-md p-4">
+            {error}
+          </div>
+        )}
+
+        <div className="bg-white shadow rounded-lg overflow-hidden">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex flex-wrap">
+              <button
+                className={`${
+                  activeTab === 'users'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm flex items-center`}
+                onClick={() => setActiveTab('users')}
+              >
+                <UserCircle className="mr-2 h-5 w-5" />
+                Users
+              </button>
+              <button
+                className={`${
+                  activeTab === 'mealPlans'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm flex items-center`}
+                onClick={() => setActiveTab('mealPlans')}
+              >
+                <LucideClipboardList className="mr-2 h-5 w-5" />
+                Meal Plans
+              </button>
+              <button
+                className={`${
+                  activeTab === 'bookings'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm flex items-center`}
+                onClick={() => setActiveTab('bookings')}
+              >
+                <Calendar className="mr-2 h-5 w-5" />
+                Bookings
+              </button>
+              <button
+                className={`${
+                  activeTab === 'timeSlots'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm flex items-center`}
+                onClick={() => setActiveTab('timeSlots')}
+              >
+                <Clock className="mr-2 h-5 w-5" />
+                Time Slots
+              </button>
+            </nav>
+          </div>
+
+          <div className="p-6">
+            {activeTab === 'users' && <UsersList />}
+            {activeTab === 'mealPlans' && (
+              <div>
+                {!editingMealPlan ? (
+                  <div className="mb-4 flex justify-between items-center">
+                    <h2 className="text-2xl font-semibold">Meal Plans</h2>
+                    <button
+                      onClick={() => setEditingMealPlan({ 
+                        id: null,
+                        title: '', 
+                        description: '', 
+                        price: 0, 
+                        content: { 
+                          weeks: [] 
+                        } 
+                      } as any)}
+                      className="btn-primary flex items-center"
+                    >
+                      <Plus size={16} className="mr-2" />
+                      Add New Plan
+                    </button>
+                  </div>
+                ) : null}
+                
+                {editingMealPlan ? (
+                  <MealPlanForm
+                    editingMealPlan={editingMealPlan}
+                    onSubmit={handleMealPlanSubmit}
+                    onCancel={() => setEditingMealPlan(null)}
+                  />
+                ) : (
+                  <MealPlansList
+                    mealPlans={mealPlans}
+                    onEdit={setEditingMealPlan}
+                    onDelete={deleteMealPlan}
+                  />
+                )}
+              </div>
+            )}
+            {activeTab === 'bookings' && (
+              <BookingsList
+                bookings={bookings}
+                updateBookingStatus={updateBookingStatus}
+              />
+            )}
+            {activeTab === 'timeSlots' && <AdminTimeSlots />}
+          </div>
         </div>
       </div>
-
-      {/* Tab Content */}
-      {activeTab === 'bookings' && (
-        <BookingsList
-          bookings={bookings}
-          updateBookingStatus={updateBookingStatus}
-        />
-      )}
-
-      {activeTab === 'meal-plans' && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold">Meal Plans</h2>
-            {!editingMealPlan && (
-              <button
-                onClick={() => setEditingMealPlan({ 
-                  id: null,
-                  title: '', 
-                  description: '', 
-                  price: 0, 
-                  content: { 
-                    weeks: [] 
-                  } 
-                } as any)}
-                className="btn-primary flex items-center"
-              >
-                <Plus size={16} className="mr-2" />
-                Add New Plan
-              </button>
-            )}
-          </div>
-
-          {editingMealPlan && (
-            <MealPlanForm
-              editingMealPlan={editingMealPlan}
-              onSubmit={handleMealPlanSubmit}
-              onCancel={() => setEditingMealPlan(null)}
-            />
-          )}
-          {!editingMealPlan && (
-            <MealPlansList
-              mealPlans={mealPlans}
-              onEdit={setEditingMealPlan}
-              onDelete={deleteMealPlan}
-            />
-          )}
-        </div>
-      )}
-
-      {activeTab === 'videos' && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold">Videos</h2>
-            {!editingVideo && (
-              <button
-                onClick={() => setEditingVideo({ id: '', title: '', description: '', video_url: '' } as VideoType)}
-                className="btn-primary flex items-center"
-              >
-                <Plus size={16} className="mr-2" />
-                Add New Video
-              </button>
-            )}
-          </div>
-
-          {editingVideo && (
-            <VideoForm
-              editingVideo={editingVideo}
-              videoCategories={videoCategories}
-              onSubmit={handleVideoSubmit}
-              onCancel={() => setEditingVideo(null)}
-            />
-          )}
-          {!editingVideo && (
-            <VideosList
-              videos={videos}
-              onEdit={setEditingVideo}
-              onDelete={deleteVideo}
-            />
-          )}
-        </div>
-      )}
     </div>
   );
 };
