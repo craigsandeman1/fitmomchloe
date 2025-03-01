@@ -1,4 +1,4 @@
-import { Instagram, Facebook, Youtube, Mail, MapPin, Phone, ArrowRight } from 'lucide-react';
+import { Instagram, Facebook, Youtube, Mail, MapPin, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 
@@ -164,12 +164,12 @@ const Footer = () => {
               &copy; {new Date().getFullYear()} FitMomChloe. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#" className="text-gray-600 hover:text-primary text-sm transition-colors">
+              <Link to="/privacy" className="text-gray-600 hover:text-primary text-sm transition-colors">
                 Privacy Policy
-              </a>
-              <a href="#" className="text-gray-600 hover:text-primary text-sm transition-colors">
+              </Link>
+              <Link to="/terms" className="text-gray-600 hover:text-primary text-sm transition-colors">
                 Terms of Service
-              </a>
+              </Link>
             </div>
           </div>
         </div>

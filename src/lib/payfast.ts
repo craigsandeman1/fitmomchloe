@@ -122,14 +122,6 @@ export class PayfastService {
       return false;
     }
 
-    // Validate source IP (should be done on server side)
-    const validHosts = [
-      'www.payfast.co.za',
-      'sandbox.payfast.co.za',
-      'w1w.payfast.co.za',
-      'w2w.payfast.co.za'
-    ];
-
     // Validate data
     const requiredFields = ['m_payment_id', 'pf_payment_id', 'payment_status', 'item_name'];
     for (const field of requiredFields) {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMealPlanStore } from '../store/mealPlan';
 import { useAuthStore } from '../store/auth';
-import { Lock, ArrowRight, Utensils, Clock, ChevronRight } from 'lucide-react';
+import { ArrowRight, Utensils, ChevronRight } from 'lucide-react';
 import { Auth } from '../components/Auth';
 import RecipeModal from '../components/RecipeModal';
 
@@ -78,7 +78,7 @@ const FreeSampleMeals = [
 
 const MealPlans = () => {
   const { user } = useAuthStore();
-  const { mealPlans, loading, error, fetchMealPlans, selectedPlan, setSelectedPlan } = useMealPlanStore();
+  const { mealPlans, loading, error, fetchMealPlans } = useMealPlanStore();
   const [selectedRecipe, setSelectedRecipe] = useState<typeof FreeSampleMeals[0] | null>(null);
 
   useEffect(() => {
@@ -277,7 +277,7 @@ const MealPlans = () => {
                     <div className="text-sm text-gray-500">One-time purchase</div>
                   </div>
                   <button
-                    onClick={() => setSelectedPlan(plan)}
+                    onClick={() => {/* Implement get started logic */}}
                     className="w-full btn-primary flex items-center justify-center gap-2"
                   >
                     Get Started

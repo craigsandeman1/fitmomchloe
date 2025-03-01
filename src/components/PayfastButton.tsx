@@ -91,7 +91,7 @@ const PayfastButton = ({
       >
         {children}
       </button>
-      <div ref={formRef} style={{ display: 'none' }} />
+      <form ref={formRef} style={{ display: 'none' }} />
     </>
   );
 };

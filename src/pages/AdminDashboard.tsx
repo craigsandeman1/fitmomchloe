@@ -16,16 +16,14 @@ import VideoForm from '../components/admin/VideoForm';
 import VideosList from '../components/admin/VideosList';
 
 const AdminDashboard = () => {
+  const { user } = useAuthStore();
+  const [activeTab, setActiveTab] = useState<'bookings' | 'meal-plans' | 'videos'>('bookings');
+  const [editingMealPlan, setEditingMealPlan] = useState<MealPlan | null>(null);
+  const [editingVideo, setEditingVideo] = useState<VideoType | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
   const [videos, setVideos] = useState<VideoType[]>([]);
   const [videoCategories, setVideoCategories] = useState<VideoCategory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'bookings' | 'meal-plans' | 'videos'>('bookings');
-  const [editingMealPlan, setEditingMealPlan] = useState<MealPlan | null>(null);
-  const [editingVideo, setEditingVideo] = useState<VideoType | null>(null);
-  const { user } = useAuthStore();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
   const navigate = useNavigate();
@@ -80,10 +78,7 @@ const AdminDashboard = () => {
       if (error) throw error;
       setBookings(data || []);
     } catch (error) {
-      setError('Failed to fetch bookings');
       console.error('Error:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -98,7 +93,6 @@ const AdminDashboard = () => {
       setMealPlans(data || []);
     } catch (error) {
       console.error('Error fetching meal plans:', error);
-      setError('Failed to fetch meal plans');
     }
   };
 
@@ -116,7 +110,6 @@ const AdminDashboard = () => {
       setVideos(data || []);
     } catch (error) {
       console.error('Error fetching videos:', error);
-      setError('Failed to fetch videos');
     }
   };
 
@@ -131,7 +124,6 @@ const AdminDashboard = () => {
       setVideoCategories(data || []);
     } catch (error) {
       console.error('Error fetching video categories:', error);
-      setError('Failed to fetch video categories');
     }
   };
 
@@ -173,7 +165,6 @@ const AdminDashboard = () => {
       form.reset();
     } catch (error) {
       console.error('Error saving video:', error);
-      setError('Failed to save video');
     }
   };
 
@@ -190,7 +181,6 @@ const AdminDashboard = () => {
       fetchVideos();
     } catch (error) {
       console.error('Error deleting video:', error);
-      setError('Failed to delete video');
     }
   };
 
@@ -256,7 +246,6 @@ const AdminDashboard = () => {
       form.reset();
     } catch (error) {
       console.error('Error saving meal plan:', error);
-      setError('Failed to save meal plan');
     }
   };
 
@@ -273,7 +262,6 @@ const AdminDashboard = () => {
       fetchMealPlans();
     } catch (error) {
       console.error('Error deleting meal plan:', error);
-      setError('Failed to delete meal plan');
     }
   };
 
@@ -288,7 +276,6 @@ const AdminDashboard = () => {
       fetchAllBookings();
     } catch (error) {
       console.error('Error updating booking:', error);
-      setError('Failed to update booking status');
     }
   };
 

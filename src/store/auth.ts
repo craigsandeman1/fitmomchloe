@@ -8,6 +8,7 @@ interface AuthState {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  session: User | null;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -17,9 +18,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
-      options: {
-        redirectTo: window.location.origin
-      }
+      options: {}
     });
     if (error) throw error;
   },
@@ -38,10 +37,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (error) throw error;
     set({ user: null });
   },
+  session: null,
 }));
 
 // Initialize auth state
-supabase.auth.onAuthStateChange((event, session) => {
+supabase.auth.onAuthStateChange((_, session) => {
   if (session?.user) {
     useAuthStore.setState({ user: session.user, loading: false });
   } else {
