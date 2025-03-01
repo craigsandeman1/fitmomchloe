@@ -15,6 +15,17 @@ export default defineConfig({
     }
   },
   build: {
-    assetsInlineLimit: 0
-  }
+    assetsInlineLimit: 0,
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html')
+      },
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom']
+        }
+      }
+    }
+  },
+  publicDir: 'public'
 });
