@@ -12,6 +12,10 @@
       "dest": "/api/payment-status.js"
     },
     {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
       "src": "/images/(.*)",
       "dest": "/images/$1"
     },
@@ -32,4 +36,4 @@
     "domains": ["images.unsplash.com"],
     "minimumCacheTTL": 60
   }
-} 
+}

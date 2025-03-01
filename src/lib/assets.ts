@@ -8,6 +8,9 @@ interface AssetMap {
   videos: {
     [key: string]: string;
   };
+  assets?: {
+    [key: string]: string;
+  };
 }
 
 // Default asset paths with explicit leading slash to ensure they're absolute
@@ -23,6 +26,14 @@ const defaultAssetMap: AssetMap = {
   videos: {
     workingOut: "/videos/working-out.mp4",
     mealPlan: "/videos/Meal-Plan.mp4"
+  },
+  assets: {
+    logo: "/assets/fitmomchloelogo.png",
+    heroBackground: "/assets/background-homepage.webp",
+    contactHero: "/assets/chloe-with-sky.jpg",
+    withKids: "/assets/withkids.jpg",
+    workingOut: "/assets/workingout.jpg",
+    mealPlan: "/assets/meal-plan.jpg"
   }
 };
 
@@ -73,6 +84,13 @@ export function getImagePath(key: string): string {
     return path;
   }
   
+  // Check if we have the asset in the assets directory
+  if (assetMap.assets && assetMap.assets[key]) {
+    const path = assetMap.assets[key];
+    console.log(`Asset path for ${key}: ${path}`);
+    return path;
+  }
+  
   // Fallback to direct path if the key doesn't exist in the map
   console.warn(`Image key not found in asset map: ${key}, using fallback path`);
   return `/images/${key}`;
@@ -95,4 +113,4 @@ export function getVideoPath(key: string): string {
   // Fallback to direct path if the key doesn't exist in the map
   console.warn(`Video key not found in asset map: ${key}, using fallback path`);
   return `/videos/${key}`;
-} 
+}

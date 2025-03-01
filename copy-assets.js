@@ -11,7 +11,8 @@ const SOURCE_DIR = {
 
 const DEST_DIR = {
   images: path.resolve('public/images'),
-  videos: path.resolve('public/videos')
+  videos: path.resolve('public/videos'),
+  assets: path.resolve('public/assets')
 };
 
 // Create destination directories if they don't exist
@@ -42,8 +43,11 @@ const copyFiles = (sourceDir, destDir, fileType) => {
   }
 };
 
-// Copy all assets
+// Copy all assets to their respective directories
 copyFiles(SOURCE_DIR.images, DEST_DIR.images, 'image');
 copyFiles(SOURCE_DIR.videos, DEST_DIR.videos, 'video');
 
-console.log('All assets copied successfully!'); 
+// Also copy images to the assets directory to handle Vite's asset references
+copyFiles(SOURCE_DIR.images, DEST_DIR.assets, 'image to assets');
+
+console.log('All assets copied successfully!');

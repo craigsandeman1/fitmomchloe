@@ -1,12 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import HeroSection from '../components/HeroSection';
 import { imageAssets } from '../lib/importedAssets';
+import { getImagePath } from '../lib/assets';
 
 // Use the directly imported asset
 const backgroundImageUrl = imageAssets.heroBackground;
+// Also get the fallback path
+const fallbackBackgroundUrl = getImagePath('heroBackground');
 
 console.log('Home using backgroundImage URL:', backgroundImageUrl);
+console.log('Home fallback backgroundImage URL:', fallbackBackgroundUrl);
 
 const Home = () => {
   useEffect(() => {
@@ -55,7 +59,11 @@ const Home = () => {
             src={backgroundImageUrl}
             alt=""
             className="w-full h-full object-cover opacity-25 md:object-center object-left"
-            onError={(e) => console.error('Error loading background image:', e)}
+            onError={(e) => {
+              console.error('Error loading background image:', e);
+              // Try the fallback path instead
+              (e.target as HTMLImageElement).src = fallbackBackgroundUrl;
+            }}
           />
         </div>
 

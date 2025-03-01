@@ -4,11 +4,14 @@ import { Menu, X, LogOut } from 'lucide-react';
 import { useAuthStore } from '../store/auth';
 import { supabase } from '../lib/supabase';
 import { imageAssets } from '../lib/importedAssets';
+import { getImagePath } from '../lib/assets';
 
 // Use the directly imported asset
 const logoUrl = imageAssets.logo;
 
 console.log('Navbar using logo URL:', logoUrl);
+// Also log the fallback path
+console.log('Navbar fallback logo URL:', getImagePath('logo'));
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -64,9 +67,9 @@ const Navbar = () => {
               className="h-12 w-auto"
               onError={(e) => {
                 console.error('Error loading logo:', e);
-                setImgError(true);
+                // Try the fallback path instead
+                (e.target as HTMLImageElement).src = getImagePath('logo');
               }}
-              style={{ display: imgError ? 'none' : 'block' }}
             />
             <span className="font-playfair text-2xl text-primary">
               Fit Mom Chloe

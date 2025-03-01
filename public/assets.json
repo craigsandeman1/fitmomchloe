@@ -10,5 +10,13 @@
   "videos": {
     "workingOut": "/videos/working-out.mp4",
     "mealPlan": "/videos/Meal-Plan.mp4"
+  },
+  "assets": {
+    "logo": "/assets/fitmomchloelogo.png",
+    "heroBackground": "/assets/background-homepage.webp",
+    "contactHero": "/assets/chloe-with-sky.jpg",
+    "withKids": "/assets/withkids.jpg",
+    "workingOut": "/assets/workingout.jpg",
+    "mealPlan": "/assets/meal-plan.jpg"
   }
-} 
+}
