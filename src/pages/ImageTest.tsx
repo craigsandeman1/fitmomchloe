@@ -1,14 +1,25 @@
 import { useState, useEffect } from 'react';
+import { getImageUrl, getImageUrlFromPath } from '../lib/imageUtils';
 
 // Test different image loading approaches
+// 1. Direct URL Constructor approach (which fails in production as we saw)
 const directUrlImage = new URL('../assets/images/fitmomchloelogo.png', import.meta.url).href;
 const heroImage = new URL('../assets/images/chloe-with-sky.jpg', import.meta.url).href;
 const withkidsImage = new URL('../assets/images/withkids.jpg', import.meta.url).href;
 const workingoutImage = new URL('../assets/images/workingout.jpg', import.meta.url).href;
 
-// Public path approach for comparison
+// 2. Public path approach (which works in production)
 const publicPathImage = '/images/fitmomchloelogo.png';
 const publicMountainImage = '/images/mountain.jpg';
+
+// 3. New utility approach (should work in both environments)
+const utilityLogoImage = getImageUrl('logo');
+const utilityHeroImage = getImageUrl('contactHero');
+const utilityWithKidsImage = getImageUrl('withKids');
+const utilityWorkingOutImage = getImageUrl('workingOut');
+
+// 4. Utility with direct path
+const utilityPathImage = getImageUrlFromPath('images/mountain.jpg');
 
 const ImageTest = () => {
   // Track loading states
@@ -18,7 +29,12 @@ const ImageTest = () => {
     withkidsImage: false,
     workingoutImage: false,
     publicPath: false,
-    publicMountain: false
+    publicMountain: false,
+    utilityLogo: false,
+    utilityHero: false,
+    utilityWithKids: false,
+    utilityWorkingOut: false,
+    utilityPath: false
   });
   
   const [errorStates, setErrorStates] = useState({
@@ -27,18 +43,35 @@ const ImageTest = () => {
     withkidsImage: false,
     workingoutImage: false,
     publicPath: false,
-    publicMountain: false
+    publicMountain: false,
+    utilityLogo: false,
+    utilityHero: false,
+    utilityWithKids: false,
+    utilityWorkingOut: false,
+    utilityPath: false
   });
 
   useEffect(() => {
     // Log the image URLs for debugging
-    console.log('Image URL Paths:');
-    console.log('Direct URL:', directUrlImage);
-    console.log('Hero Image:', heroImage);
-    console.log('With Kids Image:', withkidsImage);
-    console.log('Working Out Image:', workingoutImage);
-    console.log('Public Path Logo:', publicPathImage);
-    console.log('Public Path Mountain:', publicMountainImage);
+    console.log('Environment:', import.meta.env.MODE);
+    console.log('Is Production:', import.meta.env.PROD);
+    
+    console.log('1. URL Constructor Approach:');
+    console.log('- Logo:', directUrlImage);
+    console.log('- Hero Image:', heroImage);
+    console.log('- With Kids Image:', withkidsImage);
+    console.log('- Working Out Image:', workingoutImage);
+    
+    console.log('2. Public Path Approach:');
+    console.log('- Logo:', publicPathImage);
+    console.log('- Mountain:', publicMountainImage);
+    
+    console.log('3. New Utility Approach:');
+    console.log('- Logo:', utilityLogoImage);
+    console.log('- Hero Image:', utilityHeroImage);
+    console.log('- With Kids Image:', utilityWithKidsImage);
+    console.log('- Working Out Image:', utilityWorkingOutImage);
+    console.log('- Direct Path:', utilityPathImage);
   }, []);
 
   const handleImageLoad = (imageType: keyof typeof loadingStates) => {
@@ -252,6 +285,105 @@ const ImageTest = () => {
             <p className="mt-2">Status: {
               !loadingStates.publicMountain ? 'Loading...' :
               errorStates.publicMountain ? 'Error' : 'Loaded'
+            }</p>
+          </div>
+        </div>
+
+        {/* Test 7: Utility Approach - Logo */}
+        <div className="border rounded-lg p-6 bg-white shadow-md">
+          <h2 className="text-xl font-semibold mb-4">Test 7: Utility Approach (Logo)</h2>
+          <div className="aspect-video bg-gray-100 flex items-center justify-center relative mb-4">
+            {!loadingStates.utilityLogo && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-gray-500">Loading...</span>
+              </div>
+            )}
+            {errorStates.utilityLogo ? (
+              <div className="text-red-500 text-center p-4">
+                Failed to load image.<br />
+                URL: {utilityLogoImage}
+              </div>
+            ) : (
+              <img
+                src={utilityLogoImage}
+                alt="Logo (Utility)"
+                className="max-h-full max-w-full object-contain"
+                onLoad={() => handleImageLoad('utilityLogo')}
+                onError={() => handleImageError('utilityLogo')}
+              />
+            )}
+          </div>
+          <div className="bg-gray-100 p-3 rounded text-xs font-mono overflow-auto">
+            <p>URL: {utilityLogoImage}</p>
+            <p className="mt-2">Status: {
+              !loadingStates.utilityLogo ? 'Loading...' :
+              errorStates.utilityLogo ? 'Error' : 'Loaded'
+            }</p>
+          </div>
+        </div>
+
+        {/* Test 8: Utility Approach - Hero */}
+        <div className="border rounded-lg p-6 bg-white shadow-md">
+          <h2 className="text-xl font-semibold mb-4">Test 8: Utility Approach (Hero)</h2>
+          <div className="aspect-video bg-gray-100 flex items-center justify-center relative mb-4">
+            {!loadingStates.utilityHero && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-gray-500">Loading...</span>
+              </div>
+            )}
+            {errorStates.utilityHero ? (
+              <div className="text-red-500 text-center p-4">
+                Failed to load image.<br />
+                URL: {utilityHeroImage}
+              </div>
+            ) : (
+              <img
+                src={utilityHeroImage}
+                alt="Hero (Utility)"
+                className="max-h-full max-w-full object-cover"
+                onLoad={() => handleImageLoad('utilityHero')}
+                onError={() => handleImageError('utilityHero')}
+              />
+            )}
+          </div>
+          <div className="bg-gray-100 p-3 rounded text-xs font-mono overflow-auto">
+            <p>URL: {utilityHeroImage}</p>
+            <p className="mt-2">Status: {
+              !loadingStates.utilityHero ? 'Loading...' :
+              errorStates.utilityHero ? 'Error' : 'Loaded'
+            }</p>
+          </div>
+        </div>
+
+        {/* Test 9: Direct Path Utility */}
+        <div className="border rounded-lg p-6 bg-white shadow-md">
+          <h2 className="text-xl font-semibold mb-4">Test 9: Direct Path Utility</h2>
+          <div className="aspect-video bg-gray-100 flex items-center justify-center relative mb-4">
+            {!loadingStates.utilityPath && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-gray-500">Loading...</span>
+              </div>
+            )}
+            {errorStates.utilityPath ? (
+              <div className="text-red-500 text-center p-4">
+                Failed to load image.<br />
+                URL: {utilityPathImage}
+              </div>
+            ) : (
+              <img
+                src={utilityPathImage}
+                alt="Mountain (Utility Path)"
+                className="max-h-full max-w-full object-cover"
+                onLoad={() => handleImageLoad('utilityPath')}
+                onError={() => handleImageError('utilityPath')}
+              />
+            )}
+          </div>
+          <div className="bg-gray-100 p-3 rounded text-xs font-mono overflow-auto">
+            <p>URL: {utilityPathImage}</p>
+            <p className="mt-2">Status: {
+              !loadingStates.utilityPath ? 'Loading...' :
+              errorStates.utilityPath ? 'Error' : 'Loaded'
             }</p>
           </div>
         </div>

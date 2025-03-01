@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import { Menu, X, LogOut } from 'lucide-react';
 import { useAuthStore } from '../store/auth';
 import { supabase } from '../lib/supabase';
+import { getImageUrl } from '../lib/imageUtils';
 
-// Import the image
-const logoUrl = new URL('../assets/images/fitmomchloelogo.png', import.meta.url).href;
+// Import the logo image using our utility function
+const logoUrl = getImageUrl('logo');
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import HeroSection from '../components/HeroSection';
+import { getImageUrl } from '../lib/imageUtils';
 
-// Import the image
-const backgroundImageUrl = new URL('../assets/images/background-homepage.webp', import.meta.url).href;
+// Import the image using our utility function
+const backgroundImageUrl = getImageUrl('heroBackground');
 
 const Home = () => {
   const [heroVariant, setHeroVariant] = useState<'default' | 'alternative'>('alternative');

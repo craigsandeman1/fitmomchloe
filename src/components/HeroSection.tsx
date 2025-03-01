@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { getImageUrl } from '../lib/imageUtils';
 
-// Import images directly using URL constructor
-const withkids = new URL('../assets/images/withkids.jpg', import.meta.url).href;
-const workingout = new URL('../assets/images/workingout.jpg', import.meta.url).href;
+// Import images using our utility to handle both development and production
+const withkids = getImageUrl('withKids');
+const workingout = getImageUrl('workingOut');
 
 interface HeroProps {
   variant?: 'default' | 'alternative';

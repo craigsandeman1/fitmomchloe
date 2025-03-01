@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
+import { getImageUrl } from '../lib/imageUtils';
 
-// Import the image using URL constructor
-const heroImage = new URL('../assets/images/chloe-with-sky.jpg', import.meta.url).href;
+// Import the image using our utility function
+const heroImage = getImageUrl('contactHero');
 
 const Contact = () => {
   const [formData, setFormData] = useState({
