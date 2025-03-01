@@ -31,3 +31,18 @@ body {
   background-position: center;
   background-repeat: no-repeat;
 }
+
+/* Hide sign-up button in Auth component */
+.hide-signup > div > button:last-child {
+  display: none !important;
+}
+
+/* Additional styling for cleaner auth form */
+.hide-signup input {
+  @apply border border-gray-200 rounded py-2 px-3 w-full;
+  box-shadow: none !important;
+}
+
+.hide-signup form {
+  @apply space-y-5;
+}

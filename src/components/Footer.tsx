@@ -1,47 +1,12 @@
-import { Instagram, Facebook, Youtube, Mail, MapPin, Phone, ArrowRight } from 'lucide-react';
+import { Instagram, Facebook, Youtube, Mail, MapPin, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
 
 // Import the image
 const logoUrl = new URL('../assets/images/fitmomchloelogo.png', import.meta.url).href;
 
 const Footer = () => {
-  const [email, setEmail] = useState('');
-
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle newsletter signup
-    console.log('Newsletter signup:', email);
-    setEmail('');
-  };
-
   return (
     <footer className="bg-white">
-      {/* Newsletter Section */}
-      <div className="bg-primary/10 py-16">
-        <div className="section-container">
-          <div className="max-w-2xl mx-auto text-center">
-            <h3 className="font-playfair text-3xl mb-4">Join Our Community</h3>
-            <p className="text-gray-600 mb-8">
-              Get exclusive workout tips, nutrition advice, and special offers delivered to your inbox
-            </p>
-            <form onSubmit={handleNewsletterSubmit} className="flex gap-4 max-w-md mx-auto">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="flex-1 px-6 py-3 rounded-lg border-2 border-gray-200 focus:border-primary focus:outline-none"
-                required
-              />
-              <button type="submit" className="btn-primary whitespace-nowrap">
-                Subscribe
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-
       {/* Main Footer Content */}
       <div className="section-container py-16">
         <div className="grid md:grid-cols-4 gap-12">

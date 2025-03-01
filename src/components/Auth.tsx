@@ -51,8 +51,7 @@ export const Auth = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-playfair mb-6">{isSignUp ? 'Create Account' : 'Sign In'}</h2>
+    <div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700">
