@@ -412,7 +412,7 @@ const AdminDashboard = () => {
             <h2 className="text-2xl font-semibold">Customer Orders</h2>
             <p className="text-gray-500 mt-1">Manage meal plan purchases and their status</p>
           </div>
-          <PurchasesList purchases={purchases} />
+          <PurchasesList purchases={purchases} onUpdate={fetchPurchases} />
         </div>
       )}
 
