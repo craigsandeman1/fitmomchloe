@@ -1,5 +1,5 @@
 export interface MealPlan {
-  id: string;
+  id: string | null;
   title: string;
   description: string;
   price: number;

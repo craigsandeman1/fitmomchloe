@@ -244,7 +244,7 @@ const AdminDashboard = () => {
     console.log('Submitting meal plan data:', mealPlanData);
 
     try {
-      if (editingMealPlan) {
+      if (editingMealPlan?.id && editingMealPlan.id.trim() !== '') {
         console.log('Updating existing meal plan:', editingMealPlan.id);
         const { data, error } = await supabase
           .from('meal_plans')
@@ -398,7 +398,15 @@ const AdminDashboard = () => {
             <h2 className="text-2xl font-semibold">Meal Plans</h2>
             {!editingMealPlan && (
               <button
-                onClick={() => setEditingMealPlan({ id: '', title: '', description: '', price: 0, content: { weeks: [] } } as MealPlan)}
+                onClick={() => setEditingMealPlan({ 
+                  id: null,
+                  title: '', 
+                  description: '', 
+                  price: 0, 
+                  content: { 
+                    weeks: [] 
+                  } 
+                } as any)}
                 className="btn-primary flex items-center"
               >
                 <Plus size={16} className="mr-2" />
