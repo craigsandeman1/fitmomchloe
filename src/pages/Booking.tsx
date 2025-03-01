@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { format, parseISO, isAfter, addDays, isEqual } from 'date-fns';
 import { useBookingStore } from '../store/booking';
 import { useAuthStore } from '../store/auth';
@@ -48,14 +48,47 @@ const Booking = () => {
     },
   });
 
+  // Use useCallback for fetchAllSystemBookings to avoid dependency loops
+  const fetchAllSystemBookings = useCallback(async () => {
+    try {
+      console.log('Fetching all system bookings...');
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .neq('status', 'cancelled')
+        .order('date', { ascending: true });
+        
+      if (error) throw error;
+      setAllSystemBookings(data || []);
+      console.log(`Fetched ${data?.length || 0} system bookings`);
+    } catch (err) {
+      console.error('Error fetching all bookings:', err);
+    }
+  }, []);
+  
+  // Fetch all bookings when the component mounts
+  useEffect(() => {
+    fetchAllSystemBookings();
+    
+    // Set up periodic refresh of all bookings (every 30 seconds)
+    const intervalId = setInterval(() => {
+      fetchAllSystemBookings();
+    }, 30000); // 30 seconds
+    
+    return () => clearInterval(intervalId);
+  }, [fetchAllSystemBookings]);
+  
+  // Fetch bookings when user logs in
   useEffect(() => {
     if (user) {
       fetchUserBookings();
       fetchAvailableTimeSlots();
-      setName(user.user_metadata?.full_name || '');
+      fetchAllSystemBookings(); // Also refresh all bookings when user logs in
+      setUserName(user.user_metadata?.full_name || '');
     }
-  }, [user, fetchUserBookings, fetchAvailableTimeSlots]);
+  }, [user, fetchUserBookings, fetchAvailableTimeSlots, fetchAllSystemBookings]);
 
+  // Update available times when selectedDate changes
   useEffect(() => {
     if (selectedDate) {
       const availableTimes = getAvailableTimesForDate(selectedDate);
@@ -65,26 +98,49 @@ const Booking = () => {
         setSelectedTime('');
       }
     }
-  }, [selectedDate, bookings, getAvailableTimesForDate, selectedTime]);
+  }, [selectedDate, bookings, getAvailableTimesForDate, selectedTime, allSystemBookings]);
 
+  // Add real-time subscription to bookings
   useEffect(() => {
-    const fetchAllBookings = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('bookings')
-          .select('*')
-          .neq('status', 'cancelled')
-          .order('date', { ascending: true });
+    // Set up Supabase real-time subscription to bookings table
+    const subscription = supabase
+      .channel('bookings_channel')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'bookings' 
+        }, 
+        (payload) => {
+          console.log('Real-time booking update received:', payload);
+          // Refresh all bookings when there's any change to the bookings table
+          fetchAllSystemBookings();
           
-        if (error) throw error;
-        setAllSystemBookings(data || []);
-      } catch (err) {
-        console.error('Error fetching all bookings:', err);
-      }
-    };
+          // Also refresh user's bookings if they're logged in
+          if (user) {
+            fetchUserBookings();
+          }
+          
+          // If we have a selected date, refresh available times
+          if (selectedDate) {
+            const availableTimes = getAvailableTimesForDate(selectedDate);
+            setAvailableTimes(availableTimes);
+            
+            // Clear selected time if it's no longer available
+            if (selectedTime && !availableTimes.includes(selectedTime)) {
+              setSelectedTime('');
+              setErrorMessage('This time slot is no longer available. Please select another time.');
+            }
+          }
+        }
+      )
+      .subscribe();
     
-    fetchAllBookings();
-  }, []);
+    // Clean up subscription on unmount
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, [user, fetchUserBookings, fetchAllSystemBookings, selectedDate, selectedTime, getAvailableTimesForDate]);
 
   const isTimeSlotAvailable = (date: string, time: string): boolean => {
     // Check if the time is in availableTimes
@@ -123,6 +179,11 @@ const Booking = () => {
       
       console.log('Storing exact selected time (no timezone conversion):', exactTimeString);
       
+      // Check one more time if the slot is still available
+      if (!isTimeSlotAvailable(selectedDate, selectedTime)) {
+        throw new Error('This time slot has just been booked by someone else. Please select another time.');
+      }
+      
       const bookingData = {
         date: exactTimeString, // Store the exact string without timezone conversion
         name: userName,
@@ -147,8 +208,13 @@ const Booking = () => {
           bookingId: result.id
         });
         
-        // Reload bookings to show the new booking
+        // Refresh all bookings to ensure the UI is updated for all users
         fetchUserBookings();
+        fetchAllSystemBookings();
+        
+        // Reset form
+        setSelectedDate('');
+        setSelectedTime('');
       }
     } catch (error) {
       console.error('Error creating booking:', error);
@@ -276,6 +342,38 @@ const Booking = () => {
     return time + ':00';
   };
 
+  // Add visual feedback when a slot becomes unavailable
+  const renderTimeSlot = (time: string) => {
+    const isAvailable = isTimeSlotAvailable(selectedDate, time);
+    const isSelected = selectedTime === time;
+    let className = `p-2 border rounded-md text-center transition-colors`;
+    
+    if (isSelected) {
+      className += ' bg-primary text-white border-primary';
+    } else if (isAvailable) {
+      className += ' hover:bg-primary hover:text-white hover:border-primary';
+    } else {
+      className += ' bg-gray-100 text-gray-400 cursor-not-allowed relative';
+    }
+    
+    return (
+      <button
+        key={time}
+        type="button"
+        onClick={() => isAvailable && setSelectedTime(time)}
+        disabled={!isAvailable}
+        className={className}
+      >
+        {time}
+        {!isAvailable && (
+          <span className="absolute inset-0 flex items-center justify-center">
+            <span className="bg-red-500 h-0.5 w-full absolute transform rotate-45"></span>
+          </span>
+        )}
+      </button>
+    );
+  };
+
   return (
     <div className="section-container py-20">
       <h1 className="font-playfair text-4xl mb-8 text-center">Book a Session</h1>
@@ -351,26 +449,7 @@ const Booking = () => {
                     </label>
                     <div className="grid grid-cols-3 gap-2">
                       {availableTimes.length > 0 ? (
-                        availableTimes.map((time) => (
-                          <button
-                            key={time}
-                            type="button"
-                            onClick={() => setSelectedTime(time)}
-                            disabled={!isTimeSlotAvailable(selectedDate, time)}
-                            className={`
-                              p-2 border rounded-md text-center transition-colors
-                              ${
-                                selectedTime === time 
-                                  ? 'bg-primary text-white border-primary' 
-                                  : isTimeSlotAvailable(selectedDate, time)
-                                    ? 'hover:bg-primary hover:text-white hover:border-primary'
-                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                              }
-                            `}
-                          >
-                            {time}
-                          </button>
-                        ))
+                        availableTimes.map((time) => renderTimeSlot(time))
                       ) : (
                         <p className="col-span-3 text-center py-2 text-gray-500">
                           No available time slots for this date
