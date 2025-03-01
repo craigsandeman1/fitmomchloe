@@ -6,6 +6,7 @@ import useWeb3Forms from '@web3forms/react';
 import { AlertCircle, CheckCircle, Calendar, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Auth } from '../components/Auth';
+import { type Booking as BookingType, BookingStatus } from '../types/booking';
 
 const Booking = () => {
   const { user } = useAuthStore();
@@ -28,6 +29,8 @@ const Booking = () => {
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [showSignUp, setShowSignUp] = useState(false);
+  const [allSystemBookings, setAllSystemBookings] = useState<BookingType[]>([]);
   
   // Web3Forms setup
   const { submit } = useWeb3Forms({
@@ -64,17 +67,41 @@ const Booking = () => {
     }
   }, [selectedDate, bookings, getAvailableTimesForDate, selectedTime]);
 
-  const isTimeSlotAvailable = (date: string, time: string): boolean => {
-    // First check if the time slot is configured as available
-    if (availableTimes.length > 0 && !availableTimes.includes(time)) {
-      return false;
-    }
+  useEffect(() => {
+    const fetchAllBookings = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('bookings')
+          .select('*')
+          .neq('status', 'cancelled')
+          .order('date', { ascending: true });
+          
+        if (error) throw error;
+        setAllSystemBookings(data || []);
+      } catch (err) {
+        console.error('Error fetching all bookings:', err);
+      }
+    };
     
-    // Then check if there's already a booking for this date and time
-    const dateTime = `${date}T${time}:00`;
-    return !bookings.some(booking => 
-      booking.date === dateTime && booking.status !== 'cancelled'
-    );
+    fetchAllBookings();
+  }, []);
+
+  const isTimeSlotAvailable = (date: string, time: string): boolean => {
+    // Check if the time is in availableTimes
+    const slotAvailable = availableTimes.includes(time);
+    if (!slotAvailable) return false;
+    
+    // This date is available in system configuration, now check if it's already booked
+    const formattedDate = `${date}T${time}:00`;
+    
+    // Check if there's already a booking at this time from ANY user
+    const existingBooking = allSystemBookings.find(booking => {
+      const bookingDate = new Date(booking.date);
+      const slotDate = new Date(formattedDate);
+      return bookingDate.getTime() === slotDate.getTime() && booking.status !== 'cancelled';
+    });
+    
+    return !existingBooking;
   };
 
   const handleBooking = async (e: React.FormEvent) => {
@@ -90,11 +117,23 @@ const Booking = () => {
         throw new Error('Cannot retrieve user email. Please try again or contact support.');
       }
       
+      // Create an ISO date string but preserve the local timezone information
+      const localDate = new Date(`${selectedDate}T${selectedTime}:00`);
+      // Adjust for timezone offset to ensure the time is stored as selected
+      const tzOffset = localDate.getTimezoneOffset() * 60000; // offset in milliseconds
+      const adjustedDate = new Date(localDate.getTime() - tzOffset);
+      const isoString = adjustedDate.toISOString();
+      
+      console.log('Selected time:', selectedTime);
+      console.log('Local date:', localDate.toString());
+      console.log('Adjusted date for storage:', adjustedDate.toString());
+      console.log('ISO string for storage:', isoString);
+      
       const bookingData = {
-        date: `${selectedDate}T${selectedTime}:00`,
+        date: isoString,
         name: userName,
         notes: notes,
-        email: user.email // Make sure email is included
+        email: user.email
       };
       
       const result = await createBooking(bookingData);
@@ -234,15 +273,39 @@ const Booking = () => {
     return parseISO(a.date).getTime() - parseISO(b.date).getTime();
   });
 
+  // Standardize time format display with helper function
+  const formatTimeDisplay = (time: string): string => {
+    // Convert 24-hour time (HH:MM) to 24-hour format consistently
+    return time + ':00';
+  };
+
   return (
     <div className="section-container py-20">
       <h1 className="font-playfair text-4xl mb-8 text-center">Book a Session</h1>
       
       {!user ? (
         <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-semibold mb-6 text-center">Login to Book</h2>
-          <div className="hide-signup">
+          <h2 className="text-2xl font-semibold mb-6 text-center">
+            {showSignUp ? 'Create an Account' : 'Login to Book'}
+          </h2>
+          
+          <div className={showSignUp ? '' : 'hide-signup'}>
             <Auth />
+          </div>
+          
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600 mb-2">
+              {showSignUp 
+                ? 'Already have an account?' 
+                : "Don't have an account yet?"}
+            </p>
+            <button 
+              onClick={() => setShowSignUp(!showSignUp)}
+              type="button"
+              className="btn-primary w-full"
+            >
+              {showSignUp ? 'Login' : 'Register'}
+            </button>
           </div>
         </div>
       ) : (
@@ -379,6 +442,27 @@ const Booking = () => {
               <div className="space-y-4">
                 {sortedBookings.map((booking) => {
                   const bookingDate = parseISO(booking.date);
+                  
+                  // Convert UTC date from database back to local time for display
+                  const localBookingDate = new Date(bookingDate);
+                  
+                  const formattedDate = localBookingDate.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  });
+                  
+                  // Display the time in the originally selected format (24-hour)
+                  const formattedTime = localBookingDate.getHours().toString().padStart(2, '0') + 
+                                       ':' + 
+                                       localBookingDate.getMinutes().toString().padStart(2, '0');
+                  
+                  console.log('Booking date from DB:', booking.date);
+                  console.log('Parsed date:', bookingDate.toString());
+                  console.log('Local booking date for display:', localBookingDate.toString());
+                  console.log('Formatted time for display:', formattedTime);
+                  
                   return (
                     <div
                       key={booking.id}
@@ -387,10 +471,10 @@ const Booking = () => {
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="font-semibold">
-                            {format(bookingDate, 'PPPP')}
+                            {formattedDate}
                           </p>
                           <p className="text-gray-600">
-                            {format(bookingDate, 'p')}
+                            {formattedTime}
                           </p>
                           {booking.notes && (
                             <p className="text-gray-500 text-sm mt-2">
