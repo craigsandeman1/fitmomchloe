@@ -1,3 +1,11 @@
+-- First check if profiles table exists
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'profiles') THEN
+        RAISE NOTICE 'The profiles table does not exist. Please run the create_profiles_table.sql script first.';
+    END IF;
+END $$;
+
 -- Create available_time_slots table
 CREATE TABLE IF NOT EXISTS available_time_slots (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -31,14 +39,9 @@ CREATE TABLE IF NOT EXISTS available_time_slots (
 -- Add RLS policies
 ALTER TABLE available_time_slots ENABLE ROW LEVEL SECURITY;
 
--- Policy: Only admins can write
-CREATE POLICY admin_write_policy ON available_time_slots
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid() AND profiles.is_admin = true
-    )
-  );
+-- Use a temporary policy that allows all operations (will be replaced later after profiles table exists)
+CREATE POLICY temp_all_access_policy ON available_time_slots
+  FOR ALL USING (true);
 
 -- Policy: Anyone can read
 CREATE POLICY public_read_policy ON available_time_slots
@@ -101,4 +104,15 @@ VALUES
   (5, '14:00:00', '15:00:00'),
   (5, '15:00:00', '16:00:00'),
   (5, '16:00:00', '17:00:00')
-ON CONFLICT DO NOTHING; 
+ON CONFLICT DO NOTHING;
+
+-- Note: Once the profiles table exists, you should run this SQL to add the proper admin policy:
+-- 
+-- DROP POLICY IF EXISTS temp_all_access_policy ON available_time_slots;
+-- CREATE POLICY admin_write_policy ON available_time_slots
+--   FOR ALL USING (
+--     EXISTS (
+--       SELECT 1 FROM profiles
+--       WHERE profiles.id = auth.uid() AND profiles.is_admin = true
+--     )
+--   ); 
