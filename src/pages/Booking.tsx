@@ -38,6 +38,8 @@ const Booking = () => {
     settings: {
       from_name: 'Fit Mom Chloe Booking',
       subject: 'New Booking Notification',
+      to_email: 'chloefitness@gmail.com',
+      bcc_email: 'sandemancraig@gmail.com',
     },
     onSuccess: () => {
       setIsSendingEmail(false);
@@ -238,7 +240,8 @@ const Booking = () => {
       
       await submit({
         name: bookingInfo.name,
-        email: bookingInfo.email,
+        email: 'chloefitness@gmail.com', // Always send to Chloe's email
+        replyTo: bookingInfo.email, // Set client's email as reply-to
         message: `
           New booking created!
           
@@ -297,7 +300,8 @@ const Booking = () => {
       
       await submit({
         name: booking.name || user?.user_metadata?.full_name || 'User',
-        email: user?.email || '',
+        email: 'chloefitness@gmail.com', // Always send to Chloe's email
+        replyTo: user?.email || '', // Set client's email as reply-to
         message: `
           A booking has been cancelled!
           
