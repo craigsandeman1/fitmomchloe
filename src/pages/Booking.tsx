@@ -4,6 +4,8 @@ import { useBookingStore } from '../store/booking';
 import { useAuthStore } from '../store/auth';
 import useWeb3Forms from '@web3forms/react';
 import { AlertCircle, CheckCircle, Calendar, Clock } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { Auth } from '../components/Auth';
 
 const Booking = () => {
   const { user } = useAuthStore();
@@ -22,6 +24,10 @@ const Booking = () => {
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailError, setEmailError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [userName, setUserName] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   
   // Web3Forms setup
   const { submit } = useWeb3Forms({
@@ -73,38 +79,46 @@ const Booking = () => {
 
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedDate || !selectedTime || !userName.trim()) return;
     
-    if (!selectedDate || !selectedTime || !user) return;
+    setSubmitting(true);
     
     try {
-      setIsLoading(true);
-      const dateTime = `${selectedDate}T${selectedTime}:00`;
-      const result = await createBooking({
-        date: dateTime,
-        name,
-        notes,
-      });
+      // Get user's email from auth
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !user.email) {
+        throw new Error('Cannot retrieve user email. Please try again or contact support.');
+      }
       
-      setSuccess(true);
-      setSelectedDate('');
-      setSelectedTime('');
-      setNotes('');
+      const bookingData = {
+        date: `${selectedDate}T${selectedTime}:00`,
+        name: userName,
+        notes: notes,
+        email: user.email // Make sure email is included
+      };
       
-      // Send email notification to admin if we have a booking ID
-      if (result?.id) {
-        sendEmailNotification({
-          name,
-          email: user.email || '',
-          date: format(parseISO(dateTime), 'PPPP'),
-          time: format(parseISO(dateTime), 'p'),
-          notes,
+      const result = await createBooking(bookingData);
+      
+      if (result) {
+        setSuccessMessage('Booking confirmed. Thank you!');
+        setUserName('');
+        setNotes('');
+        
+        // Send confirmation email
+        await sendEmailNotification({
+          name: userName,
+          email: user.email,
+          date: selectedDate,
+          time: selectedTime,
+          notes: notes,
           bookingId: result.id
         });
       }
     } catch (error) {
-      console.error('Booking error:', error);
+      console.error('Error creating booking:', error);
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to create booking');
     } finally {
-      setIsLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -225,11 +239,11 @@ const Booking = () => {
       <h1 className="font-playfair text-4xl mb-8 text-center">Book a Session</h1>
       
       {!user ? (
-        <div className="text-center">
-          <p className="mb-4">Please log in to book a session.</p>
-          <a href="/login" className="btn-primary">
-            Log In
-          </a>
+        <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-2xl font-semibold mb-6 text-center">Login to Book</h2>
+          <div className="hide-signup">
+            <Auth />
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -312,8 +326,8 @@ const Booking = () => {
                   </label>
                   <input
                     type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
                     className="w-full p-2 border rounded-md focus:ring-primary focus:border-primary"
                     required
                   />
@@ -334,18 +348,18 @@ const Booking = () => {
                 
                 <button
                   type="submit"
-                  disabled={!selectedDate || !selectedTime || isLoading}
+                  disabled={!selectedDate || !selectedTime || submitting}
                   className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${
-                    (!selectedDate || !selectedTime || isLoading) && 'opacity-70 cursor-not-allowed'
+                    (!selectedDate || !selectedTime || submitting) && 'opacity-70 cursor-not-allowed'
                   }`}
                 >
-                  {isLoading ? 'Booking...' : 'Book Now'}
+                  {submitting ? 'Booking...' : 'Book Now'}
                 </button>
                 
-                {error && (
+                {errorMessage && (
                   <div className="text-red-500 flex items-center mt-2">
                     <AlertCircle className="w-4 h-4 mr-1" />
-                    <span className="text-sm">{error}</span>
+                    <span className="text-sm">{errorMessage}</span>
                   </div>
                 )}
               </form>
