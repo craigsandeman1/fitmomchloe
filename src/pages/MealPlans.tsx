@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/auth';
 import { Lock, ArrowRight, Utensils, Clock, ChevronRight } from 'lucide-react';
 import { Auth } from '../components/Auth';
 import RecipeModal from '../components/RecipeModal';
+import mealPlansVideo from '../assets/videos/meal-plans.mp4';
 
 const FreeSampleMeals = [
   {
@@ -258,8 +259,8 @@ const MealPlans = () => {
                   controls
                   playsInline
                   preload="metadata"
+                  src={mealPlansVideo}
                 >
-                  <source src={new URL('../assets/videos/meal-plans.mp4', import.meta.url).href} type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
               </div>
@@ -335,5 +336,3 @@ const MealPlans = () => {
     </div>
   );
 };
-
-export default MealPlans;
