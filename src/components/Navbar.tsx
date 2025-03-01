@@ -54,7 +54,7 @@ const Navbar = () => {
     <nav className="bg-white shadow-md">
       <div className="section-container">
         <div className="flex justify-between items-center h-20">
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-2" onClick={() => window.scrollTo(0, 0)}>
             <img 
               src={logoUrl}
               alt="Fit Mom Chloe Logo" 
@@ -72,20 +72,20 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-gray-700 hover:text-primary transition-colors">
+            <Link to="/" className="text-gray-700 hover:text-primary transition-colors" onClick={() => window.scrollTo(0, 0)}>
               Home
             </Link>
-            <Link to="/meal-plans" className="text-gray-700 hover:text-primary transition-colors">
+            <Link to="/meal-plans" className="text-gray-700 hover:text-primary transition-colors" onClick={() => window.scrollTo(0, 0)}>
               Meal Plans
             </Link>
-            <Link to="/workouts" className="text-gray-700 hover:text-primary transition-colors">
+            <Link to="/workouts" className="text-gray-700 hover:text-primary transition-colors" onClick={() => window.scrollTo(0, 0)}>
               Workouts
             </Link>
-            <Link to="/book" className="btn-primary">
+            <Link to="/book" className="btn-primary" onClick={() => window.scrollTo(0, 0)}>
               Book a Session
             </Link>
             {isAdmin && (
-              <Link to="/admin" className="text-gray-700 hover:text-primary transition-colors">
+              <Link to="/admin" className="text-gray-700 hover:text-primary transition-colors" onClick={() => window.scrollTo(0, 0)}>
                 Admin Dashboard
               </Link>
             )}
@@ -113,20 +113,20 @@ const Navbar = () => {
         {isOpen && (
           <div className="md:hidden pb-4">
             <div className="flex flex-col space-y-4">
-              <Link to="/" className="text-gray-700 hover:text-primary transition-colors">
+              <Link to="/" className="text-gray-700 hover:text-primary transition-colors" onClick={() => window.scrollTo(0, 0)}>
                 Home
               </Link>
-              <Link to="/meal-plans" className="text-gray-700 hover:text-primary transition-colors">
+              <Link to="/meal-plans" className="text-gray-700 hover:text-primary transition-colors" onClick={() => window.scrollTo(0, 0)}>
                 Meal Plans
               </Link>
-              <Link to="/workouts" className="text-gray-700 hover:text-primary transition-colors">
+              <Link to="/workouts" className="text-gray-700 hover:text-primary transition-colors" onClick={() => window.scrollTo(0, 0)}>
                 Workouts
               </Link>
-              <Link to="/book" className="btn-primary inline-block text-center">
+              <Link to="/book" className="btn-primary inline-block text-center" onClick={() => window.scrollTo(0, 0)}>
                 Book a Session
               </Link>
               {isAdmin && (
-                <Link to="/admin" className="text-gray-700 hover:text-primary transition-colors">
+                <Link to="/admin" className="text-gray-700 hover:text-primary transition-colors" onClick={() => window.scrollTo(0, 0)}>
                   Admin Dashboard
                 </Link>
               )}

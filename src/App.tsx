@@ -6,6 +6,8 @@ import Workouts from './pages/Workouts';
 import Booking from './pages/Booking';
 import AdminDashboard from './pages/AdminDashboard';
 import PaymentResult from './pages/PaymentResult';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 import Footer from './components/Footer';
 
 function App() {
@@ -22,6 +24,8 @@ function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/payment/success" element={<PaymentResult />} />
             <Route path="/payment/cancel" element={<PaymentResult />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
           </Routes>
         </main>
         <Footer />
