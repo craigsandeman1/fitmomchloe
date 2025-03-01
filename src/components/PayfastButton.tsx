@@ -32,7 +32,7 @@ const PayfastButton = ({
   className = 'btn-primary',
   children = 'Pay Now'
 }: PayfastButtonProps) => {
-  const formRef = useRef<HTMLFormElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Listen for payment success/cancel messages
@@ -74,12 +74,15 @@ const PayfastButton = ({
       mPaymentId
     });
 
-    // Insert form into ref
-    if (formRef.current) {
-      formRef.current.innerHTML = formHtml;
-      // Submit the form
-      const form = formRef.current.querySelector('form');
-      form?.submit();
+    // Create a temporary container and set the form HTML
+    if (containerRef.current) {
+      containerRef.current.innerHTML = formHtml;
+      
+      // Get the form and submit it safely
+      const form = containerRef.current.querySelector('form');
+      if (form instanceof HTMLFormElement) {
+        form.submit();
+      }
     }
   };
 
@@ -91,7 +94,7 @@ const PayfastButton = ({
       >
         {children}
       </button>
-      <div ref={formRef} style={{ display: 'none' }} />
+      <div ref={containerRef} style={{ display: 'none' }} />
     </>
   );
 };
