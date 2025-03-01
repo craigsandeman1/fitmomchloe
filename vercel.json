@@ -1,19 +1,19 @@
 {
-  "framework": "vite",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "routes": [
-    { "src": "/api/payfast/notify", "dest": "/api/payfast-notify.js" },
-    { "src": "/api/payment/status", "dest": "/api/payment-status.js" },
-    { "src": "/assets/(.*)", "dest": "/assets/$1" },
-    { "src": "/images/(.*)", "dest": "/images/$1" },
-    { "src": "/videos/(.*)", "dest": "/videos/$1" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "version": 2,
+  "builds": [
+    {
+      "src": "angular/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "angular/dist/angular",
+        "buildCommand": "cd angular && npm install && npm run build"
+      }
+    }
   ],
-  "images": {
-    "sizes": [640, 750, 828, 1080, 1200, 1920],
-    "domains": ["images.unsplash.com"],
-    "minimumCacheTTL": 60
-  }
+  "routes": [
+    { "src": "/assets/(.*)", "dest": "/angular/dist/angular/assets/$1" },
+    { "src": "/favicon.ico", "dest": "/angular/dist/angular/favicon.ico" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/angular/dist/angular/index.html" }
+  ]
 } 
