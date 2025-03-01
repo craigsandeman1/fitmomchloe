@@ -9,8 +9,8 @@
   },
   "scripts": {
     "dev": "vite",
-    "prebuild": "node copy-assets.js",
-    "build": "cd angular && npm install && npm run build && cd .. && mkdir -p dist && cp -r angular/dist/angular/* dist/",
+    "prebuild": "node copy-assets.js || true",
+    "build": "bash ./build.sh",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
