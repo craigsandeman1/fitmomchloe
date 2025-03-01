@@ -1,78 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { getImageUrl, getImageUrlFromPath } from '../lib/imageUtils';
 
-// Test different image loading approaches
-// 1. Direct URL Constructor approach (which fails in production as we saw)
-const directUrlImage = new URL('../assets/images/fitmomchloelogo.png', import.meta.url).href;
-const heroImage = new URL('../assets/images/chloe-with-sky.jpg', import.meta.url).href;
-const withkidsImage = new URL('../assets/images/withkids.jpg', import.meta.url).href;
-const workingoutImage = new URL('../assets/images/workingout.jpg', import.meta.url).href;
-
-// 2. Public path approach (which works in production)
-const publicPathImage = '/images/fitmomchloelogo.png';
-const publicMountainImage = '/images/mountain.jpg';
-
-// 3. New utility approach (should work in both environments)
-const utilityLogoImage = getImageUrl('logo');
-const utilityHeroImage = getImageUrl('contactHero');
-const utilityWithKidsImage = getImageUrl('withKids');
-const utilityWorkingOutImage = getImageUrl('workingOut');
-
-// 4. Utility with direct path
-const utilityPathImage = getImageUrlFromPath('images/mountain.jpg');
+// Use our simple utility approach (direct public paths)
+const logoImage = getImageUrl('logo');
+const heroImage = getImageUrl('contactHero');
+const withkidsImage = getImageUrl('withKids');
+const workingoutImage = getImageUrl('workingOut');
+const mountainImage = getImageUrlFromPath('images/mountain.jpg');
 
 const ImageTest = () => {
   // Track loading states
   const [loadingStates, setLoadingStates] = useState({
-    directUrl: false,
-    heroImage: false,
-    withkidsImage: false,
-    workingoutImage: false,
-    publicPath: false,
-    publicMountain: false,
-    utilityLogo: false,
-    utilityHero: false,
-    utilityWithKids: false,
-    utilityWorkingOut: false,
-    utilityPath: false
+    logo: false,
+    hero: false,
+    withkids: false,
+    workingout: false,
+    mountain: false
   });
   
   const [errorStates, setErrorStates] = useState({
-    directUrl: false,
-    heroImage: false,
-    withkidsImage: false,
-    workingoutImage: false,
-    publicPath: false,
-    publicMountain: false,
-    utilityLogo: false,
-    utilityHero: false,
-    utilityWithKids: false,
-    utilityWorkingOut: false,
-    utilityPath: false
+    logo: false,
+    hero: false,
+    withkids: false,
+    workingout: false,
+    mountain: false
   });
-
-  useEffect(() => {
-    // Log the image URLs for debugging
-    console.log('Environment:', import.meta.env.MODE);
-    console.log('Is Production:', import.meta.env.PROD);
-    
-    console.log('1. URL Constructor Approach:');
-    console.log('- Logo:', directUrlImage);
-    console.log('- Hero Image:', heroImage);
-    console.log('- With Kids Image:', withkidsImage);
-    console.log('- Working Out Image:', workingoutImage);
-    
-    console.log('2. Public Path Approach:');
-    console.log('- Logo:', publicPathImage);
-    console.log('- Mountain:', publicMountainImage);
-    
-    console.log('3. New Utility Approach:');
-    console.log('- Logo:', utilityLogoImage);
-    console.log('- Hero Image:', utilityHeroImage);
-    console.log('- With Kids Image:', utilityWithKidsImage);
-    console.log('- Working Out Image:', utilityWorkingOutImage);
-    console.log('- Direct Path:', utilityPathImage);
-  }, []);
 
   const handleImageLoad = (imageType: keyof typeof loadingStates) => {
     console.log(`✅ ${imageType} loaded successfully`);
@@ -88,52 +40,52 @@ const ImageTest = () => {
 
   return (
     <div className="section-container py-10">
-      <h1 className="text-3xl font-bold mb-8">Image Loading Test Page</h1>
+      <h1 className="text-3xl font-bold mb-8">Simplified Image Loading Test</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Test 1: Direct URL Constructor Approach */}
+        {/* Test 1: Logo */}
         <div className="border rounded-lg p-6 bg-white shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Test 1: URL Constructor (Logo)</h2>
+          <h2 className="text-xl font-semibold mb-4">Logo Image</h2>
           <div className="aspect-video bg-gray-100 flex items-center justify-center relative mb-4">
-            {!loadingStates.directUrl && (
+            {!loadingStates.logo && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-gray-500">Loading...</span>
               </div>
             )}
-            {errorStates.directUrl ? (
+            {errorStates.logo ? (
               <div className="text-red-500 text-center p-4">
                 Failed to load image.<br />
-                URL: {directUrlImage}
+                URL: {logoImage}
               </div>
             ) : (
               <img
-                src={directUrlImage}
-                alt="Logo (URL Constructor)"
+                src={logoImage}
+                alt="Logo"
                 className="max-h-full max-w-full object-contain"
-                onLoad={() => handleImageLoad('directUrl')}
-                onError={() => handleImageError('directUrl')}
+                onLoad={() => handleImageLoad('logo')}
+                onError={() => handleImageError('logo')}
               />
             )}
           </div>
           <div className="bg-gray-100 p-3 rounded text-xs font-mono overflow-auto">
-            <p>URL: {directUrlImage}</p>
+            <p>URL: {logoImage}</p>
             <p className="mt-2">Status: {
-              !loadingStates.directUrl ? 'Loading...' :
-              errorStates.directUrl ? 'Error' : 'Loaded'
+              !loadingStates.logo ? 'Loading...' :
+              errorStates.logo ? 'Error' : 'Loaded'
             }</p>
           </div>
         </div>
 
         {/* Test 2: Hero Image */}
         <div className="border rounded-lg p-6 bg-white shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Test 2: URL Constructor (Hero Image)</h2>
+          <h2 className="text-xl font-semibold mb-4">Hero Image</h2>
           <div className="aspect-video bg-gray-100 flex items-center justify-center relative mb-4">
-            {!loadingStates.heroImage && (
+            {!loadingStates.hero && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-gray-500">Loading...</span>
               </div>
             )}
-            {errorStates.heroImage ? (
+            {errorStates.hero ? (
               <div className="text-red-500 text-center p-4">
                 Failed to load image.<br />
                 URL: {heroImage}
@@ -143,30 +95,30 @@ const ImageTest = () => {
                 src={heroImage}
                 alt="Hero Image"
                 className="max-h-full max-w-full object-cover"
-                onLoad={() => handleImageLoad('heroImage')}
-                onError={() => handleImageError('heroImage')}
+                onLoad={() => handleImageLoad('hero')}
+                onError={() => handleImageError('hero')}
               />
             )}
           </div>
           <div className="bg-gray-100 p-3 rounded text-xs font-mono overflow-auto">
             <p>URL: {heroImage}</p>
             <p className="mt-2">Status: {
-              !loadingStates.heroImage ? 'Loading...' :
-              errorStates.heroImage ? 'Error' : 'Loaded'
+              !loadingStates.hero ? 'Loading...' :
+              errorStates.hero ? 'Error' : 'Loaded'
             }</p>
           </div>
         </div>
 
         {/* Test 3: With Kids Image */}
         <div className="border rounded-lg p-6 bg-white shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Test 3: URL Constructor (With Kids)</h2>
+          <h2 className="text-xl font-semibold mb-4">With Kids Image</h2>
           <div className="aspect-video bg-gray-100 flex items-center justify-center relative mb-4">
-            {!loadingStates.withkidsImage && (
+            {!loadingStates.withkids && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-gray-500">Loading...</span>
               </div>
             )}
-            {errorStates.withkidsImage ? (
+            {errorStates.withkids ? (
               <div className="text-red-500 text-center p-4">
                 Failed to load image.<br />
                 URL: {withkidsImage}
@@ -176,30 +128,30 @@ const ImageTest = () => {
                 src={withkidsImage}
                 alt="With Kids Image"
                 className="max-h-full max-w-full object-cover"
-                onLoad={() => handleImageLoad('withkidsImage')}
-                onError={() => handleImageError('withkidsImage')}
+                onLoad={() => handleImageLoad('withkids')}
+                onError={() => handleImageError('withkids')}
               />
             )}
           </div>
           <div className="bg-gray-100 p-3 rounded text-xs font-mono overflow-auto">
             <p>URL: {withkidsImage}</p>
             <p className="mt-2">Status: {
-              !loadingStates.withkidsImage ? 'Loading...' :
-              errorStates.withkidsImage ? 'Error' : 'Loaded'
+              !loadingStates.withkids ? 'Loading...' :
+              errorStates.withkids ? 'Error' : 'Loaded'
             }</p>
           </div>
         </div>
 
         {/* Test 4: Working Out Image */}
         <div className="border rounded-lg p-6 bg-white shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Test 4: URL Constructor (Working Out)</h2>
+          <h2 className="text-xl font-semibold mb-4">Working Out Image</h2>
           <div className="aspect-video bg-gray-100 flex items-center justify-center relative mb-4">
-            {!loadingStates.workingoutImage && (
+            {!loadingStates.workingout && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-gray-500">Loading...</span>
               </div>
             )}
-            {errorStates.workingoutImage ? (
+            {errorStates.workingout ? (
               <div className="text-red-500 text-center p-4">
                 Failed to load image.<br />
                 URL: {workingoutImage}
@@ -209,194 +161,62 @@ const ImageTest = () => {
                 src={workingoutImage}
                 alt="Working Out Image"
                 className="max-h-full max-w-full object-cover"
-                onLoad={() => handleImageLoad('workingoutImage')}
-                onError={() => handleImageError('workingoutImage')}
+                onLoad={() => handleImageLoad('workingout')}
+                onError={() => handleImageError('workingout')}
               />
             )}
           </div>
           <div className="bg-gray-100 p-3 rounded text-xs font-mono overflow-auto">
             <p>URL: {workingoutImage}</p>
             <p className="mt-2">Status: {
-              !loadingStates.workingoutImage ? 'Loading...' :
-              errorStates.workingoutImage ? 'Error' : 'Loaded'
+              !loadingStates.workingout ? 'Loading...' :
+              errorStates.workingout ? 'Error' : 'Loaded'
             }</p>
           </div>
         </div>
 
-        {/* Test 5: Public Path Approach - Logo */}
+        {/* Test 5: Mountain Image */}
         <div className="border rounded-lg p-6 bg-white shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Test 5: Public Path (Logo)</h2>
+          <h2 className="text-xl font-semibold mb-4">Mountain Image</h2>
           <div className="aspect-video bg-gray-100 flex items-center justify-center relative mb-4">
-            {!loadingStates.publicPath && (
+            {!loadingStates.mountain && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-gray-500">Loading...</span>
               </div>
             )}
-            {errorStates.publicPath ? (
+            {errorStates.mountain ? (
               <div className="text-red-500 text-center p-4">
                 Failed to load image.<br />
-                URL: {publicPathImage}
+                URL: {mountainImage}
               </div>
             ) : (
               <img
-                src={publicPathImage}
-                alt="Logo (Public Path)"
-                className="max-h-full max-w-full object-contain"
-                onLoad={() => handleImageLoad('publicPath')}
-                onError={() => handleImageError('publicPath')}
-              />
-            )}
-          </div>
-          <div className="bg-gray-100 p-3 rounded text-xs font-mono overflow-auto">
-            <p>URL: {publicPathImage}</p>
-            <p className="mt-2">Status: {
-              !loadingStates.publicPath ? 'Loading...' :
-              errorStates.publicPath ? 'Error' : 'Loaded'
-            }</p>
-          </div>
-        </div>
-
-        {/* Test 6: Public Path Approach - Mountain */}
-        <div className="border rounded-lg p-6 bg-white shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Test 6: Public Path (Mountain)</h2>
-          <div className="aspect-video bg-gray-100 flex items-center justify-center relative mb-4">
-            {!loadingStates.publicMountain && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-gray-500">Loading...</span>
-              </div>
-            )}
-            {errorStates.publicMountain ? (
-              <div className="text-red-500 text-center p-4">
-                Failed to load image.<br />
-                URL: {publicMountainImage}
-              </div>
-            ) : (
-              <img
-                src={publicMountainImage}
-                alt="Mountain (Public Path)"
+                src={mountainImage}
+                alt="Mountain Image"
                 className="max-h-full max-w-full object-cover"
-                onLoad={() => handleImageLoad('publicMountain')}
-                onError={() => handleImageError('publicMountain')}
+                onLoad={() => handleImageLoad('mountain')}
+                onError={() => handleImageError('mountain')}
               />
             )}
           </div>
           <div className="bg-gray-100 p-3 rounded text-xs font-mono overflow-auto">
-            <p>URL: {publicMountainImage}</p>
+            <p>URL: {mountainImage}</p>
             <p className="mt-2">Status: {
-              !loadingStates.publicMountain ? 'Loading...' :
-              errorStates.publicMountain ? 'Error' : 'Loaded'
-            }</p>
-          </div>
-        </div>
-
-        {/* Test 7: Utility Approach - Logo */}
-        <div className="border rounded-lg p-6 bg-white shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Test 7: Utility Approach (Logo)</h2>
-          <div className="aspect-video bg-gray-100 flex items-center justify-center relative mb-4">
-            {!loadingStates.utilityLogo && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-gray-500">Loading...</span>
-              </div>
-            )}
-            {errorStates.utilityLogo ? (
-              <div className="text-red-500 text-center p-4">
-                Failed to load image.<br />
-                URL: {utilityLogoImage}
-              </div>
-            ) : (
-              <img
-                src={utilityLogoImage}
-                alt="Logo (Utility)"
-                className="max-h-full max-w-full object-contain"
-                onLoad={() => handleImageLoad('utilityLogo')}
-                onError={() => handleImageError('utilityLogo')}
-              />
-            )}
-          </div>
-          <div className="bg-gray-100 p-3 rounded text-xs font-mono overflow-auto">
-            <p>URL: {utilityLogoImage}</p>
-            <p className="mt-2">Status: {
-              !loadingStates.utilityLogo ? 'Loading...' :
-              errorStates.utilityLogo ? 'Error' : 'Loaded'
-            }</p>
-          </div>
-        </div>
-
-        {/* Test 8: Utility Approach - Hero */}
-        <div className="border rounded-lg p-6 bg-white shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Test 8: Utility Approach (Hero)</h2>
-          <div className="aspect-video bg-gray-100 flex items-center justify-center relative mb-4">
-            {!loadingStates.utilityHero && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-gray-500">Loading...</span>
-              </div>
-            )}
-            {errorStates.utilityHero ? (
-              <div className="text-red-500 text-center p-4">
-                Failed to load image.<br />
-                URL: {utilityHeroImage}
-              </div>
-            ) : (
-              <img
-                src={utilityHeroImage}
-                alt="Hero (Utility)"
-                className="max-h-full max-w-full object-cover"
-                onLoad={() => handleImageLoad('utilityHero')}
-                onError={() => handleImageError('utilityHero')}
-              />
-            )}
-          </div>
-          <div className="bg-gray-100 p-3 rounded text-xs font-mono overflow-auto">
-            <p>URL: {utilityHeroImage}</p>
-            <p className="mt-2">Status: {
-              !loadingStates.utilityHero ? 'Loading...' :
-              errorStates.utilityHero ? 'Error' : 'Loaded'
-            }</p>
-          </div>
-        </div>
-
-        {/* Test 9: Direct Path Utility */}
-        <div className="border rounded-lg p-6 bg-white shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Test 9: Direct Path Utility</h2>
-          <div className="aspect-video bg-gray-100 flex items-center justify-center relative mb-4">
-            {!loadingStates.utilityPath && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-gray-500">Loading...</span>
-              </div>
-            )}
-            {errorStates.utilityPath ? (
-              <div className="text-red-500 text-center p-4">
-                Failed to load image.<br />
-                URL: {utilityPathImage}
-              </div>
-            ) : (
-              <img
-                src={utilityPathImage}
-                alt="Mountain (Utility Path)"
-                className="max-h-full max-w-full object-cover"
-                onLoad={() => handleImageLoad('utilityPath')}
-                onError={() => handleImageError('utilityPath')}
-              />
-            )}
-          </div>
-          <div className="bg-gray-100 p-3 rounded text-xs font-mono overflow-auto">
-            <p>URL: {utilityPathImage}</p>
-            <p className="mt-2">Status: {
-              !loadingStates.utilityPath ? 'Loading...' :
-              errorStates.utilityPath ? 'Error' : 'Loaded'
+              !loadingStates.mountain ? 'Loading...' :
+              errorStates.mountain ? 'Error' : 'Loaded'
             }</p>
           </div>
         </div>
       </div>
 
       <div className="mt-12 bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">Technical Information</h2>
-        <div className="bg-gray-100 p-4 rounded font-mono text-sm overflow-auto">
-          <p>import.meta.url: {import.meta.url}</p>
-          <p className="mt-2">Environment: {import.meta.env.MODE}</p>
-          <p className="mt-2">Base URL: {import.meta.env.BASE_URL}</p>
-          <p className="mt-2">User Agent: {navigator.userAgent}</p>
-        </div>
+        <h2 className="text-xl font-semibold mb-4">About This Test</h2>
+        <p className="mb-4">
+          This test page uses direct public paths to access images. All images are loaded from the `/images/` directory in the public folder.
+        </p>
+        <p>
+          These paths should work reliably in both development and production environments without requiring complex URL construction.
+        </p>
       </div>
     </div>
   );
