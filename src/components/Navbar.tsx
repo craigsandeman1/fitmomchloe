@@ -3,19 +3,14 @@ import { Link } from 'react-router-dom';
 import { Menu, X, LogOut } from 'lucide-react';
 import { useAuthStore } from '../store/auth';
 import { supabase } from '../lib/supabase';
-import { imageAssets } from '../lib/importedAssets';
-import { getImagePath } from '../lib/assets';
 
-// Use the directly imported asset
-const logoUrl = imageAssets.logo;
-
-console.log('Navbar using logo URL:', logoUrl);
-// Also log the fallback path
-console.log('Navbar fallback logo URL:', getImagePath('logo'));
+// Import the image
+const logoUrl = new URL('../assets/images/fitmomchloelogo.png', import.meta.url).href;
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const { user, signOut } = useAuthStore();
 
   useEffect(() => {
@@ -66,9 +61,9 @@ const Navbar = () => {
               className="h-12 w-auto"
               onError={(e) => {
                 console.error('Error loading logo:', e);
-                // Try the fallback path instead
-                (e.target as HTMLImageElement).src = getImagePath('logo');
+                setImgError(true);
               }}
+              style={{ display: imgError ? 'none' : 'block' }}
             />
             <span className="font-playfair text-2xl text-primary">
               Fit Mom Chloe
@@ -85,9 +80,6 @@ const Navbar = () => {
             </Link>
             <Link to="/workouts" className="text-gray-700 hover:text-primary transition-colors">
               Workouts
-            </Link>
-            <Link to="/contact" className="text-gray-700 hover:text-primary transition-colors">
-              Contact
             </Link>
             <Link to="/book" className="btn-primary">
               Book a Session
@@ -129,9 +121,6 @@ const Navbar = () => {
               </Link>
               <Link to="/workouts" className="text-gray-700 hover:text-primary transition-colors">
                 Workouts
-              </Link>
-              <Link to="/contact" className="text-gray-700 hover:text-primary transition-colors">
-                Contact
               </Link>
               <Link to="/book" className="btn-primary inline-block text-center">
                 Book a Session

@@ -1,18 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-// Import directly from the importedAssets file
-import { imageAssets } from '../lib/importedAssets';
 
-// Use the imported assets directly
-const withkidsPath = imageAssets.withKids;
-const workingoutPath = imageAssets.workingOut;
-
-// Debug what paths are being used
-console.log('Using directly imported assets:', {
-  withkidsPath,
-  workingoutPath
-});
+// Import images directly using URL constructor
+const withkids = new URL('../assets/images/withkids.jpg', import.meta.url).href;
+const workingout = new URL('../assets/images/workingout.jpg', import.meta.url).href;
 
 interface HeroProps {
   variant?: 'default' | 'alternative';
@@ -20,23 +12,6 @@ interface HeroProps {
 
 const HeroSection = ({ variant = 'default' }: HeroProps) => {
   const [email, setEmail] = useState('');
-  const [imagesLoaded, setImagesLoaded] = useState({
-    withkids: false,
-    workingout: false
-  });
-
-  useEffect(() => {
-    // Preload images
-    const preloadImage = (src: string, key: keyof typeof imagesLoaded) => {
-      const img = new Image();
-      img.src = src;
-      img.onload = () => setImagesLoaded(prev => ({ ...prev, [key]: true }));
-      img.onerror = (e) => console.error(`Failed to load image: ${src}`, e);
-    };
-
-    preloadImage(withkidsPath, 'withkids');
-    preloadImage(workingoutPath, 'workingout');
-  }, []);
 
   if (variant === 'alternative') {
     return (
@@ -45,10 +20,9 @@ const HeroSection = ({ variant = 'default' }: HeroProps) => {
         <div className="absolute inset-0 h-[85vh] grid grid-cols-2 md:grid-cols-4 grid-rows-1">
           <div className="relative">
             <img 
-              src={withkidsPath}
+              src={withkids}
               alt="Training with kids"
               className="w-full h-full object-cover"
-              onError={(e) => console.error('Failed to load withkids image:', e)}
             />
             <div className="absolute inset-0 bg-black/40" />
           </div>
@@ -62,7 +36,7 @@ const HeroSection = ({ variant = 'default' }: HeroProps) => {
           </div>
           <div className="relative hidden md:block">
             <img 
-              src={workingoutPath}
+              src={workingout}
               alt="Working out"
               className="w-full h-full object-cover object-top"
             />
@@ -159,7 +133,7 @@ const HeroSection = ({ variant = 'default' }: HeroProps) => {
       <div className="absolute inset-0 grid grid-cols-2 grid-rows-2">
         <div className="relative">
           <img 
-            src={withkidsPath}
+            src={withkids}
             alt="Training with kids"
             className="w-full h-full object-cover"
           />
@@ -175,7 +149,7 @@ const HeroSection = ({ variant = 'default' }: HeroProps) => {
         </div>
         <div className="relative">
           <img 
-            src={workingoutPath}
+            src={workingout}
             alt="Working out"
             className="w-full h-full object-cover"
           />

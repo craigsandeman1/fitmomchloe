@@ -1,25 +1,14 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import HeroSection from '../components/HeroSection';
-import { imageAssets } from '../lib/importedAssets';
-import { getImagePath } from '../lib/assets';
 
-// Use the directly imported asset
-const backgroundImageUrl = imageAssets.heroBackground;
-// Also get the fallback path
-const fallbackBackgroundUrl = getImagePath('heroBackground');
-
-console.log('Home using backgroundImage URL:', backgroundImageUrl);
-console.log('Home fallback backgroundImage URL:', fallbackBackgroundUrl);
+// Import the image
+const backgroundImageUrl = new URL('../assets/images/background-homepage.webp', import.meta.url).href;
 
 const Home = () => {
-  useEffect(() => {
-    // Preload background image
-    const img = new Image();
-    img.src = backgroundImageUrl;
-    img.onload = () => console.log('Background image loaded successfully');
-    img.onerror = (e) => console.error('Failed to load background image:', e);
+  const [heroVariant, setHeroVariant] = useState<'default' | 'alternative'>('alternative');
 
+  useEffect(() => {
     // Load Elfsight script
     const script = document.createElement('script');
     script.src = "https://static.elfsight.com/platform/platform.js";
@@ -37,19 +26,32 @@ const Home = () => {
 
     return () => {
       // Cleanup script and styles when component unmounts
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-      if (document.head.contains(style)) {
-        document.head.removeChild(style);
-      }
+      document.body.removeChild(script);
+      document.head.removeChild(style);
     };
   }, []);
 
   return (
     <div>
       {/* Hero Section */}
-      <HeroSection variant="alternative" />
+      <HeroSection variant={heroVariant} />
+
+      {/* Admin Controls - Only visible in development */}
+      {import.meta.env.DEV && (
+        <div className="fixed bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg z-50">
+          <label className="flex items-center space-x-2">
+            <span className="text-sm font-medium">Hero Variant:</span>
+            <select
+              value={heroVariant}
+              onChange={(e) => setHeroVariant(e.target.value as 'default' | 'alternative')}
+              className="border rounded px-2 py-1"
+            >
+              <option value="default">Default</option>
+              <option value="alternative">Alternative</option>
+            </select>
+          </label>
+        </div>
+      )}
 
       {/* Programs Section */}
       <section className="relative py-20">
@@ -59,11 +61,6 @@ const Home = () => {
             src={backgroundImageUrl}
             alt=""
             className="w-full h-full object-cover opacity-25 md:object-center object-left"
-            onError={(e) => {
-              console.error('Error loading background image:', e);
-              // Try the fallback path instead
-              (e.target as HTMLImageElement).src = fallbackBackgroundUrl;
-            }}
           />
         </div>
 

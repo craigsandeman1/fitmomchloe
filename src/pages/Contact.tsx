@@ -1,15 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
-import { imageAssets } from '../lib/importedAssets';
-import { getImagePath } from '../lib/assets';
 
-// Use the directly imported asset
-const heroImage = imageAssets.contactHero;
-// Also get the fallback path
-const fallbackHeroImage = getImagePath('contactHero');
-
-console.log('Contact using heroImage URL:', heroImage);
-console.log('Contact fallback heroImage URL:', fallbackHeroImage);
+// Import the image using URL constructor
+const heroImage = new URL('../assets/images/chloe-with-sky.jpg', import.meta.url).href;
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -77,11 +70,6 @@ const Contact = () => {
           src={heroImage} 
           alt="Chloe - Fitness Coach" 
           className="absolute inset-0 w-full h-full object-cover object-center"
-          onError={(e) => {
-            console.error('Failed to load contact hero image:', e);
-            // Try the fallback path instead
-            (e.target as HTMLImageElement).src = fallbackHeroImage;
-          }}
         />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative section-container h-full flex flex-col justify-center items-center text-white">
