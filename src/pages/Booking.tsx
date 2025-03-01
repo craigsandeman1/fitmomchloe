@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { format, addDays, isAfter, startOfToday, parseISO } from 'date-fns';
-import { Calendar, Clock, Info } from 'lucide-react';
+import { Calendar, Clock, Info, CheckCircle } from 'lucide-react';
 import { useAuthStore } from '../store/auth';
 import { useBookingStore } from '../store/booking';
 import { Auth } from '../components/Auth';
+import useWeb3Forms from '@web3forms/react';
 
 const AVAILABLE_TIMES = [
   '09:00', '10:00', '11:00', '14:00', '15:00', '16:00'
@@ -14,9 +15,32 @@ const Booking = () => {
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [name, setName] = useState('');
   const [notes, setNotes] = useState('');
+  const [formSuccess, setFormSuccess] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
   
   const { user } = useAuthStore();
   const { bookings, loading, error, fetchUserBookings, createBooking, cancelBooking } = useBookingStore();
+
+  // Web3Forms setup
+  const { submit } = useWeb3Forms({
+    access_key: '396876a7-1dbb-48d5-9c8c-74ef7ff0e872',
+    settings: {
+      from_name: 'Fit Mom Chloe Website',
+      subject: 'New Booking Request',
+    },
+    onSuccess: (successMessage) => {
+      console.log(successMessage);
+      setFormSuccess(true);
+      setSendingEmail(false);
+      setTimeout(() => setFormSuccess(false), 5000);
+    },
+    onError: (errorMessage) => {
+      console.error(errorMessage);
+      setEmailError(errorMessage);
+      setSendingEmail(false);
+    }
+  });
 
   useEffect(() => {
     if (user) {
@@ -31,6 +55,8 @@ const Booking = () => {
     if (!selectedDate || !selectedTime || !name || !user) return;
 
     const dateTime = `${selectedDate}T${selectedTime}:00`;
+    
+    // Create booking in Supabase
     await createBooking({
       date: dateTime,
       name,
@@ -40,10 +66,41 @@ const Booking = () => {
       user_id: user.id
     });
 
-    // Reset form
-    setSelectedDate('');
-    setSelectedTime('');
-    setNotes('');
+    // Send email notification via Web3Forms
+    try {
+      setSendingEmail(true);
+      setEmailError(null);
+      
+      const formattedDate = format(parseISO(dateTime), 'EEEE, MMMM d, yyyy');
+      const formattedTime = format(parseISO(dateTime), 'h:mm a');
+      
+      const formData = {
+        name,
+        email: user.email,
+        message: `New booking request:
+          
+Date: ${formattedDate}
+Time: ${formattedTime}
+Name: ${name}
+Email: ${user.email}
+Notes: ${notes || 'No additional notes'}`,
+        booking_date: formattedDate,
+        booking_time: formattedTime,
+        booking_notes: notes,
+        notification_email: "sandemancraig@gmail.com", // This will be included in the email
+      };
+
+      await submit(formData);
+      
+      // Reset form
+      setSelectedDate('');
+      setSelectedTime('');
+      setNotes('');
+    } catch (err) {
+      console.error('Failed to send email notification:', err);
+      setEmailError('Failed to send email notification. Please try again.');
+      setSendingEmail(false);
+    }
   };
 
   const getAvailableDates = () => {
@@ -82,6 +139,21 @@ const Booking = () => {
   return (
     <div className="section-container py-20">
       <h1 className="font-playfair text-4xl mb-8">Book a Session</h1>
+
+      {/* Success Message */}
+      {formSuccess && (
+        <div className="mb-6 p-4 rounded-md bg-green-50 text-green-800 flex items-center">
+          <CheckCircle className="mr-2" size={20} />
+          <span>Booking successful! A confirmation has been sent to your email.</span>
+        </div>
+      )}
+
+      {/* Web3Forms Error */}
+      {emailError && (
+        <div className="mb-6 p-4 rounded-md bg-red-50 text-red-800">
+          <p>There was an error sending the notification: {emailError}</p>
+        </div>
+      )}
 
       {/* Booking Form */}
       <div className="grid md:grid-cols-2 gap-12">
@@ -175,10 +247,10 @@ const Booking = () => {
 
             <button
               type="submit"
-              disabled={loading || !selectedDate || !selectedTime}
-              className="btn-primary w-full"
+              disabled={loading || sendingEmail || !selectedDate || !selectedTime}
+              className={`btn-primary w-full ${(loading || sendingEmail) ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-              {loading ? 'Booking...' : 'Book Session'}
+              {loading || sendingEmail ? 'Booking...' : 'Book Session'}
             </button>
 
             {error && (

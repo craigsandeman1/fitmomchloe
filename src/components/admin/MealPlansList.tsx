@@ -21,6 +21,15 @@ const MealPlansList = ({ mealPlans, onEdit, onDelete }: MealPlansListProps) => {
     }
     onEdit(mealPlan);
   };
+  
+  // Handle delete with proper type checking
+  const handleDelete = (id: string | null) => {
+    if (!id) {
+      console.error('Attempted to delete a meal plan with an invalid ID');
+      return;
+    }
+    onDelete(id);
+  };
 
   return (
     <div className="overflow-x-auto">
@@ -67,7 +76,7 @@ const MealPlansList = ({ mealPlans, onEdit, onDelete }: MealPlansListProps) => {
                   <Edit size={16} />
                 </button>
                 <button
-                  onClick={() => onDelete(mealPlan.id)}
+                  onClick={() => handleDelete(mealPlan.id)}
                   className="text-red-500 hover:text-red-700"
                 >
                   <Trash2 size={16} />
