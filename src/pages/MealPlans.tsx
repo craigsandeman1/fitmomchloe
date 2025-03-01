@@ -86,7 +86,7 @@ const MealPlans = () => {
   }, []);
 
   // Hero Section - Visible to all users
-  const HeroSection = () => (
+  const MealPlansHero = () => (
     <div className="relative overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
@@ -187,7 +187,7 @@ const MealPlans = () => {
   if (loading) {
     return (
       <div>
-        <HeroSection />
+        <MealPlansHero />
         <div className="section-container py-20">
           <div className="text-center">
             <p>Loading meal plans...</p>
@@ -200,7 +200,7 @@ const MealPlans = () => {
   if (error) {
     return (
       <div>
-        <HeroSection />
+        <MealPlansHero />
         <div className="section-container py-20">
           <div className="text-center text-red-500">
             <p>{error}</p>
@@ -213,7 +213,7 @@ const MealPlans = () => {
   if (!user) {
     return (
       <div>
-        <HeroSection />
+        <MealPlansHero />
         <div className="section-container py-20">
           <h1 className="font-playfair text-4xl mb-8 text-center">Access Premium Meal Plans</h1>
           <p className="text-center text-gray-600 mb-8">
@@ -229,7 +229,7 @@ const MealPlans = () => {
 
   return (
     <div>
-      <HeroSection />
+      <MealPlansHero />
       
       {/* Premium Meal Plans Section */}
       <div id="premium-plans" className="section-container py-20">
