@@ -12,6 +12,14 @@
       "dest": "/api/payment-status.js"
     },
     {
+      "src": "/images/(.*)",
+      "dest": "/images/$1"
+    },
+    {
+      "src": "/videos/(.*)",
+      "dest": "/videos/$1"
+    },
+    {
       "handle": "filesystem"
     },
     {

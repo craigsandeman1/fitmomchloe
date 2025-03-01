@@ -2,15 +2,25 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { getImagePath } from '../lib/assets';
-// ... existing code ...
+// Import our alternative asset utility
+import { getImageUrl } from '../lib/importedAssets';
 
-// Replace imports with public paths
-// import withkids from '../assets/images/withkids.jpg';
-// import workingout from '../assets/images/workingout.jpg';
+// Try both methods for asset loading
+// First attempt to use the public path
+const withkidsPublicPath = getImagePath('withKids');
+const workingoutPublicPath = getImagePath('workingOut');
 
-// We'll use our asset utility instead of hardcoded paths
-const withkidsPath = getImagePath('withKids');
-const workingoutPath = getImagePath('workingOut');
+// Then fallback to directly imported assets if needed
+const withkidsPath = withkidsPublicPath || getImageUrl('withKids');
+const workingoutPath = workingoutPublicPath || getImageUrl('workingOut');
+
+// Debug what paths are being used
+console.log('Asset paths being used:', {
+  withkidsPublicPath,
+  workingoutPublicPath,
+  withkidsPath,
+  workingoutPath
+});
 
 interface HeroProps {
   variant?: 'default' | 'alternative';

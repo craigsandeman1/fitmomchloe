@@ -10,21 +10,24 @@ interface AssetMap {
   };
 }
 
-// Default asset paths that work in both development and production
+// Default asset paths with explicit leading slash to ensure they're absolute
 const defaultAssetMap: AssetMap = {
   images: {
-    logo: '/images/fitmomchloelogo.png',
-    heroBackground: '/images/background-homepage.webp',
-    contactHero: '/images/chloe-with-sky.jpg',
-    withKids: '/images/withkids.jpg',
-    workingOut: '/images/workingout.jpg',
-    mealPlan: '/images/meal-plan.jpg'
+    logo: "/images/fitmomchloelogo.png",
+    heroBackground: "/images/background-homepage.webp",
+    contactHero: "/images/chloe-with-sky.jpg",
+    withKids: "/images/withkids.jpg",
+    workingOut: "/images/workingout.jpg",
+    mealPlan: "/images/meal-plan.jpg"
   },
   videos: {
-    workingOut: '/videos/working-out.mp4',
-    mealPlan: '/videos/Meal-Plan.mp4'
+    workingOut: "/videos/working-out.mp4",
+    mealPlan: "/videos/Meal-Plan.mp4"
   }
 };
+
+// For debugging purposes
+console.log("Asset paths initialized:", defaultAssetMap);
 
 let assetMap: AssetMap = defaultAssetMap;
 
@@ -34,6 +37,7 @@ export async function loadAssetMap(): Promise<AssetMap> {
   
   try {
     // Try to load the asset map from the JSON file
+    console.log("Attempting to load assets.json...");
     const response = await fetch('/assets.json');
     
     // If the fetch fails (404, network error, etc.), it will throw and go to the catch block
@@ -42,34 +46,53 @@ export async function loadAssetMap(): Promise<AssetMap> {
     }
     
     const data = await response.json() as AssetMap;
+    console.log('Successfully loaded asset map:', data);
     assetMap = data;
-    console.log('Loaded asset map:', data);
     return data;
   } catch (error) {
-    console.warn('Using default asset paths:', error);
+    console.warn('Using default asset paths due to error:', error);
+    // Fallback to default hardcoded paths
     return defaultAssetMap;
   }
 }
 
 // Initialize assets map on module load
-loadAssetMap().catch(console.error);
+loadAssetMap().catch(error => console.error("Error initializing asset map:", error));
 
 export function getImagePath(key: string): string {
+  // Ensure we have the asset map
+  if (!assetMap) {
+    console.error("Asset map not initialized when requesting image:", key);
+    return `/images/${key}`;
+  }
+  
   // Return the path from the asset map if it exists
   if (assetMap.images[key]) {
-    return assetMap.images[key];
+    const path = assetMap.images[key];
+    console.log(`Image path for ${key}: ${path}`);
+    return path;
   }
   
   // Fallback to direct path if the key doesn't exist in the map
+  console.warn(`Image key not found in asset map: ${key}, using fallback path`);
   return `/images/${key}`;
 }
 
 export function getVideoPath(key: string): string {
+  // Ensure we have the asset map
+  if (!assetMap) {
+    console.error("Asset map not initialized when requesting video:", key);
+    return `/videos/${key}`;
+  }
+  
   // Return the path from the asset map if it exists
   if (assetMap.videos[key]) {
-    return assetMap.videos[key];
+    const path = assetMap.videos[key];
+    console.log(`Video path for ${key}: ${path}`);
+    return path;
   }
   
   // Fallback to direct path if the key doesn't exist in the map
+  console.warn(`Video key not found in asset map: ${key}, using fallback path`);
   return `/videos/${key}`;
 } 
