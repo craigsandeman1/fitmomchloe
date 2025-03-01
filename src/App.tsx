@@ -24,6 +24,7 @@ function App() {
             <Route path="/workouts" element={<Workouts />} />
             <Route path="/book" element={<Booking />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/*" element={<AdminDashboard />} />
             <Route path="/payment/success" element={<PaymentResult />} />
             <Route path="/payment/cancel" element={<PaymentResult />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />

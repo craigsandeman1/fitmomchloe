@@ -1,4 +1,5 @@
-import { AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 import { MealPlan } from '../../types/meal-plan';
 
 interface MealPlanFormProps {
@@ -24,12 +25,51 @@ const DIFFICULTY_LEVELS = [
 ];
 
 const MealPlanForm = ({ editingMealPlan, onSubmit, onCancel }: MealPlanFormProps) => {
+  const [submitting, setSubmitting] = useState(false);
+  const [formStatus, setFormStatus] = useState<{success: boolean; message: string} | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setFormStatus(null);
+    
+    try {
+      await onSubmit(e);
+      setFormStatus({
+        success: true,
+        message: editingMealPlan?.id ? 'Meal plan updated successfully!' : 'New meal plan created!'
+      });
+    } catch (error) {
+      setFormStatus({
+        success: false,
+        message: `Error: ${error instanceof Error ? error.message : 'Failed to save meal plan'}`
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <div className="mb-8 p-6 border rounded-lg">
+    <div className="mb-8 p-6 border rounded-lg bg-white">
       <h3 className="text-xl font-semibold mb-4">
         {editingMealPlan?.id ? 'Edit' : 'Create'} Meal Plan
       </h3>
-      <form onSubmit={onSubmit} className="space-y-6">
+      
+      {/* Submission Status */}
+      {formStatus && (
+        <div className={`mb-4 p-3 rounded-md ${formStatus.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+          <div className="flex items-center">
+            {formStatus.success ? (
+              <CheckCircle className="w-5 h-5 mr-2" />
+            ) : (
+              <AlertCircle className="w-5 h-5 mr-2" />
+            )}
+            <p>{formStatus.message}</p>
+          </div>
+        </div>
+      )}
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
         <div className="grid md:grid-cols-2 gap-4">
           <div>
@@ -204,19 +244,27 @@ const MealPlanForm = ({ editingMealPlan, onSubmit, onCancel }: MealPlanFormProps
           </div>
         </div>
 
+        <div className="p-4 bg-blue-50 text-blue-800 rounded-md">
+          <p className="text-sm">
+            <strong>Note:</strong> You're creating a basic meal plan structure. After saving, you'll be able to add a sample meal. Additional meal plan content editing will be available in a future update.
+          </p>
+        </div>
+
         <div className="flex justify-end space-x-4 pt-4">
           <button
             type="button"
             onClick={onCancel}
             className="px-4 py-2 border rounded-md hover:bg-gray-50"
+            disabled={submitting}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="btn-primary"
+            disabled={submitting}
+            className={`btn-primary flex items-center ${submitting ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
-            Save
+            {submitting ? 'Saving...' : 'Save'}
           </button>
         </div>
       </form>

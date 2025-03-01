@@ -226,6 +226,12 @@ const AdminDashboard = () => {
                     name: "Sample Breakfast",
                     ingredients: ["Ingredient 1", "Ingredient 2"],
                     instructions: ["Step 1", "Step 2"],
+                    nutritionalInfo: {
+                      calories: 300,
+                      protein: 15,
+                      carbs: 30,
+                      fats: 10
+                    }
                   }
                 ]
               }
@@ -235,20 +241,34 @@ const AdminDashboard = () => {
       }
     };
 
+    console.log('Submitting meal plan data:', mealPlanData);
+
     try {
       if (editingMealPlan) {
-        const { error } = await supabase
+        console.log('Updating existing meal plan:', editingMealPlan.id);
+        const { data, error } = await supabase
           .from('meal_plans')
           .update(mealPlanData)
-          .eq('id', editingMealPlan.id);
+          .eq('id', editingMealPlan.id)
+          .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase error while updating meal plan:', error);
+          throw error;
+        }
+        console.log('Meal plan updated successfully:', data);
       } else {
-        const { error } = await supabase
+        console.log('Creating new meal plan');
+        const { data, error } = await supabase
           .from('meal_plans')
-          .insert([mealPlanData]);
+          .insert([mealPlanData])
+          .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase error while inserting meal plan:', error);
+          throw error;
+        }
+        console.log('Meal plan created successfully:', data);
       }
 
       fetchMealPlans();
@@ -256,7 +276,7 @@ const AdminDashboard = () => {
       form.reset();
     } catch (error) {
       console.error('Error saving meal plan:', error);
-      setError('Failed to save meal plan');
+      setError(`Failed to save meal plan: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
