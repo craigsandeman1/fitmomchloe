@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format, addDays, isAfter, startOfToday, parseISO } from 'date-fns';
-import { Calendar, Clock, Info, CheckCircle } from 'lucide-react';
+import { Calendar, Clock, Info, CheckCircle, X, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuthStore } from '../store/auth';
 import { useBookingStore } from '../store/booking';
 import { Auth } from '../components/Auth';
@@ -18,6 +18,12 @@ const Booking = () => {
   const [formSuccess, setFormSuccess] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  
+  // Cancellation and reschedule states
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
+  const [showReschedulePrompt, setShowReschedulePrompt] = useState(false);
+  const [cancelSuccess, setCancelSuccess] = useState(false);
   
   const { user } = useAuthStore();
   const { bookings, loading, error, fetchUserBookings, createBooking, cancelBooking } = useBookingStore();
@@ -50,6 +56,81 @@ const Booking = () => {
     }
   }, [fetchUserBookings, user]);
 
+  // Handle confirming cancellation
+  const handleCancelBookingInitiate = (bookingId: string) => {
+    setBookingToCancel(bookingId);
+    setShowCancelConfirm(true);
+  };
+
+  // Handle actual cancellation
+  const handleCancelBookingConfirm = async () => {
+    if (!bookingToCancel) return;
+    
+    try {
+      // Find the booking details to include in the notification
+      const bookingToNotify = bookings.find(b => b.id === bookingToCancel);
+      
+      // Cancel the booking in the database
+      await cancelBooking(bookingToCancel);
+      
+      // Send cancellation email notification to admin
+      await sendCancellationNotification(bookingToNotify);
+      
+      // Show success and reschedule prompt
+      setCancelSuccess(true);
+      setShowReschedulePrompt(true);
+      
+      // Close the confirmation dialog
+      setShowCancelConfirm(false);
+      setBookingToCancel(null);
+      
+      // Clear success message after a delay
+      setTimeout(() => {
+        setCancelSuccess(false);
+      }, 5000);
+      
+    } catch (err) {
+      console.error('Error cancelling booking:', err);
+      setShowCancelConfirm(false);
+      setBookingToCancel(null);
+    }
+  };
+
+  // Send cancellation notification to admin
+  const sendCancellationNotification = async (booking: any) => {
+    if (!booking || !user) return;
+    
+    try {
+      setSendingEmail(true);
+      
+      const formattedDate = format(parseISO(booking.date), 'EEEE, MMMM d, yyyy');
+      const formattedTime = format(parseISO(booking.date), 'h:mm a');
+      
+      const formData = {
+        name: user.email?.split('@')[0] || 'User',
+        email: user.email || 'unknown@email.com',
+        message: `Booking Cancellation:
+        
+User: ${booking.name || user.email?.split('@')[0] || 'User'}
+Email: ${user.email}
+Cancelled Date: ${formattedDate}
+Cancelled Time: ${formattedTime}
+Original Booking ID: ${booking.id}
+        
+This is an automated notification that a user has cancelled their booking.`,
+        subject: "Booking Cancellation Alert",
+        notification_email: "sandemancraig@gmail.com",
+      };
+      
+      await submit(formData);
+      setSendingEmail(false);
+    } catch (err) {
+      console.error('Failed to send cancellation notification:', err);
+      setSendingEmail(false);
+    }
+  };
+
+  // Handle booking submission
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedDate || !selectedTime || !name || !user) return;
@@ -92,10 +173,11 @@ Notes: ${notes || 'No additional notes'}`,
 
       await submit(formData);
       
-      // Reset form
+      // Reset form and close reschedule prompt if it was open
       setSelectedDate('');
       setSelectedTime('');
       setNotes('');
+      setShowReschedulePrompt(false);
     } catch (err) {
       console.error('Failed to send email notification:', err);
       setEmailError('Failed to send email notification. Please try again.');
@@ -122,6 +204,13 @@ Notes: ${notes || 'No additional notes'}`,
     );
   };
 
+  // Close reschedule prompt and reset form
+  const handleCloseReschedule = () => {
+    setShowReschedulePrompt(false);
+    setSelectedDate('');
+    setSelectedTime('');
+  };
+
   if (!user) {
     return (
       <div className="section-container py-20">
@@ -140,11 +229,18 @@ Notes: ${notes || 'No additional notes'}`,
     <div className="section-container py-20">
       <h1 className="font-playfair text-4xl mb-8">Book a Session</h1>
 
-      {/* Success Message */}
+      {/* Success Messages */}
       {formSuccess && (
         <div className="mb-6 p-4 rounded-md bg-green-50 text-green-800 flex items-center">
           <CheckCircle className="mr-2" size={20} />
           <span>Booking successful! A confirmation has been sent to your email.</span>
+        </div>
+      )}
+
+      {cancelSuccess && (
+        <div className="mb-6 p-4 rounded-md bg-green-50 text-green-800 flex items-center">
+          <CheckCircle className="mr-2" size={20} />
+          <span>Your booking has been successfully cancelled.</span>
         </div>
       )}
 
@@ -155,7 +251,132 @@ Notes: ${notes || 'No additional notes'}`,
         </div>
       )}
 
-      {/* Booking Form */}
+      {/* Cancel Confirmation Modal */}
+      {showCancelConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-semibold mb-4">Cancel Booking?</h3>
+            <p className="mb-6 text-gray-600">
+              Are you sure you want to cancel this booking? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setShowCancelConfirm(false)}
+                className="px-4 py-2 border rounded-md hover:bg-gray-50"
+              >
+                Keep My Booking
+              </button>
+              <button
+                onClick={handleCancelBookingConfirm}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Yes, Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reschedule Prompt Modal */}
+      {showReschedulePrompt && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-xl w-full mx-4">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-xl font-semibold">Would You Like to Reschedule?</h3>
+              <button 
+                onClick={handleCloseReschedule}
+                className="p-1 rounded-full hover:bg-gray-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <p className="mb-6 text-gray-600">
+              Your booking has been cancelled. Would you like to reschedule for another date and time?
+            </p>
+            
+            <form onSubmit={handleBooking} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select New Date
+                </label>
+                <select
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                  required
+                >
+                  <option value="">Choose a date</option>
+                  {getAvailableDates().map(date => (
+                    <option key={date} value={date}>
+                      {format(parseISO(date), 'EEEE, MMMM d')}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedDate && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select New Time
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {AVAILABLE_TIMES.map(time => (
+                      <button
+                        key={time}
+                        type="button"
+                        disabled={!isTimeSlotAvailable(selectedDate, time)}
+                        onClick={() => setSelectedTime(time)}
+                        className={`p-2 border rounded-md ${
+                          selectedTime === time
+                            ? 'bg-primary text-white'
+                            : !isTimeSlotAvailable(selectedDate, time)
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'hover:bg-primary/10'
+                        }`}
+                      >
+                        {time}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Notes (Optional)
+                </label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex justify-between">
+                <button
+                  type="button"
+                  onClick={handleCloseReschedule}
+                  className="px-4 py-2 border rounded-md hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading || sendingEmail || !selectedDate || !selectedTime}
+                  className={`btn-primary flex items-center space-x-2 ${(loading || sendingEmail) ? 'opacity-70 cursor-not-allowed' : ''}`}
+                >
+                  <span>{loading || sendingEmail ? 'Booking...' : 'Reschedule Session'}</span>
+                  <ArrowRight size={18} />
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Booking Form and List Section */}
       <div className="grid md:grid-cols-2 gap-12">
         <div>
           <form onSubmit={handleBooking} className="space-y-6">
@@ -293,7 +514,7 @@ Notes: ${notes || 'No additional notes'}`,
                     </div>
                     {booking.status === 'pending' && (
                       <button
-                        onClick={() => cancelBooking(booking.id)}
+                        onClick={() => handleCancelBookingInitiate(booking.id)}
                         className="text-red-500 hover:text-red-700"
                       >
                         Cancel
