@@ -6,7 +6,6 @@ import { getImagePath } from '../lib/assets';
 const heroImage = getImagePath('contactHero');
 
 const Contact = () => {
-  const [imgLoaded, setImgLoaded] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -21,7 +20,7 @@ const Contact = () => {
     // Preload hero image
     const img = new Image();
     img.src = heroImage;
-    img.onload = () => setImgLoaded(true);
+    img.onload = () => {}; // No need to set state
     img.onerror = (e) => console.error('Error loading contact hero image:', e);
   }, []);
 
