@@ -117,20 +117,14 @@ const Booking = () => {
         throw new Error('Cannot retrieve user email. Please try again or contact support.');
       }
       
-      // Create an ISO date string but preserve the local timezone information
-      const localDate = new Date(`${selectedDate}T${selectedTime}:00`);
-      // Adjust for timezone offset to ensure the time is stored as selected
-      const tzOffset = localDate.getTimezoneOffset() * 60000; // offset in milliseconds
-      const adjustedDate = new Date(localDate.getTime() - tzOffset);
-      const isoString = adjustedDate.toISOString();
+      // IMPORTANT: Store the date/time exactly as selected - no timezone conversion
+      // Format: 2024-03-18T14:00:00
+      const exactTimeString = `${selectedDate}T${selectedTime}:00`;
       
-      console.log('Selected time:', selectedTime);
-      console.log('Local date:', localDate.toString());
-      console.log('Adjusted date for storage:', adjustedDate.toString());
-      console.log('ISO string for storage:', isoString);
+      console.log('Storing exact selected time (no timezone conversion):', exactTimeString);
       
       const bookingData = {
-        date: isoString,
+        date: exactTimeString, // Store the exact string without timezone conversion
         name: userName,
         notes: notes,
         email: user.email
@@ -152,6 +146,9 @@ const Booking = () => {
           notes: notes,
           bookingId: result.id
         });
+        
+        // Reload bookings to show the new booking
+        fetchUserBookings();
       }
     } catch (error) {
       console.error('Error creating booking:', error);
@@ -441,27 +438,24 @@ const Booking = () => {
             ) : sortedBookings.length > 0 ? (
               <div className="space-y-4">
                 {sortedBookings.map((booking) => {
-                  const bookingDate = parseISO(booking.date);
+                  // IMPORTANT: Parse the date without timezone conversion
+                  // Split the ISO string to extract date and time parts directly
+                  const dateTimeParts = booking.date.split('T');
+                  const datePart = dateTimeParts[0]; // e.g., "2024-03-18"
+                  const timePart = dateTimeParts[1].substring(0, 5); // e.g., "14:00" (strip seconds)
                   
-                  // Convert UTC date from database back to local time for display
-                  const localBookingDate = new Date(bookingDate);
+                  // Parse the date for formatting the day name and month
+                  const dateObj = new Date(datePart + 'T00:00:00');
+                  const dayOfWeek = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+                  const month = dateObj.toLocaleDateString('en-US', { month: 'long' });
+                  const day = dateObj.getDate();
+                  const year = dateObj.getFullYear();
                   
-                  const formattedDate = localBookingDate.toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  });
+                  // Create a nicely formatted date string
+                  const formattedDate = `${dayOfWeek}, ${month} ${day}, ${year}`;
                   
-                  // Display the time in the originally selected format (24-hour)
-                  const formattedTime = localBookingDate.getHours().toString().padStart(2, '0') + 
-                                       ':' + 
-                                       localBookingDate.getMinutes().toString().padStart(2, '0');
-                  
-                  console.log('Booking date from DB:', booking.date);
-                  console.log('Parsed date:', bookingDate.toString());
-                  console.log('Local booking date for display:', localBookingDate.toString());
-                  console.log('Formatted time for display:', formattedTime);
+                  // Display the exact time string that was selected (from the database)
+                  const formattedTime = timePart;
                   
                   return (
                     <div
