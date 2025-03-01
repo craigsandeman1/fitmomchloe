@@ -18,7 +18,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       email,
       password,
       options: {
-        redirectTo: window.location.origin
+        captchaToken: undefined
       }
     });
     if (error) throw error;
@@ -41,7 +41,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 }));
 
 // Initialize auth state
-supabase.auth.onAuthStateChange((event, session) => {
+supabase.auth.onAuthStateChange((_, session) => {
   if (session?.user) {
     useAuthStore.setState({ user: session.user, loading: false });
   } else {
