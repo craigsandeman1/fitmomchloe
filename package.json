@@ -1,7 +1,8 @@
 {
-  "name": "fitmomchloe",
+  "name": "fit-mom-chloe",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Fit Mom Chloe website",
   "type": "module",
   "engines": {
     "node": "18.x"
@@ -9,7 +10,7 @@
   "scripts": {
     "dev": "vite",
     "prebuild": "node copy-assets.js",
-    "build": "tsc && vite build",
+    "build": "cd angular && npm install && npm run build && cd .. && mkdir -p dist && cp -r angular/dist/angular/* dist/",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },

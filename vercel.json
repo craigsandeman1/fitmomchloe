@@ -1,19 +1,11 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "angular/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "angular/dist/angular",
-        "buildCommand": "cd angular && npm install && npm run build"
-      }
-    }
-  ],
+  "framework": null,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "routes": [
-    { "src": "/assets/(.*)", "dest": "/angular/dist/angular/assets/$1" },
-    { "src": "/favicon.ico", "dest": "/angular/dist/angular/favicon.ico" },
+    { "src": "/assets/(.*)", "dest": "/assets/$1" },
+    { "src": "/favicon.ico", "dest": "/favicon.ico" },
     { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/angular/dist/angular/index.html" }
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 } 
