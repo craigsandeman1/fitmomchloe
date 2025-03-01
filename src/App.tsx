@@ -11,6 +11,7 @@ import Terms from './pages/Terms';
 import Footer from './components/Footer';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentCancelled from './pages/PaymentCancelled';
+import ImageTest from './pages/ImageTest';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/cancelled" element={<PaymentCancelled />} />
+            <Route path="/image-test" element={<ImageTest />} />
           </Routes>
         </main>
         <Footer />
