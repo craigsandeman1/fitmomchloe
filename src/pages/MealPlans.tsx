@@ -243,7 +243,7 @@ const MealPlans = () => {
               My meal plans are designed to nourish your body with whole, nutrient-dense foods that fuel your workouts and support your overall health goals.
             </p>
             
-            <div className="mt-10 flex flex-col md:flex-row gap-4 justify-center">
+            <div className="mt-10">
               <a 
                 href="/video-page.html" 
                 target="_blank" 
@@ -251,12 +251,6 @@ const MealPlans = () => {
                 className="btn-primary px-8 py-3 text-lg inline-flex items-center gap-2"
               >
                 Watch My Video <ArrowRight size={20} />
-              </a>
-              <a 
-                href="/meal-plans-simple" 
-                className="btn-primary bg-opacity-80 px-8 py-3 text-lg inline-flex items-center gap-2"
-              >
-                View Simple Page <ArrowRight size={20} />
               </a>
             </div>
           </div>
