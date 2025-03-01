@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { getImagePath } from '../lib/assets';
 // ... existing code ...
 
 // Replace imports with public paths
 // import withkids from '../assets/images/withkids.jpg';
 // import workingout from '../assets/images/workingout.jpg';
 
-// Use public folder paths
-const withkidsPath = '/images/withkids.jpg';
-const workingoutPath = '/images/workingout.jpg';
+// We'll use our asset utility instead of hardcoded paths
+const withkidsPath = getImagePath('withKids');
+const workingoutPath = getImagePath('workingOut');
 
 interface HeroProps {
   variant?: 'default' | 'alternative';
@@ -17,6 +18,23 @@ interface HeroProps {
 
 const HeroSection = ({ variant = 'default' }: HeroProps) => {
   const [email, setEmail] = useState('');
+  const [imagesLoaded, setImagesLoaded] = useState({
+    withkids: false,
+    workingout: false
+  });
+
+  useEffect(() => {
+    // Preload images
+    const preloadImage = (src: string, key: keyof typeof imagesLoaded) => {
+      const img = new Image();
+      img.src = src;
+      img.onload = () => setImagesLoaded(prev => ({ ...prev, [key]: true }));
+      img.onerror = (e) => console.error(`Failed to load image: ${src}`, e);
+    };
+
+    preloadImage(withkidsPath, 'withkids');
+    preloadImage(workingoutPath, 'workingout');
+  }, []);
 
   if (variant === 'alternative') {
     return (
@@ -28,6 +46,7 @@ const HeroSection = ({ variant = 'default' }: HeroProps) => {
               src={withkidsPath}
               alt="Training with kids"
               className="w-full h-full object-cover"
+              onError={(e) => console.error('Failed to load withkids image:', e)}
             />
             <div className="absolute inset-0 bg-black/40" />
           </div>

@@ -3,10 +3,10 @@ import { useVideoStore } from '../store/video';
 import { useAuthStore } from '../store/auth';
 import { Play, Lock, Clock, ChevronDown, ChevronUp, Filter, ArrowRight } from 'lucide-react';
 import { Auth } from '../components/Auth';
-// import workoutVideo from '../assets/videos/working-out.mp4';
+import { getVideoPath } from '../lib/assets';
 
-// Use public path instead - this will only work after you manually compress and add the file
-const workoutVideo = '/videos/working-out.mp4';
+// Use our asset utility
+const workoutVideo = getVideoPath('workingOut');
 
 const DIFFICULTY_LEVELS = ['Beginner', 'Intermediate', 'Advanced'] as const;
 type DifficultyLevel = typeof DIFFICULTY_LEVELS[number];

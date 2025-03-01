@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 import { Menu, X, LogOut } from 'lucide-react';
 import { useAuthStore } from '../store/auth';
 import { supabase } from '../lib/supabase';
+import { getImagePath } from '../lib/assets';
 
-// Update logo path to use public folder
-// const logoUrl = new URL('../assets/images/fitmomchloelogo.png', import.meta.url).href;
-const logoUrl = '/images/fitmomchloelogo.png';
+// Use our asset utility
+const logoUrl = getImagePath('logo');
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);

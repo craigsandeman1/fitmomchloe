@@ -1,0 +1,14 @@
+{
+  "images": {
+    "logo": "/images/fitmomchloelogo.png",
+    "heroBackground": "/images/background-homepage.webp",
+    "contactHero": "/images/chloe-with-sky.jpg",
+    "withKids": "/images/withkids.jpg",
+    "workingOut": "/images/workingout.jpg",
+    "mealPlan": "/images/meal-plan.jpg"
+  },
+  "videos": {
+    "workingOut": "/videos/working-out.mp4",
+    "mealPlan": "/videos/Meal-Plan.mp4"
+  }
+} 

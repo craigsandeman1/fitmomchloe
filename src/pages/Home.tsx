@@ -1,13 +1,21 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import HeroSection from '../components/HeroSection';
+import { getImagePath } from '../lib/assets';
 
-// Use public path instead of URL import
-// const backgroundImageUrl = new URL('../assets/images/background-homepage.webp', import.meta.url).href;
-const backgroundImageUrl = '/images/background-homepage.webp';
+// Use our asset utility instead
+const backgroundImageUrl = getImagePath('heroBackground');
 
 const Home = () => {
+  const [bgLoaded, setBgLoaded] = useState(false);
+
   useEffect(() => {
+    // Preload background image
+    const img = new Image();
+    img.src = backgroundImageUrl;
+    img.onload = () => setBgLoaded(true);
+    img.onerror = (e) => console.error('Failed to load background image:', e);
+
     // Load Elfsight script
     const script = document.createElement('script');
     script.src = "https://static.elfsight.com/platform/platform.js";
@@ -25,8 +33,12 @@ const Home = () => {
 
     return () => {
       // Cleanup script and styles when component unmounts
-      document.body.removeChild(script);
-      document.head.removeChild(style);
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+      if (document.head.contains(style)) {
+        document.head.removeChild(style);
+      }
     };
   }, []);
 
@@ -43,6 +55,7 @@ const Home = () => {
             src={backgroundImageUrl}
             alt=""
             className="w-full h-full object-cover opacity-25 md:object-center object-left"
+            onError={(e) => console.error('Error loading background image:', e)}
           />
         </div>
 

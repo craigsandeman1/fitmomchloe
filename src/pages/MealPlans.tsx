@@ -7,6 +7,7 @@ import RecipeModal from '../components/RecipeModal';
 import { supabase } from '../lib/supabase';
 import type { MealPlan } from '../types';
 import { MD5 } from 'crypto-js';
+import { getImagePath, getVideoPath } from '../lib/assets';
 
 // Start FreeSampleMeals here, removing the interface and function
 
@@ -344,10 +345,10 @@ const MealPlans = () => {
               controls
               loop
               playsInline
-              poster="/images/meal-plan.jpg"
+              poster={getImagePath('mealPlan')}
               onError={(e) => console.error('Video loading error:', e)}
             >
-              <source src="/videos/Meal-Plan.mp4" type="video/mp4" />
+              <source src={getVideoPath('mealPlan')} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </div>

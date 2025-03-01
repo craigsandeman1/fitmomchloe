@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
-// import heroImage from '../assets/images/chloe-with-sky.jpg';
+import { getImagePath } from '../lib/assets';
 
-// Use public folder path instead
-const heroImage = '/images/chloe-with-sky.jpg';
+// Use our asset utility
+const heroImage = getImagePath('contactHero');
 
 const Contact = () => {
+  const [imgLoaded, setImgLoaded] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -15,6 +16,14 @@ const Contact = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    // Preload hero image
+    const img = new Image();
+    img.src = heroImage;
+    img.onload = () => setImgLoaded(true);
+    img.onerror = (e) => console.error('Error loading contact hero image:', e);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,6 +72,7 @@ const Contact = () => {
           src={heroImage} 
           alt="Chloe - Fitness Coach" 
           className="absolute inset-0 w-full h-full object-cover object-center"
+          onError={(e) => console.error('Failed to load contact hero image:', e)}
         />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative section-container h-full flex flex-col justify-center items-center text-white">
