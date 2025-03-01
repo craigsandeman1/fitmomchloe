@@ -336,3 +336,5 @@ const MealPlans = () => {
     </div>
   );
 };
+
+export default MealPlans;
