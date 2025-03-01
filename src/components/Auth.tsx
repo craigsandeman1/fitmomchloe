@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { useAuthStore } from '../store/auth';
 
-export const Auth = () => {
+interface AuthProps {
+  onAuthSuccess?: () => void;
+}
+
+export const Auth = ({ onAuthSuccess }: AuthProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -34,7 +38,14 @@ export const Auth = () => {
         await signUp(email, password);
         setError('Please check your email to verify your account');
       } else {
+        console.log('Attempting to sign in with email:', email);
         await signIn(email, password);
+        console.log('Sign in successful');
+        
+        // Call the success callback if provided
+        if (onAuthSuccess) {
+          onAuthSuccess();
+        }
       }
     } catch (error: any) {
       console.error('Authentication error:', error);
@@ -43,7 +54,7 @@ export const Auth = () => {
       } else if (error.message?.includes('Email not confirmed')) {
         setError('Please verify your email address before signing in.');
       } else {
-        setError('Authentication failed. Please try again.');
+        setError(`Authentication failed: ${error.message || 'Unknown error'}`);
       }
     } finally {
       setIsLoading(false);

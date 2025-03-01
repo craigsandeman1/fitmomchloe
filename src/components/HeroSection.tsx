@@ -1,12 +1,9 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import withkids from '../assets/images/withkids.jpg';
 import workingout from '../assets/images/workingout.jpg';
 
 const HeroSection = () => {
-  const [email, setEmail] = useState('');
-
   return (
     <section className="relative min-h-screen bg-background">
       {/* Background Image Grid */}
@@ -70,18 +67,13 @@ const HeroSection = () => {
               </p>
               
               <div className="max-w-xl mx-auto">
-                <div className="flex gap-4">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    className="flex-1 px-6 py-4 rounded-lg border-2 border-gray-200 focus:border-primary focus:outline-none bg-white/90 backdrop-blur"
-                  />
-                  <button className="btn-primary whitespace-nowrap bg-primary hover:bg-primary/90">
-                    Get Started
-                  </button>
-                </div>
+                <Link 
+                  to="/meal-plans" 
+                  className="btn-primary text-xl px-8 py-4 inline-flex items-center justify-center gap-2 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
+                >
+                  Explore Meal Plans
+                  <ArrowRight className="ml-2" size={24} />
+                </Link>
               </div>
             </div>
           </div>
@@ -120,4 +112,4 @@ const HeroSection = () => {
   );
 };
 
-export default HeroSection;
+export default HeroSection; 

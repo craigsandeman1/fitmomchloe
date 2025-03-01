@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useMealPlanStore } from '../store/mealPlan';
 import { useAuthStore } from '../store/auth';
-import { Lock, ArrowRight, Utensils, Clock, ChevronRight, Play, Pause, Quote } from 'lucide-react';
+import { Lock, ArrowRight, Utensils, Clock, ChevronRight, Play, Pause, Quote, ArrowDown } from 'lucide-react';
 import { Auth } from '../components/Auth';
 import RecipeModal from '../components/RecipeModal';
 import { testMealPlanAccess, verifySupabaseConnection } from '../lib/supabase';
@@ -15,6 +15,7 @@ const MealPlans = () => {
   const [importingPlan, setImportingPlan] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState({ checked: false, ok: false, message: '' });
   const videoRef = useRef<HTMLVideoElement>(null);
+  const premiumPlansRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     console.log('MealPlans component mounted');
@@ -84,6 +85,12 @@ const MealPlans = () => {
       await importSampleMealPlan();
     } finally {
       setImportingPlan(false);
+    }
+  };
+
+  const scrollToPremiumPlans = () => {
+    if (premiumPlansRef.current) {
+      premiumPlansRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -186,13 +193,13 @@ const MealPlans = () => {
                 </div>
                 
                 <div className="mt-10">
-                  <a 
-                    href="#meal-plans" 
+                  <button 
+                    onClick={scrollToPremiumPlans}
                     className="inline-flex items-center gap-2 bg-primary text-white px-8 py-3 rounded-full hover:bg-primary/90 transition-colors shadow-lg hover:shadow-primary/20 group"
                   >
-                    Explore Meal Plans
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </a>
+                    View Premium Plans
+                    <ArrowDown className="w-5 h-5 group-hover:translate-y-1 transition-transform" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -201,7 +208,7 @@ const MealPlans = () => {
       </div>
 
       {/* Nutrition Features Section */}
-      <div id="meal-plans" className="bg-white py-24 w-full">
+      <div id="nutrition-philosophy" className="bg-white py-24 w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="font-playfair text-4xl mb-16 text-center">My Nutrition Philosophy</h2>
           
@@ -243,7 +250,7 @@ const MealPlans = () => {
       </div>
 
       {/* Premium Plans Section */}
-      <div className="bg-gray-50 py-24 w-full">
+      <div id="premium-plans" ref={premiumPlansRef} className="bg-gray-50 py-24 w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="font-playfair text-4xl mb-6">Premium Meal Plans</h2>
