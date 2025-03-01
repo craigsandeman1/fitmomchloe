@@ -1,17 +1,19 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import HeroSection from '../components/HeroSection';
-import { getImagePath } from '../lib/assets';
+import { imageAssets } from '../lib/importedAssets';
 
-// Use our asset utility instead
-const backgroundImageUrl = getImagePath('heroBackground');
+// Use the directly imported asset
+const backgroundImageUrl = imageAssets.heroBackground;
+
+console.log('Home using backgroundImage URL:', backgroundImageUrl);
 
 const Home = () => {
   useEffect(() => {
     // Preload background image
     const img = new Image();
     img.src = backgroundImageUrl;
-    img.onload = () => {}; // Image loaded
+    img.onload = () => console.log('Background image loaded successfully');
     img.onerror = (e) => console.error('Failed to load background image:', e);
 
     // Load Elfsight script

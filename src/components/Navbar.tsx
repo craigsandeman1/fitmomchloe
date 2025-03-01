@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import { Menu, X, LogOut } from 'lucide-react';
 import { useAuthStore } from '../store/auth';
 import { supabase } from '../lib/supabase';
-import { getImagePath } from '../lib/assets';
+import { imageAssets } from '../lib/importedAssets';
 
-// Use our asset utility
-const logoUrl = getImagePath('logo');
+// Use the directly imported asset
+const logoUrl = imageAssets.logo;
+
+console.log('Navbar using logo URL:', logoUrl);
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);

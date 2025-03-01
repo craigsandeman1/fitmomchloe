@@ -1,23 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { getImagePath } from '../lib/assets';
-// Import our alternative asset utility
-import { getImageUrl } from '../lib/importedAssets';
+// Import directly from the importedAssets file
+import { imageAssets } from '../lib/importedAssets';
 
-// Try both methods for asset loading
-// First attempt to use the public path
-const withkidsPublicPath = getImagePath('withKids');
-const workingoutPublicPath = getImagePath('workingOut');
-
-// Then fallback to directly imported assets if needed
-const withkidsPath = withkidsPublicPath || getImageUrl('withKids');
-const workingoutPath = workingoutPublicPath || getImageUrl('workingOut');
+// Use the imported assets directly
+const withkidsPath = imageAssets.withKids;
+const workingoutPath = imageAssets.workingOut;
 
 // Debug what paths are being used
-console.log('Asset paths being used:', {
-  withkidsPublicPath,
-  workingoutPublicPath,
+console.log('Using directly imported assets:', {
   withkidsPath,
   workingoutPath
 });

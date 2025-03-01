@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
-import { getImagePath } from '../lib/assets';
+import { imageAssets } from '../lib/importedAssets';
 
-// Use our asset utility
-const heroImage = getImagePath('contactHero');
+// Use the directly imported asset
+const heroImage = imageAssets.contactHero;
+
+console.log('Contact using heroImage URL:', heroImage);
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -20,7 +22,7 @@ const Contact = () => {
     // Preload hero image
     const img = new Image();
     img.src = heroImage;
-    img.onload = () => {}; // No need to set state
+    img.onload = () => console.log('Contact hero image loaded successfully');
     img.onerror = (e) => console.error('Error loading contact hero image:', e);
   }, []);
 
