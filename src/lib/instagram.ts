@@ -1,5 +1,3 @@
-import { supabase } from './supabase';
-
 interface InstagramPost {
   id: string;
   media_url: string;

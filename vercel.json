@@ -3,21 +3,24 @@
   "builds": [
     {
       "src": "package.json",
-      "use": "@vercel/static-build",
+      "use": "@vercel/node",
       "config": {
-        "distDir": "dist"
+        "nodeVersion": "16.x"
       }
     }
   ],
   "routes": [
     {
+      "src": "/api/payfast/notify",
+      "dest": "/api/payfast-notify.js"
+    },
+    {
+      "src": "/api/payment/status",
+      "dest": "/api/payment-status.js"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "git": {
-    "deploymentEnabled": {
-      "main": true
-    }
-  }
+  ]
 } 

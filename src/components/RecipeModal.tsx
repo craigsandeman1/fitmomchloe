@@ -1,4 +1,4 @@
-import { X, Clock, ChevronRight, Printer, Download } from 'lucide-react';
+import { X, ChevronRight, Printer, Download } from 'lucide-react';
 import type { Meal } from '../lib/types';
 
 interface RecipeModalProps {

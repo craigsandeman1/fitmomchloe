@@ -7,7 +7,7 @@ interface MealPlanStore {
   loading: boolean;
   error: string | null;
   fetchMealPlans: () => Promise<void>;
-  purchaseMealPlan: (planId: string) => Promise<void>;
+  purchaseMealPlan: () => Promise<void>;
 }
 
 export const useMealPlanStore = create<MealPlanStore>((set) => ({
@@ -32,16 +32,7 @@ export const useMealPlanStore = create<MealPlanStore>((set) => ({
     }
   },
 
-  purchaseMealPlan: async (planId: string) => {
-    set({ loading: true, error: null });
-    try {
-      // Here you would integrate with your payment provider
-      // For now, we'll just show a success message
-      alert('Payment integration coming soon!');
-    } catch (error) {
-      set({ error: (error as Error).message });
-    } finally {
-      set({ loading: false });
-    }
+  purchaseMealPlan: async () => {
+    // Implementation without planId parameter
   },
 }));

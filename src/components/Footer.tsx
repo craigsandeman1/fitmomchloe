@@ -1,53 +1,22 @@
-import { Instagram, Facebook, Youtube, Mail, MapPin, Phone, ArrowRight } from 'lucide-react';
+import { Instagram, Facebook, Youtube, Mail, MapPin, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
 
 // Import the image
 const logoUrl = new URL('../assets/images/fitmomchloelogo.png', import.meta.url).href;
 
 const Footer = () => {
-  const [email, setEmail] = useState('');
-
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle newsletter signup
-    console.log('Newsletter signup:', email);
-    setEmail('');
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <footer className="bg-white">
-      {/* Newsletter Section */}
-      <div className="bg-primary/10 py-16">
-        <div className="section-container">
-          <div className="max-w-2xl mx-auto text-center">
-            <h3 className="font-playfair text-3xl mb-4">Join Our Community</h3>
-            <p className="text-gray-600 mb-8">
-              Get exclusive workout tips, nutrition advice, and special offers delivered to your inbox
-            </p>
-            <form onSubmit={handleNewsletterSubmit} className="flex gap-4 max-w-md mx-auto">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="flex-1 px-6 py-3 rounded-lg border-2 border-gray-200 focus:border-primary focus:outline-none"
-                required
-              />
-              <button type="submit" className="btn-primary whitespace-nowrap">
-                Subscribe
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-
       {/* Main Footer Content */}
       <div className="section-container py-16">
         <div className="grid md:grid-cols-4 gap-12">
           {/* Brand Column */}
           <div className="space-y-6">
-            <Link to="/" className="flex items-center space-x-2">
+            <Link to="/" onClick={scrollToTop} className="flex items-center space-x-2">
               <img 
                 src={logoUrl}
                 alt="Fit Mom Chloe Logo" 
@@ -70,7 +39,9 @@ const Footer = () => {
                 <Instagram size={24} />
               </a>
               <a
-                href="#"
+                href="https://www.facebook.com/fitmomcapetown/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-gray-600 hover:text-primary transition-colors"
               >
                 <Facebook size={24} />
@@ -89,17 +60,17 @@ const Footer = () => {
             <h4 className="font-playfair text-lg mb-6">Quick Links</h4>
             <ul className="space-y-4">
               <li>
-                <Link to="/meal-plans" className="text-gray-600 hover:text-primary transition-colors">
+                <Link to="/meal-plans" onClick={scrollToTop} className="text-gray-600 hover:text-primary transition-colors">
                   Meal Plans
                 </Link>
               </li>
               <li>
-                <Link to="/workouts" className="text-gray-600 hover:text-primary transition-colors">
+                <Link to="/workouts" onClick={scrollToTop} className="text-gray-600 hover:text-primary transition-colors">
                   Workouts
                 </Link>
               </li>
               <li>
-                <Link to="/book" className="text-gray-600 hover:text-primary transition-colors">
+                <Link to="/book" onClick={scrollToTop} className="text-gray-600 hover:text-primary transition-colors">
                   Book a Session
                 </Link>
               </li>
@@ -111,24 +82,24 @@ const Footer = () => {
             <h4 className="font-playfair text-lg mb-6">Programs</h4>
             <ul className="space-y-4">
               <li>
-                <a href="#" className="text-gray-600 hover:text-primary transition-colors">
+                <Link to="/book" onClick={scrollToTop} className="text-gray-600 hover:text-primary transition-colors">
                   1-on-1 Training
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-600 hover:text-primary transition-colors">
+                <Link to="/workouts" onClick={scrollToTop} className="text-gray-600 hover:text-primary transition-colors">
                   Group Classes
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-600 hover:text-primary transition-colors">
+                <Link to="/workouts" onClick={scrollToTop} className="text-gray-600 hover:text-primary transition-colors">
                   Online Coaching
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-600 hover:text-primary transition-colors">
+                <Link to="/meal-plans" onClick={scrollToTop} className="text-gray-600 hover:text-primary transition-colors">
                   Nutrition Consulting
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -143,12 +114,14 @@ const Footer = () => {
               </li>
               <li className="flex items-center space-x-3 text-gray-600">
                 <Phone size={20} />
-                <span>+27 123 456 789</span>
+                <a href="tel:+27829596069" className="hover:text-primary transition-colors">
+                  +27 82 959 6069
+                </a>
               </li>
               <li className="flex items-center space-x-3 text-gray-600">
                 <Mail size={20} />
-                <a href="mailto:info@fitmomchloe.com" className="hover:text-primary transition-colors">
-                  info@fitmomchloe.com
+                <a href="mailto:chloefitness@gmail.com" className="hover:text-primary transition-colors">
+                  chloefitness@gmail.com
                 </a>
               </li>
             </ul>
@@ -164,12 +137,12 @@ const Footer = () => {
               &copy; {new Date().getFullYear()} FitMomChloe. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#" className="text-gray-600 hover:text-primary text-sm transition-colors">
+              <Link to="/privacy-policy" onClick={scrollToTop} className="text-gray-600 hover:text-primary text-sm transition-colors">
                 Privacy Policy
-              </a>
-              <a href="#" className="text-gray-600 hover:text-primary text-sm transition-colors">
+              </Link>
+              <Link to="/terms" onClick={scrollToTop} className="text-gray-600 hover:text-primary text-sm transition-colors">
                 Terms of Service
-              </a>
+              </Link>
             </div>
           </div>
         </div>

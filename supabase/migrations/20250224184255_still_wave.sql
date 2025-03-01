@@ -8,6 +8,16 @@
       - `description` (text)
       - `price` (decimal)
       - `content` (jsonb) - Stores weekly meal plan details
+      - `dietary_type` (text)
+      - `difficulty_level` (text)
+      - `preparation_time` (text)
+      - `duration_weeks` (integer)
+      - `total_calories` (integer)
+      - `total_protein` (integer)
+      - `total_carbs` (integer)
+      - `total_fat` (integer)
+      - `includes_grocery_list` (boolean)
+      - `includes_recipes` (boolean)
       - `created_at` (timestamptz)
       - `updated_at` (timestamptz)
 
@@ -16,6 +26,12 @@
     - Add policy for authenticated users to read meal plans
 */
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Anyone can view meal plans" ON meal_plans;
+DROP POLICY IF EXISTS "Admins can insert meal plans" ON meal_plans;
+DROP POLICY IF EXISTS "Admins can update meal plans" ON meal_plans;
+DROP POLICY IF EXISTS "Admins can delete meal plans" ON meal_plans;
+
 -- Create meal plans table if it doesn't exist
 CREATE TABLE IF NOT EXISTS meal_plans (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -23,6 +39,16 @@ CREATE TABLE IF NOT EXISTS meal_plans (
   description text NOT NULL,
   price decimal(10,2) NOT NULL,
   content jsonb NOT NULL,
+  dietary_type text,
+  difficulty_level text,
+  preparation_time text,
+  duration_weeks integer,
+  total_calories integer,
+  total_protein integer,
+  total_carbs integer,
+  total_fat integer,
+  includes_grocery_list boolean DEFAULT false,
+  includes_recipes boolean DEFAULT false,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
@@ -37,8 +63,47 @@ CREATE POLICY "Anyone can view meal plans"
   TO authenticated
   USING (true);
 
+-- Add admin policies for meal plans
+CREATE POLICY "Admins can insert meal plans"
+  ON meal_plans
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    auth.uid() IN (SELECT id FROM admin_users)
+  );
+
+CREATE POLICY "Admins can update meal plans"
+  ON meal_plans
+  FOR UPDATE
+  TO authenticated
+  USING (
+    auth.uid() IN (SELECT id FROM admin_users)
+  );
+
+CREATE POLICY "Admins can delete meal plans"
+  ON meal_plans
+  FOR DELETE
+  TO authenticated
+  USING (
+    auth.uid() IN (SELECT id FROM admin_users)
+  );
+
 -- Insert sample meal plans
-INSERT INTO meal_plans (title, description, price, content) VALUES
+INSERT INTO meal_plans (
+  title, 
+  description, 
+  price, 
+  content,
+  dietary_type,
+  difficulty_level,
+  duration_weeks,
+  total_calories,
+  total_protein,
+  total_carbs,
+  total_fat,
+  includes_grocery_list,
+  includes_recipes
+) VALUES
 (
   'Weight Loss Meal Plan',
   'A balanced, calorie-controlled meal plan designed to support healthy weight loss while maintaining energy levels.',
@@ -90,7 +155,16 @@ INSERT INTO meal_plans (title, description, price, content) VALUES
         }
       ]
     }]
-  }'
+  }',
+  'Standard',
+  'Beginner',
+  4,
+  1200,
+  95,
+  100,
+  47,
+  true,
+  true
 ),
 (
   'Muscle Gain Meal Plan',
@@ -143,7 +217,16 @@ INSERT INTO meal_plans (title, description, price, content) VALUES
         }
       ]
     }]
-  }'
+  }',
+  'Standard',
+  'Intermediate',
+  4,
+  1800,
+  150,
+  120,
+  60,
+  true,
+  true
 ),
 (
   'Plant-Based Meal Plan',
@@ -196,5 +279,14 @@ INSERT INTO meal_plans (title, description, price, content) VALUES
         }
       ]
     }]
-  }'
+  }',
+  'Vegan',
+  'Beginner',
+  4,
+  1200,
+  80,
+  100,
+  30,
+  true,
+  true
 );
