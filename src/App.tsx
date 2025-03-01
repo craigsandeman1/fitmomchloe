@@ -5,8 +5,12 @@ import MealPlans from './pages/MealPlans';
 import Workouts from './pages/Workouts';
 import Booking from './pages/Booking';
 import AdminDashboard from './pages/AdminDashboard';
-import PaymentResult from './pages/PaymentResult';
+import Contact from './pages/Contact';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Terms from './pages/Terms';
 import Footer from './components/Footer';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentCancelled from './pages/PaymentCancelled';
 
 function App() {
   return (
@@ -19,9 +23,12 @@ function App() {
             <Route path="/meal-plans" element={<MealPlans />} />
             <Route path="/workouts" element={<Workouts />} />
             <Route path="/book" element={<Booking />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/payment/success" element={<PaymentResult />} />
-            <Route path="/payment/cancel" element={<PaymentResult />} />
+            <Route path="/payment/success" element={<PaymentSuccess />} />
+            <Route path="/payment/cancelled" element={<PaymentCancelled />} />
           </Routes>
         </main>
         <Footer />

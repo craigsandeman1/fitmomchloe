@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import HeroSection from '../components/HeroSection';
 
@@ -6,8 +6,6 @@ import HeroSection from '../components/HeroSection';
 const backgroundImageUrl = new URL('../assets/images/background-homepage.webp', import.meta.url).href;
 
 const Home = () => {
-  const [heroVariant, setHeroVariant] = useState<'default' | 'alternative'>('alternative');
-
   useEffect(() => {
     // Load Elfsight script
     const script = document.createElement('script');
@@ -34,24 +32,7 @@ const Home = () => {
   return (
     <div>
       {/* Hero Section */}
-      <HeroSection variant={heroVariant} />
-
-      {/* Admin Controls - Only visible in development */}
-      {import.meta.env.DEV && (
-        <div className="fixed bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg z-50">
-          <label className="flex items-center space-x-2">
-            <span className="text-sm font-medium">Hero Variant:</span>
-            <select
-              value={heroVariant}
-              onChange={(e) => setHeroVariant(e.target.value as 'default' | 'alternative')}
-              className="border rounded px-2 py-1"
-            >
-              <option value="default">Default</option>
-              <option value="alternative">Alternative</option>
-            </select>
-          </label>
-        </div>
-      )}
+      <HeroSection variant="alternative" />
 
       {/* Programs Section */}
       <section className="relative py-20">
