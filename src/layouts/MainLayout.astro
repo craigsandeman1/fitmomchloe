@@ -1,0 +1,63 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "Fit Mom Chloe - Personalized fitness and nutrition plans for moms" } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/images/fitmomchloelogo.png" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <script async src="//www.instagram.com/embed.js"></script>
+  </head>
+  <body>
+    <header class="sticky top-0 z-50 bg-background shadow-sm">
+      <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+        <a href="/" class="text-xl font-bold text-primary">Fit Mom Chloe</a>
+        <nav>
+          <ul class="flex space-x-6">
+            <li><a href="/" class="hover:text-primary transition-colors">Home</a></li>
+            <li><a href="/meal-plans" class="hover:text-primary transition-colors">Meal Plans</a></li>
+            <li><a href="/workouts" class="hover:text-primary transition-colors">Workouts</a></li>
+            <li><a href="/book" class="hover:text-primary transition-colors">Book a Session</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="bg-gray-100 py-10 mt-10">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row justify-between">
+          <div class="mb-6 md:mb-0">
+            <h3 class="text-lg font-bold mb-2">Fit Mom Chloe</h3>
+            <p class="text-gray-600">Helping moms achieve their fitness goals.</p>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold mb-2">Connect</h3>
+            <div class="flex space-x-4">
+              <a href="#" class="text-gray-600 hover:text-primary">Instagram</a>
+              <a href="#" class="text-gray-600 hover:text-primary">Facebook</a>
+              <a href="#" class="text-gray-600 hover:text-primary">Email</a>
+            </div>
+          </div>
+        </div>
+        <div class="mt-8 pt-8 border-t border-gray-200 text-center text-gray-500">
+          <p>&copy; {new Date().getFullYear()} Fit Mom Chloe. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html> 

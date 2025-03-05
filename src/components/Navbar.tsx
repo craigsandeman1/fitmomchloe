@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/auth';
 import { supabase } from '../lib/supabase';
 
 // Import the image
-const logoUrl = new URL('../assets/images/fitmomchloelogo.png', import.meta.url).href;
+import logoImage from '../assets/images/fitmomchloelogo.png';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -56,7 +56,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-20">
           <Link to="/" className="flex items-center space-x-2" onClick={() => window.scrollTo(0, 0)}>
             <img 
-              src={logoUrl}
+              src={logoImage}
               alt="Fit Mom Chloe Logo" 
               className="h-12 w-auto"
               onError={(e) => {

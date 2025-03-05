@@ -1,14 +1,16 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
   theme: {
     extend: {
       colors: {
-        primary: '#B0826E',
-        background: '#F2E9E0',
+        primary: '#E6827C',
+        secondary: '#F7F2F0',
+        background: '#FFFFFF'
       },
       fontFamily: {
-        playfair: ['Playfair Display', 'serif'],
+        sans: ['Inter', 'sans-serif'],
+        playfair: ['"Playfair Display"', 'serif'],
       },
     },
   },
