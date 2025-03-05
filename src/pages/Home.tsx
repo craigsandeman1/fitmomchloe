@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import HeroSection from '../components/HeroSection';
 
-// Import the image
-const backgroundImageUrl = new URL('../assets/images/background-homepage.webp', import.meta.url).href;
+// Import the image directly
+import backgroundImage from '../assets/images/background-homepage.webp';
 
 const Home = () => {
   useEffect(() => {
@@ -38,7 +38,7 @@ const Home = () => {
         {/* Background Image Container */}
         <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[120%] bg-primary/5 overflow-hidden">
           <img
-            src={backgroundImageUrl}
+            src={backgroundImage}
             alt=""
             className="w-full h-full object-cover opacity-25 md:object-center object-left"
           />
