@@ -197,7 +197,16 @@ const Booking = () => {
       const result = await createBooking(bookingData);
       
       if (result) {
-        setSuccessMessage('Booking confirmed. Thank you!');
+        // Format the date and time for the success message
+        const bookingDate = new Date(selectedDate + 'T00:00:00');
+        const dayOfWeek = bookingDate.toLocaleDateString('en-US', { weekday: 'long' });
+        const month = bookingDate.toLocaleDateString('en-US', { month: 'long' });
+        const day = bookingDate.getDate();
+        const year = bookingDate.getFullYear();
+        const formattedDate = `${dayOfWeek}, ${month} ${day}, ${year}`;
+        const formattedTime = formatTimeDisplay(selectedTime);
+        
+        setSuccessMessage(`Booking confirmed for ${formattedDate} at ${formattedTime}. Thank you!`);
         setUserName('');
         setNotes('');
         
@@ -341,25 +350,97 @@ const Booking = () => {
     return parseISO(a.date).getTime() - parseISO(b.date).getTime();
   });
 
-  // Standardize time format display with helper function
-  const formatTimeDisplay = (time: string): string => {
-    // Convert 24-hour time (HH:MM) to 24-hour format consistently
-    return time + ':00';
+  // Add a session duration constant for time slots (in minutes)
+  const SESSION_DURATION = 60; // Default 1 hour sessions
+
+  // Function to calculate end time based on start time
+  const calculateEndTime = (startTime: string): string => {
+    const [hours, minutes] = startTime.split(':').map(Number);
+    let endHours = hours;
+    let endMinutes = minutes + SESSION_DURATION;
+    
+    // Handle minute overflow
+    if (endMinutes >= 60) {
+      endHours += Math.floor(endMinutes / 60);
+      endMinutes = endMinutes % 60;
+    }
+    
+    // Handle hour overflow (24-hour format)
+    if (endHours >= 24) {
+      endHours = endHours % 24;
+    }
+    
+    return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+  };
+
+  const formatTimeDisplay = (time: string, showEndTime = true): string => {
+    // Don't add seconds, and convert to 12-hour format with AM/PM
+    if (!time) return '';
+    
+    // Handle times that might already have seconds attached
+    const timeWithoutSeconds = time.split(':').slice(0, 2).join(':');
+    
+    // Parse time (handle both "HH:MM" and "HH:MM:SS" formats)
+    const [hoursStr, minutesStr] = timeWithoutSeconds.split(':');
+    const hours = parseInt(hoursStr, 10);
+    const minutes = minutesStr || '00';
+    
+    // Convert to 12-hour format
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const hours12 = hours % 12 || 12; // Convert 0 to 12 for 12 AM
+    
+    const formattedStartTime = `${hours12}:${minutes} ${period}`;
+    
+    if (!showEndTime) {
+      return formattedStartTime;
+    }
+    
+    // Calculate and format end time
+    const endTime = calculateEndTime(timeWithoutSeconds);
+    const [endHoursStr, endMinutesStr] = endTime.split(':');
+    const endHours = parseInt(endHoursStr, 10);
+    const endMinutes = endMinutesStr || '00';
+    
+    // Convert end time to 12-hour format
+    const endPeriod = endHours >= 12 ? 'PM' : 'AM';
+    const endHours12 = endHours % 12 || 12;
+    
+    const formattedEndTime = `${endHours12}:${endMinutes} ${endPeriod}`;
+    
+    return `${formattedStartTime} - ${formattedEndTime}`;
   };
 
   // Add visual feedback when a slot becomes unavailable
   const renderTimeSlot = (time: string) => {
     const isAvailable = isTimeSlotAvailable(selectedDate, time);
     const isSelected = selectedTime === time;
-    let className = `p-2 border rounded-md text-center transition-colors`;
+    
+    // Use different color variants based on state
+    const baseClasses = "relative p-3 border rounded-lg transition-all duration-200 flex flex-col items-center justify-center";
+    
+    // Color classes based on state
+    let colorClasses = "";
+    let timeClasses = "";
+    let iconColor = "";
     
     if (isSelected) {
-      className += ' bg-primary text-white border-primary';
+      colorClasses = "bg-primary border-primary text-white shadow-md transform scale-105";
+      timeClasses = "text-white font-medium";
+      iconColor = "text-white";
     } else if (isAvailable) {
-      className += ' hover:bg-primary hover:text-white hover:border-primary';
+      colorClasses = "bg-background border-primary/30 text-gray-800 hover:bg-primary/20 hover:border-primary hover:shadow";
+      timeClasses = "text-gray-800 group-hover:text-primary";
+      iconColor = "text-primary";
     } else {
-      className += ' bg-gray-100 text-gray-400 cursor-not-allowed relative';
+      colorClasses = "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed opacity-70";
+      timeClasses = "text-gray-400";
+      iconColor = "text-gray-400";
     }
+    
+    // Display just the start time in the first row for cleaner UI
+    const shortTimeDisplay = formatTimeDisplay(time, false);
+    // Show full range (start-end) in the tooltip
+    const fullTimeDisplay = formatTimeDisplay(time, true);
     
     return (
       <button
@@ -367,12 +448,17 @@ const Booking = () => {
         type="button"
         onClick={() => isAvailable && setSelectedTime(time)}
         disabled={!isAvailable}
-        className={className}
+        className={`${baseClasses} ${colorClasses} group`}
+        title={fullTimeDisplay}
       >
-        {time}
+        <Clock size={16} className={`mb-1 ${iconColor}`} />
+        <span className={`text-sm ${timeClasses}`}>{shortTimeDisplay}</span>
+        <span className={`text-xs mt-1 ${timeClasses}`}>1 hour</span>
+        
         {!isAvailable && (
           <span className="absolute inset-0 flex items-center justify-center">
             <span className="bg-red-500 h-0.5 w-full absolute transform rotate-45"></span>
+            <span className="bg-red-500 h-0.5 w-full absolute transform -rotate-45"></span>
           </span>
         )}
       </button>
@@ -427,7 +513,7 @@ const Booking = () => {
                 <CheckCircle className="text-green-500 mr-2 mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold text-green-800">Booking Confirmed!</h3>
-                  <p className="text-green-700">Your session has been booked successfully.</p>
+                  <p className="text-green-700">{successMessage}</p>
                   <button 
                     onClick={() => setSuccess(false)} 
                     className="mt-2 text-sm text-green-600 underline"
@@ -454,18 +540,22 @@ const Booking = () => {
                 
                 {selectedDate && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Time
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select a Time Slot
                     </label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       {availableTimes.length > 0 ? (
                         availableTimes.map((time) => renderTimeSlot(time))
                       ) : (
-                        <p className="col-span-3 text-center py-2 text-gray-500">
-                          No available time slots for this date
+                        <p className="col-span-3 text-center py-4 px-3 rounded-lg bg-gray-50 text-gray-500 border border-dashed border-gray-300">
+                          No available time slots for this date. Please select another date.
                         </p>
                       )}
                     </div>
+                    <p className="text-xs text-gray-500 mt-2 flex items-center">
+                      <Clock size={12} className="mr-1"/>
+                      All sessions are 1 hour long
+                    </p>
                   </div>
                 )}
                 
@@ -531,7 +621,7 @@ const Booking = () => {
                   // Split the ISO string to extract date and time parts directly
                   const dateTimeParts = booking.date.split('T');
                   const datePart = dateTimeParts[0]; // e.g., "2024-03-18"
-                  const timePart = dateTimeParts[1].substring(0, 5); // e.g., "14:00" (strip seconds)
+                  const timePart = dateTimeParts[1]; // Extract full time part including seconds
                   
                   // Parse the date for formatting the day name and month
                   const dateObj = new Date(datePart + 'T00:00:00');
@@ -543,20 +633,35 @@ const Booking = () => {
                   // Create a nicely formatted date string
                   const formattedDate = `${dayOfWeek}, ${month} ${day}, ${year}`;
                   
-                  // Display the exact time string that was selected (from the database)
-                  const formattedTime = timePart;
+                  // Format the time consistently using our helper function, showing end time
+                  const formattedTime = formatTimeDisplay(timePart, true);
+                  
+                  // Create status badge styling based on booking status
+                  let statusClass = '';
+                  switch(booking.status) {
+                    case 'confirmed':
+                      statusClass = 'bg-green-100 text-green-800 border border-green-200';
+                      break;
+                    case 'cancelled':
+                      statusClass = 'bg-red-100 text-red-800 border border-red-200';
+                      break;
+                    default: // pending
+                      statusClass = 'bg-yellow-100 text-yellow-800 border border-yellow-200';
+                  }
                   
                   return (
                     <div
                       key={booking.id}
-                      className="border p-4 rounded-md hover:shadow-sm transition-shadow"
+                      className="border p-4 rounded-md hover:shadow-sm transition-shadow bg-white"
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-semibold">
+                          <p className="font-semibold flex items-center">
+                            <Calendar size={16} className="mr-2 text-primary" />
                             {formattedDate}
                           </p>
-                          <p className="text-gray-600">
+                          <p className="text-gray-600 flex items-center mt-1">
+                            <Clock size={16} className="mr-2 text-primary" />
                             {formattedTime}
                           </p>
                           {booking.notes && (
@@ -565,12 +670,20 @@ const Booking = () => {
                             </p>
                           )}
                         </div>
-                        <button
-                          onClick={() => handleCancelBookingInitiate(booking.id)}
-                          className="text-red-500 hover:text-red-700 text-sm"
-                        >
-                          Cancel
-                        </button>
+                        <div className="flex flex-col items-end">
+                          <span className={`px-2 py-1 rounded-full text-xs ${statusClass}`}>
+                            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                          </span>
+                          
+                          {booking.status !== 'cancelled' && (
+                            <button
+                              onClick={() => handleCancelBookingInitiate(booking.id)}
+                              className="text-red-500 hover:text-red-700 text-sm mt-2"
+                            >
+                              Cancel
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );

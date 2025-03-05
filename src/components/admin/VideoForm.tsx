@@ -1,8 +1,14 @@
+<<<<<<< Updated upstream
 import { useState, useRef } from 'react';
 import { Video as VideoType, VideoCategory } from '../../types/video';
 import { Upload, X, Play, Loader } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import useFileUpload from '../../hooks/useFileUpload';
+=======
+import { useState, useEffect } from 'react';
+import { Video as VideoType, VideoCategory } from '../../types/video';
+import { Play, Upload, Info, HelpCircle } from 'lucide-react';
+>>>>>>> Stashed changes
 
 interface VideoFormProps {
   editingVideo: VideoType | null;
@@ -18,6 +24,7 @@ const DIFFICULTY_LEVELS = [
 ];
 
 const VideoForm = ({ editingVideo, videoCategories, onSubmit, onCancel }: VideoFormProps) => {
+<<<<<<< Updated upstream
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
   const [selectedThumbnail, setSelectedThumbnail] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -145,12 +152,81 @@ const VideoForm = ({ editingVideo, videoCategories, onSubmit, onCancel }: VideoF
     }
   };
 
+=======
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [videoUrlInput, setVideoUrlInput] = useState(editingVideo?.video_url || '');
+  const [thumbnailUrlInput, setThumbnailUrlInput] = useState(editingVideo?.thumbnail_url || '');
+  const [videoError, setVideoError] = useState('');
+  const [showHelpTooltip, setShowHelpTooltip] = useState(false);
+
+  // Update thumbnail preview when the thumbnail URL changes
+  useEffect(() => {
+    setThumbnailPreview(thumbnailUrlInput || null);
+  }, [thumbnailUrlInput]);
+
+  // Extract video ID from various video platforms
+  const extractVideoId = (url: string): string | null => {
+    try {
+      // Check if it's already a direct file URL ending with a video extension
+      if (/\.(mp4|mov|avi|webm)$/i.test(url)) {
+        return url;
+      }
+      
+      // YouTube
+      const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+      const youtubeMatch = url.match(youtubeRegex);
+      if (youtubeMatch?.[1]) {
+        return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+      }
+      
+      // Vimeo
+      const vimeoRegex = /vimeo\.com\/(?:.*\/)?(?:videos\/)?([0-9]+)/i;
+      const vimeoMatch = url.match(vimeoRegex);
+      if (vimeoMatch?.[1]) {
+        return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+      }
+      
+      // If it's a direct URL, return it as is
+      return url;
+    } catch (error) {
+      console.error("Error extracting video ID:", error);
+      return null;
+    }
+  };
+
+  const handleVideoUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newUrl = e.target.value;
+    setVideoUrlInput(newUrl);
+    setVideoError('');
+    
+    // If there's no thumbnail URL yet, try to generate one from the video URL
+    if (newUrl && !thumbnailUrlInput) {
+      try {
+        // For YouTube videos, we can generate a thumbnail URL
+        const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+        const youtubeMatch = newUrl.match(youtubeRegex);
+        if (youtubeMatch?.[1]) {
+          const thumbnailUrl = `https://img.youtube.com/vi/${youtubeMatch[1]}/hqdefault.jpg`;
+          setThumbnailUrlInput(thumbnailUrl);
+        }
+      } catch (error) {
+        console.error("Error generating thumbnail URL:", error);
+      }
+    }
+  };
+
+  const getVideoPreviewUrl = (): string | null => {
+    return extractVideoId(videoUrlInput);
+  };
+
+>>>>>>> Stashed changes
   return (
-    <div className="mb-8 p-6 border rounded-lg">
-      <h3 className="text-xl font-semibold mb-4">
+    <div className="mb-8 p-6 border rounded-lg bg-white shadow-sm">
+      <h3 className="text-xl font-semibold mb-6 text-gray-800 border-b pb-4">
         {editingVideo?.id ? 'Edit' : 'Create'} Video
       </h3>
       
+<<<<<<< Updated upstream
       {error && (
         <div className="mb-4 p-4 bg-red-50 text-red-700 rounded-md">
           <p>{error}</p>
@@ -161,9 +237,52 @@ const VideoForm = ({ editingVideo, videoCategories, onSubmit, onCancel }: VideoF
         {/* Basic Information */}
         <div className="grid md:grid-cols-2 gap-4">
           <div>
+=======
+      <form onSubmit={onSubmit} className="space-y-8">
+        {/* Section: Basic Information */}
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+          <h4 className="font-medium text-gray-700 mb-4 flex items-center">
+            <Info className="mr-2 text-primary h-5 w-5" />
+            Basic Information
+          </h4>
+          
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Title *
+              </label>
+              <input
+                type="text"
+                name="title"
+                defaultValue={editingVideo?.title}
+                className="w-full p-2 border rounded-md focus:ring-primary focus:border-primary"
+                placeholder="Enter video title"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category
+              </label>
+              <select
+                name="category_id"
+                defaultValue={editingVideo?.category_id || ''}
+                className="w-full p-2 border rounded-md focus:ring-primary focus:border-primary"
+              >
+                <option value="">Select Category</option>
+                {videoCategories.map(category => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-4">
+>>>>>>> Stashed changes
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Title *
+              Description *
             </label>
+<<<<<<< Updated upstream
             <input
               type="text"
               name="title"
@@ -301,6 +420,166 @@ const VideoForm = ({ editingVideo, videoCategories, onSubmit, onCancel }: VideoF
               <Upload size={16} className="mr-2" />
               {selectedThumbnail ? 'Change Thumbnail' : formData.thumbnail_url ? 'Replace Thumbnail' : 'Upload Thumbnail'}
             </button>
+=======
+            <textarea
+              name="description"
+              defaultValue={editingVideo?.description}
+              className="w-full p-2 border rounded-md focus:ring-primary focus:border-primary"
+              rows={3}
+              placeholder="Describe what this video is about..."
+              required
+            />
+          </div>
+        </div>
+
+        {/* Section: Video Content */}
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+          <h4 className="font-medium text-gray-700 mb-4 flex items-center">
+            <Play className="mr-2 text-primary h-5 w-5" />
+            Video Content
+          </h4>
+          
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Video Link *
+              </label>
+              <div className="flex">
+                <input
+                  type="url"
+                  name="video_url"
+                  value={videoUrlInput}
+                  onChange={handleVideoUrlChange}
+                  className="w-full p-2 border rounded-l-md focus:ring-primary focus:border-primary"
+                  placeholder="Paste YouTube or video link here"
+                  required
+                />
+                <button 
+                  type="button" 
+                  className="bg-gray-100 px-3 border-t border-r border-b rounded-r-md"
+                  onClick={() => setShowHelpTooltip(!showHelpTooltip)}
+                >
+                  <HelpCircle size={16} className="text-gray-500" />
+                </button>
+              </div>
+              
+              {showHelpTooltip && (
+                <div className="bg-blue-50 text-blue-800 p-3 rounded-md text-xs mt-2 mb-2">
+                  <p className="font-semibold mb-1">Supported video formats:</p>
+                  <ul className="list-disc pl-4 space-y-1">
+                    <li>YouTube videos</li>
+                    <li>Vimeo videos</li>
+                    <li>Direct video links</li>
+                  </ul>
+                </div>
+              )}
+              
+              {videoError && <p className="text-red-500 text-xs mt-1">{videoError}</p>}
+              
+              {videoUrlInput && getVideoPreviewUrl() && (
+                <div className="mt-3 border rounded-md overflow-hidden aspect-video bg-black">
+                  <iframe 
+                    src={getVideoPreviewUrl() || ''}
+                    className="w-full h-full"
+                    allowFullScreen
+                    title="Video preview"
+                  />
+                </div>
+              )}
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Thumbnail
+              </label>
+              <input
+                type="url"
+                name="thumbnail_url"
+                value={thumbnailUrlInput}
+                onChange={(e) => setThumbnailUrlInput(e.target.value)}
+                className="w-full p-2 border rounded-md focus:ring-primary focus:border-primary"
+                placeholder="Paste thumbnail image link here"
+              />
+              
+              {thumbnailPreview && (
+                <div className="mt-3 border rounded-md overflow-hidden aspect-video">
+                  <img 
+                    src={thumbnailPreview} 
+                    alt="Thumbnail preview" 
+                    className="w-full h-full object-cover"
+                    onError={() => setThumbnailPreview(null)} 
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Section: Additional Details */}
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+          <h4 className="font-medium text-gray-700 mb-4">
+            Additional Details
+          </h4>
+          
+          <div className="grid md:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Duration
+              </label>
+              <input
+                type="text"
+                name="duration"
+                defaultValue={editingVideo?.duration || ''}
+                className="w-full p-2 border rounded-md focus:ring-primary focus:border-primary"
+                placeholder="e.g. 00:30:00"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Difficulty Level
+              </label>
+              <select
+                name="difficulty_level"
+                defaultValue={editingVideo?.difficulty_level || ''}
+                className="w-full p-2 border rounded-md focus:ring-primary focus:border-primary"
+              >
+                <option value="">Select Level</option>
+                {DIFFICULTY_LEVELS.map(level => (
+                  <option key={level} value={level}>{level}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Price (R)
+              </label>
+              <input
+                type="number"
+                name="individual_price"
+                defaultValue={editingVideo?.individual_price || ''}
+                min="0"
+                step="0.01"
+                className="w-full p-2 border rounded-md focus:ring-primary focus:border-primary"
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+          
+          <div className="mt-4">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                name="is_premium"
+                defaultChecked={editingVideo?.is_premium}
+                className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+              />
+              <span className="ml-2 text-sm text-gray-700">
+                Premium Content
+              </span>
+            </label>
+>>>>>>> Stashed changes
           </div>
           
           {selectedThumbnail && (
@@ -331,6 +610,7 @@ const VideoForm = ({ editingVideo, videoCategories, onSubmit, onCancel }: VideoF
             </div>
           )}
         </div>
+<<<<<<< Updated upstream
 
         {/* Additional Details */}
         <div className="grid md:grid-cols-3 gap-4">
@@ -392,17 +672,25 @@ const VideoForm = ({ editingVideo, videoCategories, onSubmit, onCancel }: VideoF
           </label>
         </div>
 
+=======
+        
+>>>>>>> Stashed changes
         <div className="flex justify-end space-x-4 pt-4">
           <button
             type="button"
             onClick={onCancel}
+<<<<<<< Updated upstream
             className="px-4 py-2 border rounded-md hover:bg-gray-50"
             disabled={uploading}
+=======
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+>>>>>>> Stashed changes
           >
             Cancel
           </button>
           <button
             type="submit"
+<<<<<<< Updated upstream
             className="btn-primary flex items-center"
             disabled={uploading}
           >
@@ -414,6 +702,11 @@ const VideoForm = ({ editingVideo, videoCategories, onSubmit, onCancel }: VideoF
             ) : (
               'Save'
             )}
+=======
+            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
+          >
+            {editingVideo?.id ? 'Update' : 'Create'} Video
+>>>>>>> Stashed changes
           </button>
         </div>
       </form>

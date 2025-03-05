@@ -1,4 +1,9 @@
 export interface MealPlan {
+  /**
+   * ID is null only for new meal plans being created in the UI.
+   * When saving to database, a UUID must be generated.
+   * After fetching from the database, this will always be a string.
+   */
   id: string | null;
   title: string;
   description: string;

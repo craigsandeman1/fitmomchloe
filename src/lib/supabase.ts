@@ -7,18 +7,30 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
+// We'll add some flags to prevent excessive logging and refresh cycles
+let hasLoggedSignIn = false;
+let hasLoggedTokenRefresh = false;
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: false, // Set to false to reduce unnecessary refreshes
   }
 });
 
-// Initialize auth state
+// Initialize auth state with debouncing to prevent excessive logging
 supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
-  if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-    console.log('User signed in or token refreshed');
+  if (event === 'SIGNED_IN' && !hasLoggedSignIn) {
+    console.log('User signed in');
+    hasLoggedSignIn = true;
+    // Reset after a delay
+    setTimeout(() => { hasLoggedSignIn = false; }, 10000);
+  } else if (event === 'TOKEN_REFRESHED' && !hasLoggedTokenRefresh) {
+    console.log('Token refreshed');
+    hasLoggedTokenRefresh = true;
+    // Reset after a delay
+    setTimeout(() => { hasLoggedTokenRefresh = false; }, 30000);
   }
 });
 

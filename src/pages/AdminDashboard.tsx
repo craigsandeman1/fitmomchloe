@@ -1,11 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
+<<<<<<< Updated upstream
 import { Plus, UserCircle, Calendar, LucideClipboardList, LogOut, Clock, Film } from 'lucide-react';
+=======
+import { Plus, UserCircle, Calendar, LucideClipboardList, LogOut, Clock } from 'lucide-react';
+>>>>>>> Stashed changes
 import { useAuthStore } from '../store/auth';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '../store/user';
+<<<<<<< Updated upstream
 import { verifyAdminStatus, debugAdminStatus } from '../lib/adminUtils';
 import { useBookingStore } from '../store/booking';
+=======
+import { v4 as uuidv4 } from 'uuid';
+import { sendBookingCancellationNotification, sendBookingRescheduleNotification } from '../lib/notifications';
+>>>>>>> Stashed changes
 
 // Import admin components
 import BookingsList from '../components/admin/BookingsList';
@@ -15,7 +24,11 @@ import VideoForm from '../components/admin/VideoForm';
 import VideosList from '../components/admin/VideosList';
 import UsersList from '../components/admin/UsersList';
 import AdminTimeSlots from '../components/admin/AdminTimeSlots';
+<<<<<<< Updated upstream
 import AdminDebug from '../components/AdminDebug';
+=======
+import BookingsCalendarView from '../components/admin/BookingsCalendarView';
+>>>>>>> Stashed changes
 
 // Import types
 import { Booking, BookingStatus } from '../types/booking';
@@ -29,18 +42,25 @@ const AdminDashboard = () => {
   const [videoCategories, setVideoCategories] = useState<VideoCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('bookings');
+  const [activeTab, setActiveTab] = useState('timeSlots');
   const [editingMealPlan, setEditingMealPlan] = useState<MealPlan | null>(null);
   const [editingVideo, setEditingVideo] = useState<VideoType | null>(null);
-  const { user, signOut } = useUserStore();
+  const { user } = useUserStore();
   const { user: authUser } = useAuthStore();
+<<<<<<< Updated upstream
   const [isAdmin, setIsAdmin] = useState(false);
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
   const adminCheckInProgress = useRef(false);
   const navigate = useNavigate();
   const { deleteBooking } = useBookingStore();
+=======
+  const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+>>>>>>> Stashed changes
 
+  // Load data on component mount
   useEffect(() => {
+<<<<<<< Updated upstream
     const checkAdmin = async () => {
       // Prevent multiple simultaneous admin checks
       if (adminCheckInProgress.current) return;
@@ -99,6 +119,10 @@ const AdminDashboard = () => {
 
     checkAdmin();
   }, [authUser, navigate, isAdmin]);
+=======
+    fetchData();
+  }, []);
+>>>>>>> Stashed changes
 
   const fetchData = async () => {
     setLoading(true);
@@ -150,6 +174,12 @@ const AdminDashboard = () => {
 
   const updateBookingStatus = async (id: string, status: BookingStatus) => {
     try {
+      // Get the booking before updating to use for notification
+      const bookingToUpdate = bookings.find(b => b.id === id);
+      if (!bookingToUpdate) {
+        throw new Error('Booking not found');
+      }
+
       const { error } = await supabase
         .from('bookings')
         .update({ status })
@@ -161,9 +191,65 @@ const AdminDashboard = () => {
       setBookings(bookings.map(booking => 
         booking.id === id ? { ...booking, status } : booking
       ));
+
+      // Send notification if booking is cancelled
+      if (status === 'cancelled' && bookingToUpdate.email) {
+        await sendBookingCancellationNotification({
+          ...bookingToUpdate,
+          status // Update with new status
+        });
+      }
     } catch (err) {
       console.error('Error updating booking status:', err);
       setError('Failed to update booking status.');
+    }
+  };
+
+  const rescheduleBooking = async (id: string, newDate: string) => {
+    try {
+      // Get the booking before updating to use for notification
+      const bookingToUpdate = bookings.find(b => b.id === id);
+      if (!bookingToUpdate) {
+        throw new Error('Booking not found');
+      }
+
+      const oldDate = bookingToUpdate.date;
+      
+      // Update the booking in the database
+      const { error } = await supabase
+        .from('bookings')
+        .update({ 
+          date: newDate,
+          status: 'confirmed', // Automatically confirm rescheduled bookings
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Update local state
+      setBookings(bookings.map(booking => 
+        booking.id === id 
+          ? { ...booking, date: newDate, status: 'confirmed', updated_at: new Date().toISOString() } 
+          : booking
+      ));
+
+      // Send notification about the rescheduled booking
+      if (bookingToUpdate.email) {
+        await sendBookingRescheduleNotification(
+          {
+            ...bookingToUpdate,
+            date: newDate,
+            status: 'confirmed'
+          }, 
+          oldDate
+        );
+      }
+      
+    } catch (err) {
+      console.error('Error rescheduling booking:', err);
+      setError('Failed to reschedule booking.');
+      throw err; // Re-throw to handle in the UI
     }
   };
 
@@ -182,10 +268,15 @@ const AdminDashboard = () => {
           mp.id === mealPlan.id ? mealPlan : mp
         ));
       } else {
-        // Create new meal plan
+        // Create new meal plan with a generated UUID
+        const newMealPlan = {
+          ...mealPlan,
+          id: uuidv4() // Generate a new UUID for the meal plan
+        };
+        
         const { data, error } = await supabase
           .from('meal_plans')
-          .insert([{ ...mealPlan, id: undefined }])
+          .insert([newMealPlan])
           .select();
 
         if (error) throw error;
@@ -287,11 +378,17 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleSignOut = () => {
-    signOut();
-    navigate('/login');
+  const handleSignOut = async () => {
+    try {
+      const { signOut } = useAuthStore.getState();
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
+<<<<<<< Updated upstream
   const handleDeleteBooking = async (id: string) => {
     try {
       await deleteBooking(id);
@@ -319,6 +416,8 @@ const AdminDashboard = () => {
     );
   }
 
+=======
+>>>>>>> Stashed changes
   if (loading) {
     return (
       <div className="min-h-screen flex justify-center items-center">
@@ -377,25 +476,39 @@ const AdminDashboard = () => {
               </button>
               <button
                 className={`${
-                  activeTab === 'bookings'
+                  activeTab === 'videos'
                     ? 'border-primary text-primary'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm flex items-center`}
+                onClick={() => setActiveTab('videos')}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="mr-2 h-5 w-5" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                </svg>
+                Videos
+              </button>
+              <button
+                className={`${
+                  activeTab === 'bookings'
+                    ? 'border-primary text-primary bg-blue-50'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm flex items-center`}
                 onClick={() => setActiveTab('bookings')}
               >
                 <Calendar className="mr-2 h-5 w-5" />
-                Bookings
+                <span className="font-semibold">Bookings</span>
               </button>
               <button
                 className={`${
                   activeTab === 'timeSlots'
-                    ? 'border-primary text-primary'
+                    ? 'border-primary text-primary bg-blue-50'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm flex items-center`}
                 onClick={() => setActiveTab('timeSlots')}
               >
                 <Clock className="mr-2 h-5 w-5" />
-                Time Slots
+                <span className="font-semibold">Time Slots</span>
               </button>
               <button
                 className={`${
@@ -452,11 +565,55 @@ const AdminDashboard = () => {
               </div>
             )}
             {activeTab === 'bookings' && (
+<<<<<<< Updated upstream
               <BookingsList
                 bookings={bookings}
                 updateBookingStatus={updateBookingStatus}
                 deleteBooking={handleDeleteBooking}
               />
+=======
+              <div className="mt-6">
+                <div className="flex justify-end mb-4">
+                  <div className="inline-flex rounded-md shadow-sm">
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`px-4 py-2 text-sm font-medium rounded-l-md ${
+                        viewMode === 'list'
+                          ? 'bg-blue-50 text-blue-700 border border-blue-300'
+                          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      List View
+                    </button>
+                    <button
+                      onClick={() => setViewMode('calendar')}
+                      className={`px-4 py-2 text-sm font-medium rounded-r-md ${
+                        viewMode === 'calendar'
+                          ? 'bg-blue-50 text-blue-700 border border-blue-300'
+                          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      Calendar View
+                    </button>
+                  </div>
+                </div>
+                
+                {viewMode === 'list' ? (
+                  <BookingsList 
+                    bookings={bookings} 
+                    updateBookingStatus={updateBookingStatus} 
+                    loading={loading}
+                    error={error}
+                    rescheduleBooking={rescheduleBooking}
+                  />
+                ) : (
+                  <BookingsCalendarView 
+                    bookings={bookings}
+                    rescheduleBooking={rescheduleBooking}
+                  />
+                )}
+              </div>
+>>>>>>> Stashed changes
             )}
             {activeTab === 'timeSlots' && <AdminTimeSlots />}
             {activeTab === 'videos' && (
@@ -465,6 +622,7 @@ const AdminDashboard = () => {
                   <div className="mb-4 flex justify-between items-center">
                     <h2 className="text-2xl font-semibold">Videos</h2>
                     <button
+<<<<<<< Updated upstream
                       onClick={() => setEditingVideo({
                         id: null as unknown as string,
                         title: '',
@@ -480,6 +638,15 @@ const AdminDashboard = () => {
                         created_at: '',
                         updated_at: ''
                       })}
+=======
+                      onClick={() => setEditingVideo({ 
+                        id: null,
+                        title: '',
+                        description: '',
+                        video_url: '',
+                        is_premium: false
+                      } as any)}
+>>>>>>> Stashed changes
                       className="btn-primary flex items-center"
                     >
                       <Plus size={16} className="mr-2" />
@@ -492,7 +659,28 @@ const AdminDashboard = () => {
                   <VideoForm
                     editingVideo={editingVideo}
                     videoCategories={videoCategories}
+<<<<<<< Updated upstream
                     onSubmit={handleVideoSubmit}
+=======
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      const formData = new FormData(e.currentTarget);
+                      const videoData = {
+                        id: editingVideo.id,
+                        title: formData.get('title') as string,
+                        description: formData.get('description') as string,
+                        video_url: formData.get('video_url') as string,
+                        thumbnail_url: formData.get('thumbnail_url') as string || null,
+                        category_id: formData.get('category_id') as string || null,
+                        difficulty_level: formData.get('difficulty_level') as string || null,
+                        duration: formData.get('duration') as string || null,
+                        is_premium: formData.has('is_premium'),
+                        individual_price: formData.get('individual_price') ? 
+                          parseFloat(formData.get('individual_price') as string) : null
+                      };
+                      await handleVideoSubmit(videoData as VideoType);
+                    }}
+>>>>>>> Stashed changes
                     onCancel={() => setEditingVideo(null)}
                   />
                 ) : (
