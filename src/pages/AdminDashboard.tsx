@@ -154,10 +154,12 @@ const AdminDashboard = () => {
           mp.id === mealPlan.id ? mealPlan : mp
         ));
       } else {
-        // Create new meal plan
+        // Create new meal plan - omit id to let Supabase generate UUID
+        const { id, ...mealPlanData } = mealPlan;
+        
         const { data, error } = await supabase
           .from('meal_plans')
-          .insert([{ ...mealPlan, id: undefined }])
+          .insert([mealPlanData])
           .select();
 
         if (error) throw error;

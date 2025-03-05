@@ -9,6 +9,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import PaymentResult from './pages/PaymentResult';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
+import Login from './pages/Login';
 import Footer from './components/Footer';
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
             <Route path="/payment/cancel" element={<PaymentResult />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/login" element={<Login />} />
           </Routes>
         </main>
         <Footer />

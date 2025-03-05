@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { useMealPlanStore } from '../store/mealPlan';
 import { useAuthStore } from '../store/auth';
-import { Lock, ArrowRight, Utensils, Clock, ChevronRight, Play, Pause, Quote, ArrowDown } from 'lucide-react';
+import { Lock, ArrowRight, Utensils, Clock, ChevronRight, Play, Pause, Quote, ArrowDown, FileDown } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 import { Auth } from '../components/Auth';
 import RecipeModal from '../components/RecipeModal';
 import { testMealPlanAccess, verifySupabaseConnection } from '../lib/supabase';
@@ -92,6 +93,110 @@ const MealPlans = () => {
     if (premiumPlansRef.current) {
       premiumPlansRef.current.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+  
+  // Generate and download PDF for a meal plan
+  const handleDownloadPDF = (mealPlan: any) => {
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(20);
+    doc.text(`Meal Plan: ${mealPlan.title}`, 20, 20);
+    
+    // Add description
+    doc.setFontSize(12);
+    doc.text('Description:', 20, 30);
+    
+    // Handle long descriptions by wrapping text
+    const splitDescription = doc.splitTextToSize(mealPlan.description, 170);
+    doc.text(splitDescription, 20, 40);
+    
+    let yPosition = 40 + (splitDescription.length * 7);
+    
+    // Add details
+    doc.setFontSize(14);
+    doc.text('Details:', 20, yPosition);
+    yPosition += 10;
+    
+    doc.setFontSize(12);
+    doc.text(`Price: R${mealPlan.price.toFixed(2)}`, 20, yPosition);
+    yPosition += 7;
+    
+    if (mealPlan.dietary_type) {
+      doc.text(`Dietary Type: ${mealPlan.dietary_type}`, 20, yPosition);
+      yPosition += 7;
+    }
+    
+    if (mealPlan.duration_weeks) {
+      doc.text(`Duration: ${mealPlan.duration_weeks} weeks`, 20, yPosition);
+      yPosition += 7;
+    }
+    
+    if (mealPlan.total_calories) {
+      doc.text(`Total Calories: ${mealPlan.total_calories}`, 20, yPosition);
+      yPosition += 7;
+    }
+    
+    if (mealPlan.total_protein) {
+      doc.text(`Total Protein: ${mealPlan.total_protein}g`, 20, yPosition);
+      yPosition += 7;
+    }
+    
+    if (mealPlan.total_carbs) {
+      doc.text(`Total Carbs: ${mealPlan.total_carbs}g`, 20, yPosition);
+      yPosition += 7;
+    }
+    
+    if (mealPlan.total_fat) {
+      doc.text(`Total Fat: ${mealPlan.total_fat}g`, 20, yPosition);
+      yPosition += 7;
+    }
+    
+    // Add meal plan content if available
+    if (mealPlan.content && mealPlan.content.weeks && mealPlan.content.weeks.length > 0) {
+      yPosition += 10;
+      doc.setFontSize(14);
+      doc.text('Meal Plan Content:', 20, yPosition);
+      yPosition += 10;
+      
+      mealPlan.content.weeks.forEach((week: any, weekIndex: number) => {
+        doc.setFontSize(13);
+        doc.text(`Week ${week.weekNumber}:`, 20, yPosition);
+        yPosition += 7;
+        
+        week.days.forEach((day: any, dayIndex: number) => {
+          // Check if we need a new page
+          if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+          }
+          
+          doc.setFontSize(12);
+          doc.text(`${day.day}:`, 25, yPosition);
+          yPosition += 7;
+          
+          day.meals.forEach((meal: any, mealIndex: number) => {
+            // Check if we need a new page
+            if (yPosition > 270) {
+              doc.addPage();
+              yPosition = 20;
+            }
+            
+            doc.setFontSize(11);
+            doc.text(`${meal.type}: ${meal.name}`, 30, yPosition);
+            yPosition += 7;
+          });
+        });
+      });
+    }
+    
+    // Add footer with date
+    const today = new Date();
+    doc.setFontSize(10);
+    doc.text(`Generated on ${today.toLocaleDateString()}`, 20, 290);
+    
+    // Save the PDF
+    doc.save(`${mealPlan.title.replace(/\s+/g, '_')}_meal_plan.pdf`);
   };
 
   return (
@@ -350,9 +455,17 @@ const MealPlans = () => {
                           <div className="text-2xl font-playfair">R{plan.price}</div>
                           <div className="text-sm text-gray-500">One-time purchase</div>
                         </div>
-                        <button className="w-full btn-primary flex items-center justify-center gap-2">
-                          Get Started <ArrowRight size={20} />
-                        </button>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => handleDownloadPDF(plan)}
+                            className="flex-1 bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                          >
+                            Download PDF <FileDown size={18} />
+                          </button>
+                          <button className="flex-1 btn-primary flex items-center justify-center gap-2">
+                            Get Started <ArrowRight size={18} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
