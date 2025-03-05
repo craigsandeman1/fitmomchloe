@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/((?!assets|images|videos|.*\\.(?:jpg|png|gif|svg|webp)).*)", "destination": "/index.html" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
@@ -22,7 +22,7 @@
       ]
     },
     {
-      "source": "/(.*\\.(jpg|png|gif|svg|webp))",
+      "source": "/:path*\\.(jpg|png|gif|svg|webp)",
       "headers": [
         {
           "key": "Cache-Control",
