@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import withkids from '../assets/images/withkids.jpg';
+import yogaWithZozo from '../assets/images/yoga-with-zozo.webp';
 import workingout from '../assets/images/workingout.jpg';
+import salmon from '../assets/images/salmon.webp';
+import beanSalad from '../assets/images/bean-salad.webp';
 
 const HeroSection = () => {
   return (
@@ -10,16 +12,16 @@ const HeroSection = () => {
       <div className="absolute inset-0 h-[85vh] grid grid-cols-2 md:grid-cols-4 grid-rows-1">
         <div className="relative">
           <img 
-            src={withkids}
-            alt="Training with kids"
+            src={yogaWithZozo}
+            alt="Yoga with Zozo"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-black/40" />
         </div>
         <div className="relative">
           <img 
-            src="https://images.unsplash.com/photo-1547592180-85f173990554?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80"
-            alt=""
+            src={salmon}
+            alt="Healthy salmon meal"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-black/40" />
@@ -34,8 +36,8 @@ const HeroSection = () => {
         </div>
         <div className="relative hidden md:block">
           <img 
-            src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80"
-            alt=""
+            src={beanSalad}
+            alt="Bean salad"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-black/40" />

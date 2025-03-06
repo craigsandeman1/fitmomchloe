@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fit Mom Chloe - 7 Day Weight Loss Meal Plan</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    :root {
+      --primary: #D7A779;
+      --primary-light: #F3EBE2;
+      --primary-dark: #B88651;
+      --text-dark: #333333;
+      --text-medium: #666666;
+      --text-light: #888888;
+      --background: #FFFFFF;
+      --accent: #A6C3B0;
+      --accent-light: #E8F1EB;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      color: var(--text-dark);
+      background-color: var(--background);
+      max-width: 210mm; /* A4 width */
+      margin: 0 auto;
+      padding: 20px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    
+    .cover-page {
+      height: 297mm; /* A4 height */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+      background-color: var(--primary-light);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      padding: 40px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+    
+    .cover-page::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: url('/assets/images/salmon.webp');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.15;
+      z-index: 0;
+    }
+    
+    .cover-content {
+      position: relative;
+      z-index: 1;
+      max-width: 80%;
+    }
+    
+    .logo {
+      margin-bottom: 40px;
+      width: 180px;
+    }
+    
+    h1, h2, h3, h4 {
+      font-family: 'Playfair Display', serif;
+      margin-bottom: 20px;
+    }
+    
+    h1 {
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1.2;
+      letter-spacing: -0.5px;
+    }
+    
+    h2 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-top: 30px;
+      color: var(--primary);
+      letter-spacing: -0.3px;
+    }
+    
+    h3 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-top: 25px;
+      color: var(--primary);
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 10px;
+      display: inline-block;
+      letter-spacing: -0.3px;
+    }
+    
+    h4 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-top: 20px;
+      letter-spacing: -0.2px;
+    }
+    
+    p {
+      margin-bottom: 16px;
+      font-size: 1rem;
+      max-width: 100%;
+    }
+    
+    .cover-subtitle {
+      font-size: 1.5rem;
+      margin-bottom: 30px;
+      color: var(--text-medium);
+    }
+    
+    .author {
+      font-size: 1.2rem;
+      font-style: italic;
+      margin-top: 40px;
+      color: var(--text-medium);
+    }
+    
+    .section {
+      margin-bottom: 40px;
+      padding: 25px;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    }
+    
+    .intro {
+      background-color: var(--primary-light);
+      padding: 30px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    
+    .intro p {
+      font-size: 1.1rem;
+    }
+    
+    .meal-day {
+      margin-bottom: 40px;
+      background-color: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    }
+    
+    .day-header {
+      background-color: var(--primary);
+      color: white;
+      padding: 15px 25px;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    
+    .day-content {
+      padding: 25px;
+    }
+    
+    .meal {
+      margin-bottom: 25px;
+      border-left: 3px solid var(--primary);
+      padding-left: 18px;
+    }
+    
+    .meal-title {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: var(--primary);
+      margin-bottom: 10px;
+      letter-spacing: -0.2px;
+    }
+    
+    .meal-description {
+      margin-bottom: 10px;
+    }
+    
+    .ingredients {
+      margin-bottom: 15px;
+    }
+    
+    .ingredients-list {
+      list-style-type: none;
+      padding-left: 10px;
+    }
+    
+    .ingredients-list li {
+      margin-bottom: 8px;
+      position: relative;
+      padding-left: 20px;
+      text-wrap: wrap;
+      word-wrap: break-word;
+      width: 100%;
+    }
+    
+    .ingredients-list li::before {
+      content: '•';
+      color: var(--primary);
+      font-weight: bold;
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+    
+    .instructions {
+      margin-bottom: 15px;
+    }
+    
+    .tip {
+      background-color: var(--accent-light);
+      padding: 18px;
+      border-radius: 10px;
+      margin: 25px 0;
+      font-style: italic;
+      position: relative;
+      border-left: 4px solid var(--accent);
+    }
+    
+    .tip::before {
+      content: 'TIP';
+      font-weight: 600;
+      color: var(--accent);
+      display: block;
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+    
+    .appendix {
+      background-color: var(--primary-light);
+      padding: 30px;
+      border-radius: 12px;
+      margin-top: 40px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    }
+    
+    .appendix h3 {
+      border-bottom: none;
+      color: var(--primary);
+      margin-bottom: 25px;
+    }
+    
+    .appendix-list {
+      list-style-type: none;
+      padding-left: 10px;
+      margin-bottom: 25px;
+    }
+    
+    .appendix-list li {
+      margin-bottom: 10px;
+      position: relative;
+      padding-left: 20px;
+      text-wrap: wrap;
+      word-wrap: break-word;
+      width: 100%;
+    }
+    
+    .appendix-list li::before {
+      content: '•';
+      color: var(--primary);
+      font-weight: bold;
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+    
+    .reminder {
+      text-align: center;
+      font-weight: 600;
+      color: var(--primary);
+      font-size: 1.2rem;
+      margin: 30px 0;
+      padding: 15px;
+      border-top: 2px dashed var(--primary);
+      border-bottom: 2px dashed var(--primary);
+    }
+    
+    .page-break {
+      page-break-after: always;
+      height: 0;
+      display: block;
+    }
+    
+    .footer {
+      margin-top: 30px;
+      padding: 10px 15px;
+      text-align: center;
+      border-top: 1px solid var(--primary-light);
+      font-size: 0.75rem;
+      color: var(--text-medium);
+    }
+    
+    .footer p {
+      margin-bottom: 5px;
+    }
+    
+    .footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    
+    @media print {
+      body {
+        padding: 0;
+      }
+      
+      .page-break {
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Cover Page -->
+  <div class="cover-page">
+    <div class="cover-content">
+      <img src="/assets/images/fitmomchloe-logo-large.png" alt="Fit Mom Chloe Logo" class="logo">
+      <h1>{{title}}</h1>
+      <p class="cover-subtitle">{{subtitle}}</p>
+      <p class="author">{{author}}</p>
+    </div>
+  </div>
+  
+  <div class="page-break"></div>
+  
+  <!-- Introduction Section -->
+  <div class="section">
+    <div class="intro">
+      <h2>Welcome to Your Transformation</h2>
+      {{introduction}}
+    </div>
+    
+    <div class="tip">
+      In the appendix, you will find a list of acceptable snacks and suggested supplements that will help you along your weight loss journey.
+    </div>
+  </div>
+  
+  <div class="page-break"></div>
+  
+  <!-- Days Content -->
+  {{days}}
+  
+  <div class="page-break"></div>
+  
+  <!-- Appendix Section -->
+  {{appendix}}
+  
+  <!-- Footer with Contact Information -->
+  <div class="footer">
+    <p>www.fitmomchloe.com | 082 959 6069 | @fitmomcapetown</p>
+    <p>© 2023 Fit Mom Chloe. All rights reserved.</p>
+  </div>
+</body>
+</html> 

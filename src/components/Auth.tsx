@@ -3,9 +3,10 @@ import { useAuthStore } from '../store/auth';
 
 interface AuthProps {
   onAuthSuccess?: () => void;
+  purchaseFlow?: boolean;
 }
 
-export const Auth = ({ onAuthSuccess }: AuthProps) => {
+export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -36,6 +37,26 @@ export const Auth = ({ onAuthSuccess }: AuthProps) => {
     try {
       if (isSignUp) {
         await signUp(email, password);
+        
+        if (purchaseFlow) {
+          // For purchase flow: automatically sign them in after sign up
+          // Don't make them wait for email verification
+          console.log('Signing up in purchase flow, proceeding to sign in automatically');
+          try {
+            await signIn(email, password);
+            
+            // If we successfully signed in, call the success callback
+            if (onAuthSuccess) {
+              onAuthSuccess();
+            }
+            return; // Skip the "check email" message
+          } catch (signInError: any) {
+            console.error('Auto sign-in after signup failed:', signInError);
+            // Continue with normal flow if auto-signin fails
+          }
+        }
+        
+        // Standard sign-up flow (not purchase flow)
         setError('Please check your email to verify your account');
       } else {
         console.log('Attempting to sign in with email:', email);
@@ -51,7 +72,8 @@ export const Auth = ({ onAuthSuccess }: AuthProps) => {
       console.error('Authentication error:', error);
       if (error.message === 'Invalid login credentials') {
         setError('Invalid email or password. Please try again.');
-      } else if (error.message?.includes('Email not confirmed')) {
+      } else if (error.message?.includes('Email not confirmed') && !purchaseFlow) {
+        // Only show this error if not in purchase flow
         setError('Please verify your email address before signing in.');
       } else {
         setError(`Authentication failed: ${error.message || 'Unknown error'}`);
@@ -111,7 +133,7 @@ export const Auth = ({ onAuthSuccess }: AuthProps) => {
           {isLoading ? (
             'Please wait...'
           ) : (
-            isSignUp ? 'Sign Up' : 'Sign In'
+            purchaseFlow && isSignUp ? 'Sign Up & Continue' : (isSignUp ? 'Sign Up' : 'Sign In')
           )}
         </button>
       </form>

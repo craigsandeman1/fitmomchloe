@@ -5,6 +5,12 @@ export interface MealPlan {
   price: number;
   content: {
     weeks: Week[];
+    rawText?: string;
+    appendix?: MealPlanAppendix;
+    metadata?: {
+      thumbnailUrl?: string;
+      [key: string]: any;
+    };
   };
   total_calories?: number;
   total_protein?: number;
@@ -16,6 +22,10 @@ export interface MealPlan {
   dietary_type?: string;
   difficulty_level?: string;
   preparation_time?: string;
+  thumbnail_url?: string;
+  image_url?: string;
+  pdf_url?: string;
+  is_hidden?: boolean;
 }
 
 interface Week {
@@ -31,6 +41,7 @@ interface Day {
 interface Meal {
   type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   name: string;
+  description?: string;
   ingredients: string[];
   instructions: string[];
   nutritionalInfo?: {
@@ -39,4 +50,11 @@ interface Meal {
     carbs?: number;
     fats?: number;
   };
+}
+
+export interface MealPlanAppendix {
+  snacks?: string[];
+  supplements?: string[];
+  breakfasts?: string[];
+  reminder?: string;
 }

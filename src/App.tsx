@@ -10,6 +10,7 @@ import PaymentResult from './pages/PaymentResult';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import Login from './pages/Login';
+import PayfastTest from './pages/PayfastTest';
 import Footer from './components/Footer';
 
 function App() {
@@ -17,7 +18,7 @@ function App() {
     <Router>
       <div className="min-h-screen bg-background flex flex-col">
         <Navbar />
-        <main className="flex-grow">
+        <main className="flex-grow pt-16">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/meal-plans" element={<MealPlans />} />
@@ -31,6 +32,7 @@ function App() {
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/payfast-test" element={<PayfastTest />} />
           </Routes>
         </main>
         <Footer />

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Plus, UserCircle, Calendar, LucideClipboardList, LogOut, Clock } from 'lucide-react';
+import { Plus, UserCircle, Calendar, LucideClipboardList, LogOut, Clock, Users, FileText } from 'lucide-react';
 import { useAuthStore } from '../store/auth';
 import { supabase } from '../lib/supabase';
+import { adminSupabase } from '../lib/adminSupabase';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '../store/user';
 
@@ -26,7 +27,7 @@ const AdminDashboard = () => {
   const [videoCategories, setVideoCategories] = useState<VideoCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('bookings');
+  const [activeTab, setActiveTab] = useState<'users' | 'mealPlans' | 'bookings' | 'timeSlots'>('mealPlans');
   const [editingMealPlan, setEditingMealPlan] = useState<MealPlan | null>(null);
   const [editingVideo, setEditingVideo] = useState<VideoType | null>(null);
   const { user, signOut } = useUserStore();
@@ -62,7 +63,6 @@ const AdminDashboard = () => {
 
         setIsAdmin(true);
         setIsCheckingAdmin(false);
-        fetchData();
       } catch (err) {
         console.error('Error in admin check:', err);
         navigate('/');
@@ -71,6 +71,12 @@ const AdminDashboard = () => {
 
     checkAdmin();
   }, [authUser, navigate]);
+
+  useEffect(() => {
+    if (isAdmin && !isCheckingAdmin) {
+      fetchData();
+    }
+  }, [isAdmin, isCheckingAdmin]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -86,13 +92,35 @@ const AdminDashboard = () => {
       if (bookingsError) throw bookingsError;
       setBookings(bookingsData || []);
 
-      // Fetch meal plans
-      const { data: mealPlansData, error: mealPlansError } = await supabase
+      // Fetch meal plans using adminSupabase
+      const { data: mealPlansData, error: mealPlansError } = await adminSupabase
         .from('meal_plans')
         .select('*')
         .order('title');
 
       if (mealPlansError) throw mealPlansError;
+      
+      console.log('Admin - Fetched meal plans:', mealPlansData);
+      
+      // Log each meal plan's content and thumbnail info for debugging
+      if (mealPlansData) {
+        mealPlansData.forEach((plan: any) => {
+          console.log(`Admin - Meal plan ${plan.id} (${plan.title}):`);
+          if (plan.thumbnail_url) {
+            console.log('  Has thumbnail_url:', plan.thumbnail_url);
+          }
+          if (plan.content) {
+            console.log('  Content structure:', Object.keys(plan.content));
+            if (plan.content.metadata) {
+              console.log('  Metadata:', plan.content.metadata);
+            }
+            if (plan.content.image) {
+              console.log('  Has content.image:', plan.content.image);
+            }
+          }
+        });
+      }
+      
       setMealPlans(mealPlansData || []);
 
       // Fetch videos
@@ -139,32 +167,163 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleMealPlanSubmit = async (mealPlan: MealPlan) => {
+  const handleMealPlanSubmit = async (mealPlan: MealPlan, files?: { pdfFile?: File, thumbnailFile?: File }) => {
     try {
+      let pdf_url = (mealPlan as any).pdf_url;
+      // Store the thumbnail URL but don't save to database (column doesn't exist)
+      let thumbnail_url = (mealPlan as any).thumbnail_url;
+      
+      console.log('Original meal plan before processing:', JSON.stringify(mealPlan));
+      
+      // Upload PDF file if provided
+      if (files?.pdfFile) {
+        const pdfFileName = `pdf-files/${Date.now()}-${files.pdfFile.name}`;
+        
+        try {
+          const { error: pdfUploadError } = await adminSupabase.storage
+            .from('Images') // Use 'Images' bucket for all files
+            .upload(pdfFileName, files.pdfFile, {
+              cacheControl: '3600',
+              upsert: true
+            });
+            
+          if (pdfUploadError) {
+            console.error('PDF upload error:', pdfUploadError);
+            throw pdfUploadError;
+          }
+          
+          // Get the public URL
+          const { data: pdfData } = adminSupabase.storage
+            .from('Images')
+            .getPublicUrl(pdfFileName);
+            
+          pdf_url = pdfData.publicUrl;
+        } catch (uploadError) {
+          console.error('Error uploading PDF:', uploadError);
+          // Continue without uploading the file
+        }
+      }
+      
+      // Upload thumbnail if provided - we'll upload it but not save the URL to database schema
+      if (files?.thumbnailFile) {
+        const thumbnailFileName = `meal-plans/${Date.now()}-${files.thumbnailFile.name}`;
+        
+        try {
+          const { error: thumbnailUploadError } = await adminSupabase.storage
+            .from('Images')
+            .upload(thumbnailFileName, files.thumbnailFile, {
+              cacheControl: '3600',
+              upsert: true
+            });
+            
+          if (thumbnailUploadError) {
+            console.error('Thumbnail upload error:', thumbnailUploadError);
+            throw thumbnailUploadError;
+          }
+          
+          // Get the public URL - we'll use this in UI but not save to database
+          const { data: thumbnailData } = adminSupabase.storage
+            .from('Images')
+            .getPublicUrl(thumbnailFileName);
+            
+          thumbnail_url = thumbnailData.publicUrl;
+          console.log('Thumbnail uploaded, URL for UI only:', thumbnail_url);
+        } catch (uploadError) {
+          console.error('Error uploading thumbnail:', uploadError);
+          // Continue without uploading the file
+        }
+      }
+      
+      // Only include fields that exist in the database
+      const { 
+        id,
+        title, 
+        description, 
+        price, 
+        content,
+        total_calories,
+        total_protein,
+        total_carbs,
+        total_fat,
+        duration_weeks,
+        includes_grocery_list,
+        includes_recipes,
+        dietary_type,
+        difficulty_level,
+        preparation_time
+      } = mealPlan;
+
+      // Create a new content object with the thumbnail URL
+      // We need to ensure it's properly structured for JSON serialization
+      const existingContent = content || { weeks: [] };
+      
+      // Store the thumbnail URL in the metadata field
+      const contentWithThumbnail = {
+        ...existingContent,
+        metadata: {
+          ...(existingContent.metadata || {}),
+          thumbnailUrl: thumbnail_url  // Store the URL in a field that won't conflict
+        }
+      };
+      
+      console.log('Modified content with thumbnail:', JSON.stringify(contentWithThumbnail));
+
+      // Create a copy with only the fields we know exist in the database
+      const mealPlanToSave = {
+        title, 
+        description, 
+        price, 
+        content: contentWithThumbnail, // Use the modified content with thumbnail
+        total_calories,
+        total_protein,
+        total_carbs,
+        total_fat,
+        duration_weeks,
+        includes_grocery_list,
+        includes_recipes,
+        dietary_type,
+        difficulty_level,
+        preparation_time
+      };
+      
+      console.log('Meal plan to save to database:', JSON.stringify(mealPlanToSave));
+
+      // Remove any URL properties that don't exist in the database
+      delete (mealPlanToSave as any).pdf_url;
+      delete (mealPlanToSave as any).thumbnail_url;
+      
+      // For UI purposes, create an object with all fields including URLs
+      const mealPlanWithFiles = {
+        ...mealPlanToSave,
+        id,
+        pdf_url,
+        thumbnail_url // Store for UI but not in database
+      };
+
       if (mealPlan.id) {
-        // Update existing meal plan
-        const { error } = await supabase
+        // Update existing meal plan using adminSupabase
+        const { error } = await adminSupabase
           .from('meal_plans')
-          .update(mealPlan)
+          .update(mealPlanToSave)
           .eq('id', mealPlan.id);
 
         if (error) throw error;
 
+        // For UI purposes only - include both URLs in the state
         setMealPlans(mealPlans.map(mp => 
-          mp.id === mealPlan.id ? mealPlan : mp
+          mp.id === mealPlan.id ? mealPlanWithFiles : mp
         ));
       } else {
-        // Create new meal plan - omit id to let Supabase generate UUID
-        const { id, ...mealPlanData } = mealPlan;
-        
-        const { data, error } = await supabase
+        // Create new meal plan using adminSupabase
+        const { data, error } = await adminSupabase
           .from('meal_plans')
-          .insert([mealPlanData])
+          .insert([mealPlanToSave])
           .select();
 
         if (error) throw error;
         if (data) {
-          setMealPlans([...mealPlans, data[0]]);
+          // For UI purposes only - include both URLs in the state
+          setMealPlans([...mealPlans, {...data[0], pdf_url, thumbnail_url: thumbnail_url}]);
         }
       }
 
@@ -177,17 +336,95 @@ const AdminDashboard = () => {
 
   const deleteMealPlan = async (id: string) => {
     try {
-      const { error } = await supabase
+      // First check if this meal plan has any purchases
+      const { data: purchaseData, error: purchaseError } = await adminSupabase
+        .from('purchases')
+        .select('id')
+        .eq('meal_plan_id', id);
+        
+      if (purchaseError) {
+        console.error('Error checking purchases:', purchaseError);
+      }
+      
+      // If there are purchases, we can't delete this meal plan
+      if (purchaseData && purchaseData.length > 0) {
+        setError(`Cannot delete this meal plan because it has been purchased ${purchaseData.length} time(s). Instead, you can hide it from the public view by editing it.`);
+        return;
+      }
+      
+      // If no purchases, proceed with deletion
+      const { error } = await adminSupabase
         .from('meal_plans')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
-
+      if (error) {
+        // Check specifically for foreign key constraint errors
+        if (error.code === '23503') {
+          setError('This meal plan cannot be deleted because it is linked to purchases. Consider hiding it instead of deleting it.');
+        } else {
+          throw error;
+        }
+        return;
+      }
+      
       setMealPlans(mealPlans.filter(mp => mp.id !== id));
+      
     } catch (err) {
       console.error('Error deleting meal plan:', err);
-      setError('Failed to delete meal plan.');
+      setError('Failed to delete meal plan. It may be linked to user purchases.');
+    }
+  };
+
+  const toggleMealPlanVisibility = async (id: string, isHidden: boolean) => {
+    try {
+      console.log(`Toggling meal plan ${id} visibility to ${isHidden ? 'hidden' : 'visible'}`);
+      
+      // First get the current meal plan data
+      const { data: currentData, error: fetchError } = await adminSupabase
+        .from('meal_plans')
+        .select('*')
+        .eq('id', id)
+        .single();
+        
+      if (fetchError) {
+        console.error('Error fetching meal plan for visibility update:', fetchError);
+        setError('Failed to fetch meal plan data for visibility update.');
+        return;
+      }
+      
+      // Create or update the metadata in the content object
+      const currentContent = currentData.content || {};
+      const updatedContent = {
+        ...currentContent,
+        metadata: {
+          ...(currentContent.metadata || {}),
+          isHidden: isHidden
+        }
+      };
+      
+      console.log('Updated content with visibility status:', updatedContent);
+      
+      // Update the meal plan with the modified content
+      const { error } = await adminSupabase
+        .from('meal_plans')
+        .update({ content: updatedContent })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error toggling meal plan visibility:', error);
+        setError('Failed to update meal plan visibility.');
+        return;
+      }
+      
+      // Update the state locally
+      setMealPlans(mealPlans.map(mp => 
+        mp.id === id ? { ...mp, content: updatedContent, is_hidden: isHidden } : mp
+      ));
+      
+    } catch (err) {
+      console.error('Error toggling meal plan visibility:', err);
+      setError('Failed to update meal plan visibility.');
     }
   };
 
@@ -291,48 +528,43 @@ const AdminDashboard = () => {
         )}
 
         <div className="bg-white shadow rounded-lg overflow-hidden">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex flex-wrap">
+          <div className="pb-4 border-b">
+            <nav className="flex space-x-2 overflow-x-auto">
               <button
-                className={`${
-                  activeTab === 'users'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm flex items-center`}
                 onClick={() => setActiveTab('users')}
+                className={`px-4 py-2 rounded-md ${
+                  activeTab === 'users' ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100'
+                }`}
               >
-                <UserCircle className="mr-2 h-5 w-5" />
+                <Users className="mr-2 h-5 w-5" />
                 Users
               </button>
               <button
-                className={`${
-                  activeTab === 'mealPlans'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm flex items-center`}
-                onClick={() => setActiveTab('mealPlans')}
+                onClick={() => {
+                  setActiveTab('mealPlans');
+                  setEditingMealPlan(null);
+                }}
+                className={`px-4 py-2 rounded-md ${
+                  activeTab === 'mealPlans' ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100'
+                }`}
               >
-                <LucideClipboardList className="mr-2 h-5 w-5" />
+                <FileText className="mr-2 h-5 w-5" />
                 Meal Plans
               </button>
               <button
-                className={`${
-                  activeTab === 'bookings'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm flex items-center`}
                 onClick={() => setActiveTab('bookings')}
+                className={`px-4 py-2 rounded-md ${
+                  activeTab === 'bookings' ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100'
+                }`}
               >
                 <Calendar className="mr-2 h-5 w-5" />
                 Bookings
               </button>
               <button
-                className={`${
-                  activeTab === 'timeSlots'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm flex items-center`}
                 onClick={() => setActiveTab('timeSlots')}
+                className={`px-4 py-2 rounded-md ${
+                  activeTab === 'timeSlots' ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100'
+                }`}
               >
                 <Clock className="mr-2 h-5 w-5" />
                 Time Slots
@@ -357,25 +589,32 @@ const AdminDashboard = () => {
                           weeks: [] 
                         } 
                       } as any)}
-                      className="btn-primary flex items-center"
+                      className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
                     >
-                      <Plus size={16} className="mr-2" />
-                      Add New Plan
+                      Add New Meal Plan
                     </button>
                   </div>
                 ) : null}
                 
-                {editingMealPlan ? (
+                {!editingMealPlan ? (
+                  <MealPlansList
+                    mealPlans={mealPlans}
+                    onEdit={(mealPlan) => {
+                      // Preserve the thumbnail_url when setting the meal plan for editing
+                      const mealPlanWithThumbnail = {
+                        ...mealPlan,
+                        thumbnail_url: (mealPlan as any).thumbnail_url || undefined
+                      };
+                      setEditingMealPlan(mealPlanWithThumbnail);
+                    }}
+                    onDelete={deleteMealPlan}
+                    onToggleVisibility={toggleMealPlanVisibility}
+                  />
+                ) : (
                   <MealPlanForm
                     editingMealPlan={editingMealPlan}
                     onSubmit={handleMealPlanSubmit}
                     onCancel={() => setEditingMealPlan(null)}
-                  />
-                ) : (
-                  <MealPlansList
-                    mealPlans={mealPlans}
-                    onEdit={setEditingMealPlan}
-                    onDelete={deleteMealPlan}
                   />
                 )}
               </div>

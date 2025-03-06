@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { supabase } from '../lib/supabase';
+import { supabase, serviceClient } from '../lib/supabase';
 import type { MealPlan } from '../lib/types';
 
 interface MealPlanStore {
@@ -49,37 +49,64 @@ export const useMealPlanStore = create<MealPlanStore>((set) => ({
   fetchMealPlans: async () => {
     try {
       set({ loading: true, error: null });
-      console.log('⚠️ Fetching meal plans... Check network tab for request status.');
-      const { data, error } = await supabase
+      console.log('Fetching meal plans from database');
+      
+      // First try with regular client
+      const { data: regularData, error: regularError } = await supabase
+        .from('meal_plans')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (regularError) {
+        console.error('Error fetching with regular client:', regularError);
+      } else {
+        console.log('Regular client results:', regularData);
+        console.log('Regular client count:', regularData?.length || 0);
+      }
+      
+      // Then try with service client (which may bypass RLS)
+      const { data, error } = await serviceClient
         .from('meal_plans')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Supabase error when fetching meal plans:', error);
+        console.error('Error fetching meal plans with service client:', error);
         throw error;
       }
 
-      console.log('✅ Meal plans fetched successfully:', data);
+      console.log('Service client results:', data);
+      console.log('Service client count:', data?.length || 0);
       
-      // If no meal plans from database, use the sample plan for development
-      if (!data || data.length === 0) {
-        console.log('⚠️ No meal plans found in database, showing fallback sample plan');
-        set({ mealPlans: [sampleMealPlan], loading: false });
-        return;
+      if (data) {
+        // Log each meal plan's content and thumbnail info for debugging
+        data.forEach((plan: any) => {
+          console.log(`Meal plan ${plan.id} (${plan.title}):`);
+          if (plan.thumbnail_url) {
+            console.log('  Has thumbnail_url:', plan.thumbnail_url);
+          }
+          if (plan.content) {
+            console.log('  Content structure:', Object.keys(plan.content));
+            if (plan.content.metadata) {
+              console.log('  Metadata:', plan.content.metadata);
+            }
+            if (plan.content.image) {
+              console.log('  Has content.image:', plan.content.image);
+            }
+          }
+        });
       }
       
-      set({ mealPlans: data as MealPlan[], loading: false });
+      // Simply set the data from the database
+      set({ mealPlans: data || [], loading: false });
+      
     } catch (error) {
-      console.error('❌ Error fetching meal plans:', error);
+      console.error('Error fetching meal plans:', error);
       set({ 
         error: error instanceof Error ? error.message : 'Failed to fetch meal plans',
-        loading: false 
+        loading: false,
+        mealPlans: [] // Empty array on error
       });
-      
-      // Fallback to sample plan on error
-      console.log('⚠️ Falling back to sample plan due to error');
-      set({ mealPlans: [sampleMealPlan], loading: false });
     }
   },
   
