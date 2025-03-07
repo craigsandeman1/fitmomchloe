@@ -11,6 +11,33 @@
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
+// Import the logo and background image
+import logoPath from '../assets/images/fitmomchloe-logo-large.png';
+import backgroundPath from '../assets/images/chloe-food.jpg';
+
+// Function to convert an image to base64
+async function getBase64Image(imgUrl: string): Promise<string> {
+  try {
+    // Use a different approach for imported assets vs URLs
+    if (typeof imgUrl === 'string' && (imgUrl.startsWith('http') || imgUrl.startsWith('blob') || imgUrl.startsWith('data:'))) {
+      const response = await fetch(imgUrl);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } else {
+      // For imported assets (which are already URLs in production builds)
+      return imgUrl;
+    }
+  } catch (error) {
+    console.error('Error loading image:', error);
+    return '';
+  }
+}
+
 // Define interfaces for our data structure
 export interface MealIngredient {
   name: string;
@@ -37,6 +64,7 @@ export interface MealPlanAppendix {
   breakfastsTitle?: string;
   breakfasts?: string[];
   reminder?: string;
+  customSections?: {[key: string]: string[]};
 }
 
 export interface MealPlanData {
@@ -72,6 +100,23 @@ export async function generateMealPlanPDF(mealPlanData: MealPlanData, templatePa
     
     // If template couldn't be loaded, use fallback template
     if (!templateHTML) {
+      // Load images as base64
+      let logoBase64 = '';
+      let backgroundBase64 = '';
+      
+      try {
+        console.log('Loading images, paths:', { logoPath, backgroundPath });
+        logoBase64 = await getBase64Image(logoPath);
+        backgroundBase64 = await getBase64Image(backgroundPath);
+        console.log('Images loaded successfully as base64:', { 
+          logoLoaded: !!logoBase64, 
+          backgroundLoaded: !!backgroundBase64,
+          backgroundLength: backgroundBase64.length
+        });
+      } catch (error) {
+        console.error('Error loading images:', error);
+      }
+      
       templateHTML = `<!DOCTYPE html>
       <html>
       <head>
@@ -94,7 +139,7 @@ export async function generateMealPlanPDF(mealPlanData: MealPlanData, templatePa
             height: 297mm;
             position: relative;
             background-color: #f8f9fa;
-            background-image: linear-gradient(rgba(121, 85, 72, 0.15), rgba(255, 255, 255, 0.9)), url('/src/assets/images/chloe-food.jpg');
+            background-image: linear-gradient(rgba(121, 85, 72, 0.15), rgba(255, 255, 255, 0.9)), url('${backgroundBase64}');
             background-size: cover;
             background-position: center;
             text-align: center;
@@ -333,7 +378,7 @@ export async function generateMealPlanPDF(mealPlanData: MealPlanData, templatePa
           <div class="cover-overlay"></div>
           <div class="cover-content">
             <div class="logo-container">
-              <img src="/src/assets/images/fitmomchloe-logo-large.png" alt="Fit Mom Chloe" class="logo">
+              <img src="${logoBase64 || '../assets/images/fitmomchloe-logo-large.png'}" alt="Fit Mom Chloe" class="logo">
             </div>
             <h1>{{title}}</h1>
             <h2>{{subtitle}}</h2>
@@ -470,8 +515,11 @@ export async function generateMealPlanPDF(mealPlanData: MealPlanData, templatePa
  * @returns {string} - The populated template
  */
 function populateTemplate(template: string, data: MealPlanData): string {
+  // Get the number of days in the meal plan
+  const numDays = data.days ? data.days.length : 0;
+  
   // Replace basic metadata
-  template = template.replace(/{{title}}/g, data.title || '7-DAY WEIGHT LOSS MEAL PLAN');
+  template = template.replace(/{{title}}/g, data.title || `${numDays}-DAY MEAL PLAN`);
   template = template.replace(/{{subtitle}}/g, data.subtitle || 'A complete guide to transform your nutrition journey');
   template = template.replace(/{{author}}/g, data.author || 'Created by Chloe');
   
@@ -533,6 +581,11 @@ function populateTemplate(template: string, data: MealPlanData): string {
  * @returns {string} - The day HTML
  */
 function createDayHTML(day: MealDay): string {
+  // Skip days with empty or undefined day number
+  if (!day.day) {
+    return '';
+  }
+
   let dayHTML = `
     <div class="meal-day">
       <div class="page-watermark"></div>
@@ -563,9 +616,15 @@ function createDayHTML(day: MealDay): string {
       if (meal.ingredients && meal.ingredients.length) {
         dayHTML += `
           <div class="ingredients">
-            <ul class="ingredients-list">
-              ${meal.ingredients.map(ingredient => `<li>${ingredient}</li>`).join('')}
-            </ul>
+            ${meal.ingredients.map(ingredient => {
+              // Check if the ingredient contains a colon - if so, make the first part bold
+              if (ingredient.includes(':')) {
+                const [title, content] = ingredient.split(':', 2);
+                return `<p><strong>${title}:</strong>${content}</p>`;
+              } else {
+                return `<p>${ingredient}</p>`;
+              }
+            }).join('')}
           </div>
         `;
       }
@@ -590,6 +649,28 @@ function createDayHTML(day: MealDay): string {
  * @returns {string} - The appendix HTML
  */
 function createAppendixHTML(appendix: MealPlanAppendix): string {
+  // Add CSS for dotted line box
+  const dottedBoxStyle = `
+    border: 2px dashed #795548;
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin: 15px 0;
+    background-color: #fff;
+  `;
+
+  // Helper function to format items without bullets and with subheadings for colon lines
+  const formatItems = (items: string[]): string => {
+    return items.map(item => {
+      // Check if the item contains a colon - if so, make the first part bold
+      if (item.includes(':')) {
+        const [title, content] = item.split(':', 2);
+        return `<p><strong>${title}:</strong>${content}</p>`;
+      } else {
+        return `<p>${item}</p>`;
+      }
+    }).join('');
+  };
+  
   let appendixHTML = `
     <div class="appendix">
       <div class="page-watermark"></div>
@@ -600,10 +681,12 @@ function createAppendixHTML(appendix: MealPlanAppendix): string {
   if (appendix.snacks && appendix.snacks.length) {
     appendixHTML += `
       <div class="appendix-section">
-        <h3>${appendix.snacksTitle || 'LIST OF ACCEPTABLE SNACKS'}</h3>
-        <ul class="appendix-list">
-          ${appendix.snacks.map(snack => `<li>${snack}</li>`).join('')}
-        </ul>
+        <div style="${dottedBoxStyle}">
+          <h3>${appendix.snacksTitle || 'List of Acceptable Snacks'}</h3>
+          <div class="appendix-content">
+            ${formatItems(appendix.snacks)}
+          </div>
+        </div>
       </div>
     `;
   }
@@ -612,10 +695,12 @@ function createAppendixHTML(appendix: MealPlanAppendix): string {
   if (appendix.supplements && appendix.supplements.length) {
     appendixHTML += `
       <div class="appendix-section">
-        <h3>${appendix.supplementsTitle || 'SUPPLEMENTS FOR BLOATING AND WEIGHT LOSS'}</h3>
-        <ul class="appendix-list">
-          ${appendix.supplements.map(supplement => `<li>${supplement}</li>`).join('')}
-        </ul>
+        <div style="${dottedBoxStyle}">
+          <h3>${appendix.supplementsTitle || 'Supplements'}</h3>
+          <div class="appendix-content">
+            ${formatItems(appendix.supplements)}
+          </div>
+        </div>
       </div>
     `;
   }
@@ -624,10 +709,12 @@ function createAppendixHTML(appendix: MealPlanAppendix): string {
   if (appendix.breakfasts && appendix.breakfasts.length) {
     appendixHTML += `
       <div class="appendix-section">
-        <h3>${appendix.breakfastsTitle || 'OPTIONAL BREAKFAST IDEAS'}</h3>
-        <ul class="appendix-list">
-          ${appendix.breakfasts.map(breakfast => `<li>${breakfast}</li>`).join('')}
-        </ul>
+        <div style="${dottedBoxStyle}">
+          <h3>${appendix.breakfastsTitle || 'Optional Breakfast'}</h3>
+          <div class="appendix-content">
+            ${formatItems(appendix.breakfasts)}
+          </div>
+        </div>
       </div>
     `;
   }
@@ -642,6 +729,24 @@ function createAppendixHTML(appendix: MealPlanAppendix): string {
         </div>
       </div>
     `;
+  }
+  
+  // Add any custom sections
+  if (appendix.customSections) {
+    for (const [title, items] of Object.entries(appendix.customSections)) {
+      if (items && items.length) {
+        appendixHTML += `
+          <div class="appendix-section">
+            <div style="${dottedBoxStyle}">
+              <h3>${title}</h3>
+              <div class="appendix-content">
+                ${formatItems(items)}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
   }
   
   appendixHTML += `

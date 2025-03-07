@@ -451,71 +451,120 @@ const MealPlanForm = ({ editingMealPlan, onSubmit, onCancel }: MealPlanFormProps
       days.push(currentDay);
     }
     
-    // Ensure we have enough days
-    while (days.length < 7) {
-      const dayNumber = days.length + 1;
-      days.push({
-        day: dayNumber.toString(),
-        meals: [{
-          title: 'MEAL',
-          ingredients: ['Your meal plan content for Day ' + dayNumber]
-        }]
-      });
-    }
-    
     // Process appendix content more carefully
     let snacks: string[] = [];
     let supplements: string[] = [];
     let breakfasts: string[] = [];
     let reminder: string = '';
+    let additionalSections: {[key: string]: string[]} = {};
+    let sectionTitles: {[key: string]: string} = {};
     
     // Join all appendix content
     const appendixText = appendixContent.join('\n');
     
-    // More robust section extraction
-    const extractSection = (startMarker: string, endMarkers: string[]): string[] => {
-      const startIndex = appendixText.toUpperCase().indexOf(startMarker.toUpperCase());
-      if (startIndex === -1) return [];
+    // Find all section headers in the appendix (ALL CAPS or lines ending with colon)
+    const sectionHeaders: string[] = [];
+    const appendixLines = appendixText.split('\n');
+    
+    for (let i = 0; i < appendixLines.length; i++) {
+      const line = appendixLines[i].trim();
       
+      // Check for section headers (but exclude list items with colons in them):
+      // 1. ALL CAPS lines (at least 3 characters) that are not just bullet points
+      // 2. Lines ending with a colon that don't start with bullet points and are preceded by an empty line
+      if ((line.length > 3 && line === line.toUpperCase() && !/^[•\-*]\s*$/.test(line)) ||
+          (line.length > 3 && line.endsWith(':') && 
+           !/^[•\-*]/.test(line) && // not starting with a bullet
+           (i === 0 || appendixLines[i-1].trim() === ''))) { // preceded by empty line or first line
+        // Store the exact title (without the colon)
+        const cleanTitle = line.endsWith(':') ? line.slice(0, -1).trim() : line;
+        sectionHeaders.push(cleanTitle);
+      }
+    }
+    
+    console.log('Detected section headers:', sectionHeaders);
+    
+    // More robust section extraction with exact title preservation
+    const extractSection = (sectionTitle: string, otherSections: string[]): [string[], string] => {
+      // Store the exact title for use in the PDF
+      const exactTitle = sectionTitle;
+      
+      // Search for title with and without colon
+      let startIndex = appendixText.indexOf(sectionTitle);
+      if (startIndex === -1) {
+        startIndex = appendixText.indexOf(sectionTitle + ':');
+      }
+      
+      if (startIndex === -1) {
+        return [[], exactTitle];
+      }
+      
+      // Find the end by looking for the next section
       let endIndex = appendixText.length;
-      for (const marker of endMarkers) {
-        const idx = appendixText.toUpperCase().indexOf(marker.toUpperCase(), startIndex + startMarker.length);
+      for (const section of otherSections) {
+        // Check for section with and without colon
+        let idx = appendixText.indexOf(section, startIndex + sectionTitle.length);
+        if (idx === -1) {
+          idx = appendixText.indexOf(section + ':', startIndex + sectionTitle.length);
+        }
+        
         if (idx !== -1 && idx < endIndex) {
           endIndex = idx;
         }
       }
       
-      const sectionText = appendixText.substring(
-        startIndex + startMarker.length, 
-        endIndex
-      ).trim();
+      // Extract the section content
+      const startOffset = startIndex + sectionTitle.length;
+      // Skip the colon if present
+      const colonOffset = appendixText.charAt(startOffset) === ':' ? 1 : 0;
+      const sectionText = appendixText.substring(startOffset + colonOffset, endIndex).trim();
       
-      return sectionText.split('\n')
-        .map(line => line.trim())
-        .filter(line => line !== '' && !line.match(/^[•\-*]?\s*$/));
+      // Process the content into list items
+      return [
+        sectionText.split('\n')
+          .map(line => line.trim())
+          .filter(line => line.length > 0)
+          .map(line => line.replace(/^[•\-*]\s*/, ''))
+          .filter(line => line.length > 0),
+        exactTitle
+      ];
     };
     
-    // Extract all sections with more robust patterns
-    snacks = extractSection(
+    // Extract standard sections
+    const [snacksItems, snacksTitle] = extractSection(
       'LIST OF ACCEPTABLE SNACKS', 
       ['SUPPLEMENTS', 'OPTIONAL BREAKFAST', 'REMEMBER']
-    ).map(item => item.replace(/^[•\-*]\s*/, ''));
+    );
+    snacks = snacksItems;
     
-    supplements = extractSection(
+    const [supplementsItems, supplementsTitle] = extractSection(
       'SUPPLEMENTS', 
       ['LIST OF ACCEPTABLE SNACKS', 'OPTIONAL BREAKFAST', 'REMEMBER']
-    ).map(item => item.replace(/^[•\-*]\s*/, ''));
+    );
+    supplements = supplementsItems;
     
-    breakfasts = extractSection(
+    const [breakfastsItems, breakfastsTitle] = extractSection(
       'OPTIONAL BREAKFAST', 
       ['LIST OF ACCEPTABLE SNACKS', 'SUPPLEMENTS', 'REMEMBER']
-    ).map(item => item.replace(/^[•\-*]\s*/, ''));
+    );
+    breakfasts = breakfastsItems;
     
     // Extract reminder section - usually comes last
     const reminderIndex = appendixText.toUpperCase().indexOf('REMEMBER');
     if (reminderIndex !== -1) {
       reminder = appendixText.substring(reminderIndex).trim();
     }
+    
+    // Extract any other ALL CAPS sections that are not standard ones
+    for (const section of sectionHeaders) {
+      if (!['LIST OF ACCEPTABLE SNACKS', 'SUPPLEMENTS', 'OPTIONAL BREAKFAST', 'REMEMBER'].some(s => 
+        section.includes(s))) {
+        const [items, title] = extractSection(section, sectionHeaders.filter(s => s !== section));
+        additionalSections[title] = items;
+      }
+    }
+    
+    console.log('Additional sections:', additionalSections);
     
     // Ensure we have at least empty arrays for each section
     if (!snacks.length) snacks = [];
@@ -536,13 +585,14 @@ const MealPlanForm = ({ editingMealPlan, onSubmit, onCancel }: MealPlanFormProps
       introduction,
       days,
       appendix: {
-        snacksTitle: 'LIST OF ACCEPTABLE SNACKS',
+        snacksTitle: snacksTitle,
         snacks,
-        supplementsTitle: 'SUPPLEMENTS FOR BLOATING AND WEIGHT LOSS',
+        supplementsTitle: supplementsTitle,
         supplements,
-        breakfastsTitle: 'OPTIONAL BREAKFAST IDEAS',
+        breakfastsTitle: breakfastsTitle,
         breakfasts,
-        reminder
+        reminder,
+        customSections: additionalSections
       }
     };
   };
