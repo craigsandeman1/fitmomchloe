@@ -520,7 +520,7 @@ function populateTemplate(template: string, data: MealPlanData): string {
   
   // Replace basic metadata
   template = template.replace(/{{title}}/g, data.title || `${numDays}-DAY MEAL PLAN`);
-  template = template.replace(/{{subtitle}}/g, data.subtitle || 'A complete guide to transform your nutrition journey');
+  template = template.replace(/{{subtitle}}/g, data.subtitle || '');
   template = template.replace(/{{author}}/g, data.author || 'Created by Chloe');
   
   // Replace introduction with proper HTML formatting

@@ -570,7 +570,17 @@ const MealPlanForm = ({ editingMealPlan, onSubmit, onCancel }: MealPlanFormProps
     // Extract reminder section - usually comes last
     const reminderIndex = appendixText.toUpperCase().indexOf('REMEMBER');
     if (reminderIndex !== -1) {
-      reminder = appendixText.substring(reminderIndex).trim();
+      // Extract everything from REMEMBER to the end of the text
+      // DON'T repeat the title in the content since it's already used as a header in the PDF
+      const reminderText = appendixText.substring(reminderIndex).trim();
+      
+      // Check if the first line is "REMEMBER TO DRINK WATER!!!" and if so, skip it in the content
+      const reminderLines = reminderText.split('\n');
+      if (reminderLines.length > 0 && reminderLines[0].toUpperCase().includes('REMEMBER TO DRINK WATER')) {
+        reminder = reminderLines.slice(1).join('\n').trim();
+      } else {
+        reminder = reminderText;
+      }
     }
     
     // Extract any other ALL CAPS sections that are not standard ones
@@ -598,7 +608,7 @@ const MealPlanForm = ({ editingMealPlan, onSubmit, onCancel }: MealPlanFormProps
     
     return {
       title,
-      subtitle: 'A complete guide to transform your nutrition journey',
+      subtitle: '',
       author: 'Created by Chloe',
       introduction,
       days,
