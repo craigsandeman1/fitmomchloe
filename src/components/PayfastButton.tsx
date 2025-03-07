@@ -208,10 +208,17 @@ const PayfastButton = ({
     // If handlePurchaseAttempt is provided, call it first
     if (handlePurchaseAttempt && plan) {
       console.log('PayfastButton: Calling handlePurchaseAttempt');
-      handlePurchaseAttempt(plan);
+      // Store the result of handlePurchaseAttempt
+      const result = handlePurchaseAttempt(plan);
+      
+      // If it returns true, the purchase was handled elsewhere, so stop here
+      if (result === true) {
+        console.log('PayfastButton: Purchase handled by parent component');
+        return;
+      }
     }
     
-    // Always continue with the payment flow regardless
+    // Continue with the payment flow
     console.log('PayfastButton: Preparing payment flow');
     
     // Call the onClick handler if provided

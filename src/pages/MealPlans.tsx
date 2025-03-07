@@ -342,26 +342,18 @@ const MealPlans = () => {
   const handlePurchaseAttempt = (plan: MealPlan) => {
     console.log('MealPlans: handlePurchaseAttempt called for plan', plan.title);
     
-    if (!user) {
-      // Save the plan they were trying to purchase
-      setPendingPurchase(plan);
-      // Show the auth modal
-      setShowAuthModal(true);
-    } else if (hasPurchased(plan.id)) {
+    // No longer requiring authentication to purchase
+    // Just check if the user has already purchased (if logged in)
+    if (user && hasPurchased(plan.id)) {
       // Already purchased, just download it
       downloadPurchasedPlan(plan.id || '');
     } else {
-      // Logged in but not purchased, proceed with Payfast
-      console.log('MealPlans: User logged in and plan not purchased, should continue with payment...');
+      // Either not logged in or hasn't purchased, proceed with Payfast
+      console.log('MealPlans: Proceeding with payment...');
       
-      // This is where we need to continue the payment flow
-      // Instead of doing nothing, we need to return false or null to let PayfastButton handle it
-      return false; // This signals to PayfastButton that it should continue with its own flow
+      // Let PayfastButton handle it
+      return false;
     }
-    
-    // If we made it here, we've handled the purchase ourselves
-    // Return true to signal to PayfastButton that it should stop its flow
-    return true;
   };
   
   // Handle when user successfully authenticates from the auth modal
