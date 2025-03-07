@@ -722,7 +722,7 @@ function createAppendixHTML(appendix: MealPlanAppendix): string {
   // Add reminder
   if (appendix.reminder) {
     appendixHTML += `
-      <div class="reminder-box">
+      <div class="reminder-box" style="margin-bottom: 30px; padding-bottom: 20px; page-break-inside: avoid;">
         <div class="reminder-title">REMEMBER TO DRINK WATER!!!</div>
         <div class="reminder-content">
           ${appendix.reminder.split('\n').join('<br>')}

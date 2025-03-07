@@ -320,22 +320,39 @@ const MealPlanForm = ({ editingMealPlan, onSubmit, onCancel }: MealPlanFormProps
     // Better line splitting to handle different line endings
     const lines = text.split(/\r?\n/).map(line => line.trim());
     
-    // Extract title from the first line
-    const title = lines[0] ? lines[0].trim() : '7-DAY WEIGHT LOSS MEAL PLAN';
+    // Extract title - check for multiple title lines at the beginning
+    const titleLines = [];
+    let i = 0;
     
-    // Find the introduction section (before the first DAY)
+    // Collect title lines until we hit content that looks like introduction text
+    // (longer paragraphs or day markers)
+    while (i < Math.min(3, lines.length) && 
+           lines[i] && 
+           lines[i].length > 0 && 
+           lines[i].length < 30 && 
+           !lines[i].match(/^DAY/i)) {
+      titleLines.push(lines[i]);
+      i++;
+    }
+    
+    // Join all title lines or use default
+    const title = titleLines.length > 0 
+      ? titleLines.join(' - ') 
+      : '7-DAY WEIGHT LOSS MEAL PLAN';
+    
+    // Find the introduction section (after title lines, before the first DAY)
     let introEndIndex = -1;
-    for (let i = 1; i < lines.length; i++) { // Start from index 1 to skip title
-      if (lines[i].match(/^DAY \d+/i)) {
-        introEndIndex = i;
+    for (let j = i; j < lines.length; j++) {
+      if (lines[j].match(/^DAY \w+/i)) {
+        introEndIndex = j;
         break;
       }
     }
     
-    // Extract the introduction - use more lines if available
+    // Extract the introduction - use proper range after title lines
     const introLines = introEndIndex > 0 
-      ? lines.slice(1, introEndIndex).filter(line => line.trim() !== '')
-      : lines.slice(1, 5).filter(line => line.trim() !== '');
+      ? lines.slice(i, introEndIndex).filter(line => line.trim() !== '')
+      : lines.slice(i, i + 5).filter(line => line.trim() !== '');
     
     // Join intro lines with proper paragraph formatting - but don't add HTML tags here
     // They'll be added in the PDF generator
@@ -344,7 +361,8 @@ const MealPlanForm = ({ editingMealPlan, onSubmit, onCancel }: MealPlanFormProps
       : 'Welcome to your customized meal plan! Follow this guide carefully for best results.';
     
     // Find all day sections and their content
-    const dayRegex = /^DAY (\d+)/i;
+    // Update regex to handle both numeric days (DAY 1) and text days (DAY ONE)
+    const dayRegex = /^DAY (\w+)/i;
     const days: any[] = [];
     
     let currentDay: any = null;
