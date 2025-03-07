@@ -671,62 +671,10 @@ function createAppendixHTML(appendix: MealPlanAppendix): string {
     }).join('');
   };
   
-  // Create the water reminder box for the top right corner
-  let waterReminderHTML = '';
-  if (appendix.reminder) {
-    waterReminderHTML = `
-      <div style="
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        width: 200px;
-        padding: 15px;
-        border-radius: 15px;
-        background-color: rgba(173, 216, 230, 0.2);
-        border: 1px solid rgba(135, 206, 235, 0.5);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        text-align: center;
-        z-index: 10;
-        page-break-inside: avoid;
-      ">
-        <div style="
-          position: absolute;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          background-image: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\" style=\"enable-background:new 0 0 512 512;\" opacity=\"0.1\"><path fill=\"%230099ff\" d=\"M352,0c-53,0-96,85.5-96,192c0,106.5,43,192,96,192s96-85.5,96-192C448,85.5,405,0,352,0z M252.7,428.7 c-38.3-23.9-61.3-59.1-65.4-98.1c-5.9-57,30.3-124,36.9-136.9c3.1-6.2,12.2-6.1,15.1,0.2c7.9,16.2,27.2,53.9,50.7,77.4 c23.2,23.2,52.5,37.6,52.5,37.6s-15.8,51-47.8,83C270.4,415.3,252.7,428.7,252.7,428.7z M215,211c0-21,17-38,38-38 s38,17,38,38s-17,38-38,38S215,232,215,211z\"/></svg>');
-          background-repeat: no-repeat;
-          background-position: center;
-          background-size: 80px 80px;
-          opacity: 0.3;
-          border-radius: 15px;
-          z-index: -1;
-        "></div>
-        <h4 style="
-          margin-top: 5px;
-          margin-bottom: 10px;
-          color: #0077be;
-          font-size: 14px;
-          font-weight: bold;
-          text-transform: uppercase;
-        ">Remember To Drink Water!!!</h4>
-        <div style="
-          font-size: 12px;
-          color: #333;
-          line-height: 1.4;
-        ">
-          ${appendix.reminder.split('\n').join('<br>')}
-        </div>
-      </div>
-    `;
-  }
-
   let appendixHTML = `
     <div class="appendix">
       <div class="page-watermark"></div>
       <h3>APPENDIX</h3>
-      ${waterReminderHTML}
   `;
   
   // Add snacks list
@@ -787,6 +735,18 @@ function createAppendixHTML(appendix: MealPlanAppendix): string {
         `;
       }
     }
+  }
+  
+  // Add reminder in a more traditional format
+  if (appendix.reminder) {
+    appendixHTML += `
+      <div class="reminder-box" style="margin-bottom: 30px; padding-bottom: 20px; page-break-inside: avoid;">
+        <div class="reminder-title" style="font-weight: bold; font-size: 16px; color: #795548; margin-bottom: 10px; text-transform: uppercase;">REMEMBER TO DRINK WATER!!!</div>
+        <div class="reminder-content">
+          ${appendix.reminder.split('\n').join('<br>')}
+        </div>
+      </div>
+    `;
   }
   
   appendixHTML += `
