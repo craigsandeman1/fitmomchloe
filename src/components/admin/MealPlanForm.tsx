@@ -708,10 +708,24 @@ const MealPlanForm = ({ editingMealPlan, onSubmit, onCancel }: MealPlanFormProps
         {/* Meal Plan Generator Section */}
         <div className="mb-8 border-t border-gray-200 pt-6 bg-blue-50 p-6 rounded-lg">
           <h3 className="text-lg font-medium text-blue-900 mb-3">Option 1: Generate Meal Plan PDF</h3>
-          <p className="text-sm text-blue-700 mb-4">
+          <p className="text-sm text-blue-700 mb-2">
             Paste your meal plan content below to automatically generate a beautifully formatted PDF. 
             Each day will be placed on its own page, and the Appendix will be on a separate page as well.
           </p>
+          
+          <div className="bg-white p-4 border border-blue-200 rounded-md mb-4 text-sm">
+            <h4 className="font-bold text-blue-800 mb-2">Formatting Guidelines:</h4>
+            <ul className="list-disc pl-5 space-y-1 text-gray-700">
+              <li><strong>Title:</strong> First line will be the title</li>
+              <li><strong>Days:</strong> Start each day with <code className="bg-gray-100 px-1">DAY X</code> (e.g., DAY 1)</li>
+              <li><strong>Meals:</strong> Label each meal with <code className="bg-gray-100 px-1">MEAL TYPE:</code> (e.g., LUNCH:)</li>
+              <li><strong>Appendix:</strong> Start appendix with <code className="bg-gray-100 px-1">APPENDIX</code> on its own line</li>
+              <li><strong>Sections:</strong> Create sections with ALL CAPS text or text ending with a colon</li>
+              <li><strong>Subheadings:</strong> Use colons for subheadings - text before the colon will appear <strong>bold</strong></li>
+              <li><strong>No bullet points needed:</strong> Just list items on separate lines</li>
+            </ul>
+            <div className="mt-2 text-blue-600 text-xs">Note: For best results, put section headers on their own line with a blank line before them.</div>
+          </div>
           
           <textarea
             value={mealPlanText}
@@ -719,7 +733,24 @@ const MealPlanForm = ({ editingMealPlan, onSubmit, onCancel }: MealPlanFormProps
             onPaste={handlePaste}
             rows={12}
             className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 mb-4"
-            placeholder="Paste your meal plan content here. Make sure each day starts with 'DAY X' and the appendix starts with 'APPENDIX'..."
+            placeholder="TITLE OF MEAL PLAN
+Introduction paragraph goes here.
+
+DAY 1
+LUNCH:
+Meal description here
+
+DINNER:
+Another meal here
+
+APPENDIX
+LIST OF ACCEPTABLE SNACKS
+Item 1
+Item 2
+
+Optional Breakfast:
+Item 1
+Item 2"
           ></textarea>
           
           <div className="flex gap-3 mb-0">
