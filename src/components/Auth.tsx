@@ -95,7 +95,7 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
   };
 
   return (
-    <div className="max-w-md mx-auto hide-signup">
+    <div className="max-w-md mx-auto">
       <div className="mb-4 text-center">
         <h2 className="text-2xl font-playfair mb-2">{isSignUp ? 'Create Account' : 'Sign In'}</h2>
         <p className="text-gray-600">

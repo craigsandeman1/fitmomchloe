@@ -93,9 +93,7 @@ const Login = () => {
               </span>
             )}
           </p>
-          <div className="hide-signup">
-            <Auth onAuthSuccess={handleAuthSuccess} />
-          </div>
+          <Auth onAuthSuccess={handleAuthSuccess} />
           
           {isCheckingAdmin && (
             <div className="mt-4 text-center text-gray-500">
