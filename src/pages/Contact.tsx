@@ -42,6 +42,52 @@ const Contact = () => {
           subject: formData.subject || 'New Contact Form Submission',
           to: 'chloefitness@gmail.com',
           bcc: 'fitmomchloe@gmail.com,sandemancraig@gmail.com',
+          html: true,
+          message: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>New Contact Form Submission</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #FF6B6B;
+      margin-bottom: 20px;
+    }
+    .section {
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .label {
+      font-weight: bold;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>New Contact Form Submission</h1>
+  
+  <div class="section">
+    <p><span class="label">Name:</span> ${formData.name}</p>
+    <p><span class="label">Email:</span> ${formData.email}</p>
+    <p><span class="label">Subject:</span> ${formData.subject || 'Not specified'}</p>
+  </div>
+  
+  <div class="section">
+    <p><span class="label">Message:</span></p>
+    <p>${formData.message.replace(/\n/g, '<br>')}</p>
+  </div>
+</body>
+</html>`
         })
       });
       

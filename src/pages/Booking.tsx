@@ -40,6 +40,7 @@ const Booking = () => {
       subject: 'New Booking Notification',
       to: 'chloefitness@gmail.com',
       bcc: 'fitmomchloe@gmail.com,sandemancraig@gmail.com',
+      html: true,
     },
     onSuccess: () => {
       setIsSendingEmail(false);
@@ -241,16 +242,56 @@ const Booking = () => {
       await submit({
         name: bookingInfo.name,
         email: bookingInfo.email,
-        message: `
-          New booking created!
-          
-          Name: ${bookingInfo.name}
-          Email: ${bookingInfo.email}
-          Date: ${bookingInfo.date}
-          Time: ${bookingInfo.time}
-          Notes: ${bookingInfo.notes || 'None'}
-          Booking ID: ${bookingInfo.bookingId}
-        `,
+        message: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>New Booking Notification</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #FF6B6B;
+      margin-bottom: 20px;
+    }
+    .booking-details {
+      background-color: #f9f9f9;
+      border-left: 4px solid #FF6B6B;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .label {
+      font-weight: bold;
+      width: 100px;
+      display: inline-block;
+    }
+    p {
+      margin: 8px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>New Personal Training Session Booked!</h1>
+  
+  <div class="booking-details">
+    <p><span class="label">Name:</span> ${bookingInfo.name}</p>
+    <p><span class="label">Email:</span> ${bookingInfo.email}</p>
+    <p><span class="label">Date:</span> ${bookingInfo.date}</p>
+    <p><span class="label">Time:</span> ${bookingInfo.time}</p>
+    <p><span class="label">Notes:</span> ${bookingInfo.notes || 'None'}</p>
+    <p><span class="label">Booking ID:</span> ${bookingInfo.bookingId}</p>
+  </div>
+  
+  <p>This booking has been confirmed and added to your calendar.</p>
+</body>
+</html>`,
         botcheck: '',
       });
     } catch (err) {
@@ -300,15 +341,59 @@ const Booking = () => {
       await submit({
         name: booking.name || user?.user_metadata?.full_name || 'User',
         email: user?.email || '',
-        message: `
-          A booking has been cancelled!
-          
-          Name: ${booking.name || user?.user_metadata?.full_name || 'Not provided'}
-          Email: ${user?.email || 'Not provided'}
-          Original Date: ${format(bookingDate, 'PPPP')}
-          Original Time: ${format(bookingDate, 'p')}
-          Booking ID: ${booking.id}
-        `,
+        message: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Booking Cancellation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #FF6B6B;
+      margin-bottom: 20px;
+    }
+    .booking-details {
+      background-color: #f9f9f9;
+      border-left: 4px solid #e74c3c;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .label {
+      font-weight: bold;
+      width: 120px;
+      display: inline-block;
+    }
+    p {
+      margin: 8px 0;
+    }
+    .cancelled {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1><span class="cancelled">CANCELLED:</span> Personal Training Session</h1>
+  
+  <div class="booking-details">
+    <p><span class="label">Name:</span> ${booking.name || user?.user_metadata?.full_name || 'Not provided'}</p>
+    <p><span class="label">Email:</span> ${user?.email || 'Not provided'}</p>
+    <p><span class="label">Original Date:</span> ${format(bookingDate, 'PPPP')}</p>
+    <p><span class="label">Original Time:</span> ${format(bookingDate, 'p')}</p>
+    <p><span class="label">Booking ID:</span> ${booking.id}</p>
+  </div>
+  
+  <p>This booking has been cancelled and removed from your calendar.</p>
+</body>
+</html>`,
         botcheck: '',
       });
     } catch (err) {
