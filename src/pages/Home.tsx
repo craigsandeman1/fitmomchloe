@@ -45,7 +45,7 @@ const Home = () => {
         </div>
 
         <div className="section-container relative z-10">
-          <h2 className="font-playfair text-4xl text-center mb-8 md:mb-16">What I Offer</h2>
+          <h2 className="font-playfair text-3xl md:text-4xl text-center mb-8 md:mb-16">What I Offer</h2>
           <div className="grid md:grid-cols-3 gap-4 md:gap-8 px-4 md:px-0">
             <div className="bg-white/40 md:bg-white/70 backdrop-blur-sm md:backdrop-blur p-6 md:p-8 rounded-lg text-center shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1">
               <h3 className="font-playfair text-xl md:text-2xl mb-3 md:mb-4">Personal Training</h3>
@@ -68,7 +68,7 @@ const Home = () => {
 
       {/* Instagram Feed Section */}
       <section className="bg-[#F7F2F0]">
-        <h2 className="font-playfair text-4xl text-center pt-32 pb-8">Follow My Journey</h2>
+        <h2 className="font-playfair text-3xl md:text-4xl text-center pt-32 pb-8">Follow My Journey</h2>
         <div 
           className="elfsight-app-bc1ab87c-9801-4a3d-b414-c409d1543e51" 
           data-elfsight-app-lazy

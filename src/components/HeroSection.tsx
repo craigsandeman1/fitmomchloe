@@ -60,11 +60,11 @@ const HeroSection = () => {
         <div className="flex-grow flex items-center">
           <div className="section-container relative z-10">
             <div className="max-w-3xl mx-auto text-center">
-              <h1 className="font-playfair text-6xl md:text-7xl mb-8 text-white drop-shadow-lg">
+              <h1 className="font-playfair text-4xl sm:text-5xl md:text-7xl mb-8 text-white drop-shadow-lg">
                 You deserve to live in a body you{' '}
                 <span className="text-primary">love</span>
               </h1>
-              <p className="text-2xl mb-12 text-white drop-shadow-md">
+              <p className="text-xl md:text-2xl mb-12 text-white drop-shadow-md">
                 And I want to help you build it
               </p>
               
