@@ -151,7 +151,9 @@ const Booking = () => {
     if (!slotAvailable) return false;
     
     // This date is available in system configuration, now check if it's already booked
-    const formattedDate = `${date}T${time}:00`;
+    const formattedDate = time.includes(':00')
+      ? `${date}T${time}`
+      : `${date}T${time}:00`;
     
     // Check if there's already a booking at this time from ANY user
     const existingBooking = allSystemBookings.find(booking => {
@@ -178,7 +180,9 @@ const Booking = () => {
       
       // IMPORTANT: Store the date/time exactly as selected - no timezone conversion
       // Format: 2024-03-18T14:00:00
-      const exactTimeString = `${selectedDate}T${selectedTime}:00`;
+      const exactTimeString = selectedTime.includes(':00') 
+        ? `${selectedDate}T${selectedTime}`
+        : `${selectedDate}T${selectedTime}:00`;
       
       console.log('Storing exact selected time (no timezone conversion):', exactTimeString);
       
