@@ -7,6 +7,7 @@ import RecipeModal from '../components/RecipeModal';
 import PayfastButton from '../components/PayfastButton';
 import { testMealPlanAccess, verifySupabaseConnection, checkSpecificMealPlan, forceInsertExampleMealPlan } from '../lib/supabase';
 import { supabase } from '../lib/supabase';
+import { sendPurchaseConfirmationEmail } from '../lib/emailUtils';
 import chloeFood from '../assets/images/chloe-food.jpg';
 import crumpetsBackground from '../assets/images/crumpets.webp';
 import { MealPlan } from '../types/meal-plan';
@@ -264,13 +265,13 @@ const MealPlans = () => {
     setPurchaseSuccess(planId);
     console.log(`Successfully purchased meal plan: ${planId}`);
     
+    // Find the plan to get its details
+    const plan = mealPlans.find(p => p.id === planId);
+    if (!plan) return;
+    
     // Record the purchase in the database
     if (user && planId) {
-      try {
-        // Find the plan to get its price
-        const plan = mealPlans.find(p => p.id === planId);
-        if (!plan) return;
-        
+      try {        
         const { error } = await supabase
           .from('purchases')
           .insert([
@@ -292,6 +293,32 @@ const MealPlans = () => {
       } catch (err) {
         console.error('Error recording purchase:', err);
       }
+    }
+    
+    // Send purchase confirmation email
+    try {
+      // Create a download link for the plan
+      // Note: In production, this should be a secure, time-limited link
+      const downloadLink = `${window.location.origin}/meal-plans?download=${planId}`;
+
+      // Get user's email (from user object or session)
+      const userEmail = user?.email;
+      
+      if (userEmail && plan.title) {
+        // Send the purchase confirmation email
+        await sendPurchaseConfirmationEmail(
+          userEmail,
+          plan.title,
+          downloadLink,
+          user?.user_metadata?.name || undefined
+        );
+        console.log('Purchase confirmation email sent');
+      } else {
+        console.warn('Could not send purchase confirmation email - missing email or plan title');
+      }
+    } catch (emailError) {
+      console.error('Error sending purchase confirmation email:', emailError);
+      // Don't block the purchase process if email fails
     }
     
     // Trigger download for the purchased plan

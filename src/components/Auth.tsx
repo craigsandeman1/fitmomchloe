@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuthStore } from '../store/auth';
+import { sendWelcomeEmail } from '../lib/emailUtils';
 
 interface AuthProps {
   onAuthSuccess?: () => void;
@@ -38,6 +39,14 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
       if (isSignUp) {
         await signUp(email, password);
         
+        // Send custom welcome email via Web3Forms
+        try {
+          await sendWelcomeEmail(email);
+        } catch (emailError) {
+          console.error("Failed to send welcome email:", emailError);
+          // Don't block the signup process if email fails
+        }
+        
         if (purchaseFlow) {
           // For purchase flow: automatically sign them in after sign up
           // Don't make them wait for email verification
@@ -49,45 +58,62 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
             if (onAuthSuccess) {
               onAuthSuccess();
             }
-            return; // Skip the "check email" message
-          } catch (signInError: any) {
-            console.error('Auto sign-in after signup failed:', signInError);
-            // Continue with normal flow if auto-signin fails
+          } catch (signInError) {
+            console.error('Error signing in after sign up:', signInError);
+            setError('Account created successfully, but there was an issue signing you in automatically. Please try signing in manually.');
           }
+        } else {
+          // Normal sign up flow
+          setError('');
+          setIsLoading(false);
+          if (!purchaseFlow) {
+            setIsSignUp(false); // Switch back to login view
+          }
+          // Show success message
+          setError('Account created successfully! Please check your email to verify your account.');
         }
-        
-        // Standard sign-up flow (not purchase flow)
-        setError('Please check your email to verify your account');
       } else {
-        console.log('Attempting to sign in with email:', email);
+        // Login flow
         await signIn(email, password);
-        console.log('Sign in successful');
         
-        // Call the success callback if provided
+        // Clear form
+        setEmail('');
+        setPassword('');
+        setError('');
+        
+        // Call success callback if provided
         if (onAuthSuccess) {
           onAuthSuccess();
         }
       }
-    } catch (error: any) {
-      console.error('Authentication error:', error);
-      if (error.message === 'Invalid login credentials') {
-        setError('Invalid email or password. Please try again.');
-      } else if (error.message?.includes('Email not confirmed') && !purchaseFlow) {
-        // Only show this error if not in purchase flow
-        setError('Please verify your email address before signing in.');
-      } else {
-        setError(`Authentication failed: ${error.message || 'Unknown error'}`);
-      }
+    } catch (err: any) {
+      console.error('Authentication error:', err);
+      setError(err.message || 'An error occurred');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div>
+    <div className="max-w-md mx-auto hide-signup">
+      <div className="mb-4 text-center">
+        <h2 className="text-2xl font-playfair mb-2">{isSignUp ? 'Create Account' : 'Sign In'}</h2>
+        <p className="text-gray-600">
+          {isSignUp 
+            ? 'Create an account to access your purchases' 
+            : 'Sign in to access your account'}
+        </p>
+      </div>
+      
+      {error && (
+        <div className={`p-3 rounded mb-4 ${error.includes('success') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          {error}
+        </div>
+      )}
+      
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
             Email
           </label>
           <input
@@ -95,13 +121,14 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
             required
-            disabled={isLoading}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            placeholder="your@email.com"
           />
         </div>
+        
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
             Password
           </label>
           <input
@@ -109,46 +136,35 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
             required
-            minLength={6}
-            disabled={isLoading}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            placeholder={isSignUp ? 'Create a password (min. 6 characters)' : 'Enter your password'}
           />
-          {isSignUp && (
-            <p className="mt-1 text-sm text-gray-500">
-              Password must be at least 6 characters long
-            </p>
-          )}
         </div>
-        {error && (
-          <div className={`text-sm ${error.includes('verify') ? 'text-blue-600' : 'text-red-500'}`}>
-            {error}
-          </div>
-        )}
-        <button
-          type="submit"
-          className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            'Please wait...'
-          ) : (
-            purchaseFlow && isSignUp ? 'Sign Up & Continue' : (isSignUp ? 'Sign Up' : 'Sign In')
-          )}
-        </button>
+        
+        <div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#FF6B6B] to-[#FF8E8E] hover:from-[#FF5252] hover:to-[#FF7676] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+          >
+            {isLoading ? 'Processing...' : isSignUp ? 'Create Account' : 'Sign In'}
+          </button>
+        </div>
       </form>
-      <button
-        onClick={() => {
-          setIsSignUp(!isSignUp);
-          setError('');
-          setEmail('');
-          setPassword('');
-        }}
-        className="mt-4 text-primary hover:text-primary/80 text-sm"
-        disabled={isLoading}
-      >
-        {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-      </button>
+      
+      <div className="mt-4 text-center">
+        <button
+          type="button"
+          onClick={() => {
+            setIsSignUp(!isSignUp);
+            setError('');
+          }}
+          className="text-sm text-primary hover:text-primary-dark"
+        >
+          {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
+        </button>
+      </div>
     </div>
   );
 };

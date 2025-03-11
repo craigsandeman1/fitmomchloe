@@ -41,7 +41,7 @@ const Contact = () => {
           ...formData,
           subject: formData.subject || 'New Contact Form Submission',
           to: 'chloefitness@gmail.com',
-          bcc: 'sandemancraig@gmail.com',
+          bcc: 'fitmomchloe@gmail.com,sandemancraig@gmail.com',
         })
       });
       

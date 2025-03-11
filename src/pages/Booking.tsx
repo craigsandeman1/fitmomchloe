@@ -38,6 +38,8 @@ const Booking = () => {
     settings: {
       from_name: 'Fit Mom Chloe Booking',
       subject: 'New Booking Notification',
+      to: 'chloefitness@gmail.com',
+      bcc: 'fitmomchloe@gmail.com,sandemancraig@gmail.com',
     },
     onSuccess: () => {
       setIsSendingEmail(false);
