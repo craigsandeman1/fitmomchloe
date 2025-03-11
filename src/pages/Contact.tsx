@@ -156,7 +156,7 @@ const Contact = () => {
           <div className="space-y-8">
             <div className="relative rounded-lg overflow-hidden h-80 mb-8">
               <img 
-                src="/chloe-fitness-contact.webp" 
+                src="chloe-fitness-contact.webp" 
                 alt="Fit Mom Chloe" 
                 className="w-full h-full object-cover"
               />
