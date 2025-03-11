@@ -18,7 +18,7 @@ body {
 }
 
 .btn-primary {
-  @apply bg-[#B0826E] text-white px-6 py-3 rounded-md hover:bg-[#9A715F] transition-colors duration-300;
+  @apply bg-gradient-to-r from-[#FF6B6B] to-[#FF8E8E] hover:from-[#FF5252] hover:to-[#FF7676] shadow-lg shadow-primary/30 transform transition-all duration-200 hover:scale-[1.02] text-white px-6 py-3 rounded-lg;
 }
 
 .section-container {
