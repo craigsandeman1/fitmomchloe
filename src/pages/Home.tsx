@@ -68,7 +68,7 @@ const Home = () => {
 
       {/* Instagram Feed Section */}
       <section className="bg-[#F7F2F0] w-full">
-        <h2 className="font-playfair text-2xl md:text-4xl text-center pt-16 md:pt-32 pb-6 md:pb-8">Follow My Journey</h2>
+        <h2 className="font-playfair text-2xl md:text-4xl text-center pt-24 md:pt-32 pb-6 md:pb-8">Follow My Journey</h2>
         <div 
           className="elfsight-app-bc1ab87c-9801-4a3d-b414-c409d1543e51" 
           data-elfsight-app-lazy
