@@ -151,38 +151,32 @@ const Contact = () => {
       {/* Contact Form and Info Section */}
       <section className="section-container py-16">
         <div className="grid md:grid-cols-2 gap-12 items-center">
-          {/* Image and Contact Info */}
+          {/* Contact Info */}
           <div className="space-y-8">
-            <div className="relative rounded-lg overflow-hidden h-80 mb-8">
-              <img 
-                src="/chloe-fitness-contact.webp"
-                alt="Fit Mom Chloe" 
-                className="w-full h-full object-cover"
-              />
-            </div>
-            
             <div className="space-y-4">
               <h2 className="text-3xl font-playfair text-primary">Contact Information</h2>
               <p className="text-gray-600">
                 Reach out to us through any of these channels, and we'll get back to you as soon as possible.
               </p>
               
-              <ul className="space-y-4 mt-6">
-                <li className="flex items-start space-x-3 text-gray-700">
-                  <Phone className="mt-1 text-primary" size={20} />
-                  <span>082 959 6069</span>
-                </li>
-                <li className="flex items-start space-x-3 text-gray-700">
-                  <Mail className="mt-1 text-primary" size={20} />
-                  <a href="mailto:chloefitness@gmail.com" className="hover:text-primary transition-colors">
+              <div className="space-y-4 mt-6">
+                <div className="flex items-center space-x-3">
+                  <Phone className="text-primary h-5 w-5" />
+                  <span className="text-gray-700">082 959 6069</span>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <Mail className="text-primary h-5 w-5" />
+                  <a href="mailto:chloefitness@gmail.com" className="text-gray-700 hover:text-primary">
                     chloefitness@gmail.com
                   </a>
-                </li>
-                <li className="flex items-start space-x-3 text-gray-700">
-                  <MapPin className="mt-1 text-primary" size={20} />
-                  <span>Cape Town, South Africa</span>
-                </li>
-              </ul>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <MapPin className="text-primary h-5 w-5 mt-1" />
+                  <span className="text-gray-700">Cape Town, South Africa</span>
+                </div>
+              </div>
             </div>
           </div>
           
