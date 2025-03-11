@@ -89,7 +89,7 @@ const PayfastButton = ({
   onCancel,
   onClick,
   className = 'btn-primary',
-  children = 'Pay Now',
+  children = 'Buy Now',
   plan,
   handlePurchaseAttempt
 }: PayfastButtonProps) => {
@@ -413,9 +413,10 @@ const PayfastButton = ({
                 <div className="flex flex-col gap-3">
                   <button
                     onClick={proceedToPayment}
-                    className="w-full py-3 bg-primary text-white rounded-lg flex items-center justify-center hover:bg-primary-dark transition-colors"
+                    className="w-full py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF8E8E] hover:from-[#FF5252] hover:to-[#FF7676] shadow-lg shadow-primary/30 transform transition-all duration-200 hover:scale-[1.02] text-white rounded-lg flex items-center justify-center"
                   >
-                    Proceed to Payment <ArrowRight className="ml-2 h-5 w-5" />
+                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    Buy Now
                   </button>
                   <button
                     onClick={() => setShowPaymentModal(false)}

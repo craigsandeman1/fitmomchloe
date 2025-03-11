@@ -1,66 +1,60 @@
-import { Instagram, Facebook, Youtube, Mail, MapPin, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-// Import the image
-const logoUrl = new URL('../assets/images/fitmomchloelogo.png', import.meta.url).href;
+import { Facebook, Instagram } from 'lucide-react';
+import logo from '../assets/images/fitmomchloe-logo-large.png';
 
 const Footer = () => {
   return (
-    <footer className="bg-white">
-      {/* Main Footer Content */}
-      <div className="section-container py-16">
-        <div className="grid md:grid-cols-4 gap-12">
+    <footer className="bg-gradient-to-b from-gray-50 to-gray-100 border-t border-gray-200 pt-12 pb-6 mt-16">
+      <div className="section-container">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* Brand Column */}
           <div className="space-y-6">
-            <Link to="/" className="flex items-center space-x-2" onClick={() => window.scrollTo(0, 0)}>
-              <img 
-                src={logoUrl}
-                alt="Fit Mom Chloe Logo" 
-                className="h-12 w-auto"
-              />
-              <span className="font-playfair text-2xl text-primary">
-                Fit Mom Chloe
-              </span>
+            <Link to="/" className="inline-block" onClick={() => window.scrollTo(0, 0)}>
+              <img src={logo} alt="Fit Mom Chloe" className="h-16" />
             </Link>
-            <p className="text-gray-600">
-              Empowering moms to live their healthiest, strongest lives through personalized fitness and nutrition guidance.
+            <p className="text-gray-600 max-w-sm">
+              Empowering moms to achieve their fitness goals with personalized 
+              meal plans and training programs.
             </p>
             <div className="flex space-x-4">
-              <a
-                href="https://www.instagram.com/fitmomcapetown/"
-                target="_blank"
+              <a 
+                href="https://www.facebook.com/fitmomcapetown/" 
+                target="_blank" 
                 rel="noopener noreferrer"
-                className="text-gray-600 hover:text-primary transition-colors"
-              >
-                <Instagram size={24} />
-              </a>
-              <a
-                href="#"
-                className="text-gray-600 hover:text-primary transition-colors"
+                className="text-gray-500 hover:text-primary transition-colors"
+                aria-label="Facebook"
               >
                 <Facebook size={24} />
               </a>
-              <a
-                href="#"
-                className="text-gray-600 hover:text-primary transition-colors"
+              <a 
+                href="https://www.instagram.com/fit_mom_chloe/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-500 hover:text-primary transition-colors"
+                aria-label="Instagram"
               >
-                <Youtube size={24} />
+                <Instagram size={24} />
               </a>
             </div>
           </div>
-
+          
           {/* Quick Links */}
-          <div>
-            <h4 className="font-playfair text-lg mb-6">Quick Links</h4>
-            <ul className="space-y-4">
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-gray-900">Quick Links</h3>
+            <ul className="space-y-3">
+              <li>
+                <Link to="/" className="text-gray-600 hover:text-primary transition-colors" onClick={() => window.scrollTo(0, 0)}>
+                  Home
+                </Link>
+              </li>
               <li>
                 <Link to="/meal-plans" className="text-gray-600 hover:text-primary transition-colors" onClick={() => window.scrollTo(0, 0)}>
                   Meal Plans
                 </Link>
               </li>
               <li>
-                <Link to="/workouts" className="text-gray-600 hover:text-primary transition-colors" onClick={() => window.scrollTo(0, 0)}>
-                  Workouts
+                <Link to="/contact" className="text-gray-600 hover:text-primary transition-colors" onClick={() => window.scrollTo(0, 0)}>
+                  Contact
                 </Link>
               </li>
               <li>
@@ -70,81 +64,40 @@ const Footer = () => {
               </li>
             </ul>
           </div>
-
-          {/* Programs */}
-          <div>
-            <h4 className="font-playfair text-lg mb-6">Programs</h4>
-            <ul className="space-y-4">
-              <li>
-                <a href="#" className="text-gray-600 hover:text-primary transition-colors">
-                  1-on-1 Training
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-primary transition-colors">
-                  Group Classes
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-primary transition-colors">
-                  Online Coaching
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-primary transition-colors">
-                  Nutrition Consulting
-                </a>
-              </li>
-            </ul>
-          </div>
-
+          
           {/* Contact Info */}
-          <div>
-            <h4 className="font-playfair text-lg mb-6">Contact</h4>
-            <ul className="space-y-4">
-              <li className="flex items-center space-x-3 text-gray-600">
-                <MapPin size={20} />
-                <span>Cape Town, South Africa</span>
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-gray-900">Contact Us</h3>
+            <ul className="space-y-3">
+              <li className="text-gray-600">
+                <span className="font-medium">Phone:</span> 082 959 6069
               </li>
-              <li className="flex items-center space-x-3 text-gray-600">
-                <Phone size={20} />
-                <span>+27 123 456 789</span>
-              </li>
-              <li className="flex items-center space-x-3 text-gray-600">
-                <Mail size={20} />
+              <li className="text-gray-600">
+                <span className="font-medium">Email:</span>{' '}
                 <a href="mailto:chloefitness@gmail.com" className="hover:text-primary transition-colors">
                   chloefitness@gmail.com
                 </a>
               </li>
+              <li className="text-gray-600">
+                <span className="font-medium">Location:</span> Cape Town, South Africa
+              </li>
+              <li className="pt-2">
+                <Link to="/privacy-policy" className="text-gray-600 hover:text-primary transition-colors text-sm" onClick={() => window.scrollTo(0, 0)}>
+                  Privacy Policy
+                </Link>
+                {' | '}
+                <Link to="/terms-of-service" className="text-gray-600 hover:text-primary transition-colors text-sm" onClick={() => window.scrollTo(0, 0)}>
+                  Terms of Service
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
-      </div>
-
-      {/* Bottom Bar */}
-      <div className="border-t border-gray-200">
-        <div className="section-container py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-600 text-sm">
-              &copy; {new Date().getFullYear()} FitMomChloe. All rights reserved.
-            </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <Link 
-                to="/privacy-policy" 
-                className="text-gray-600 hover:text-primary text-sm transition-colors"
-                onClick={() => window.scrollTo(0, 0)}
-              >
-                Privacy Policy
-              </Link>
-              <Link 
-                to="/terms-of-service" 
-                className="text-gray-600 hover:text-primary text-sm transition-colors"
-                onClick={() => window.scrollTo(0, 0)}
-              >
-                Terms of Service
-              </Link>
-            </div>
-          </div>
+        
+        <div className="mt-12 pt-6 border-t border-gray-200 text-center">
+          <p className="text-gray-500 text-sm">
+            © {new Date().getFullYear()} Fit Mom Chloe. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>

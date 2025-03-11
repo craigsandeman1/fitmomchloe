@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useMealPlanStore } from '../store/mealPlan';
 import { useAuthStore } from '../store/auth';
-import { Lock, ArrowRight, Utensils, Clock, ChevronRight, Play, Pause, Quote, ArrowDown, FileDown, CheckCircle, Repeat, GraduationCap } from 'lucide-react';
+import { Lock, ArrowRight, Utensils, Clock, ChevronRight, Play, Pause, Quote, ArrowDown, FileDown, CheckCircle, Repeat, GraduationCap, ShoppingCart } from 'lucide-react';
 import { Auth } from '../components/Auth';
 import RecipeModal from '../components/RecipeModal';
 import PayfastButton from '../components/PayfastButton';
@@ -581,7 +581,7 @@ const MealPlans = () => {
                             {hasPurchased(plan.id) ? (
                               <button
                                 onClick={() => downloadPurchasedPlan(plan.id || '')}
-                                className="w-full py-3 bg-green-500 text-white rounded-lg flex items-center justify-center hover:bg-green-600 transition-colors"
+                                className="w-full py-3 bg-gradient-to-r from-[#4CAF50] to-[#66BB6A] hover:from-[#43A047] hover:to-[#5CB860] shadow-lg shadow-green-500/30 transform transition-all duration-200 hover:scale-[1.02] text-white rounded-lg flex items-center justify-center"
                               >
                                 <FileDown className="mr-2 h-5 w-5" />
                                 Download Plan
@@ -598,14 +598,16 @@ const MealPlans = () => {
                                     onSuccess={handlePurchaseSuccess}
                                     onCancel={handlePurchaseCancel}
                                     handlePurchaseAttempt={handlePurchaseAttempt}
+                                    className="bg-gradient-to-r from-[#FF6B6B] to-[#FF8E8E] hover:from-[#FF5252] hover:to-[#FF7676] shadow-lg shadow-primary/30 transform transition-all duration-200 hover:scale-[1.02]"
                                   />
                                 ) : (
                                   <button
                                     onClick={() => {
                                       if (plan.id) handlePurchaseSuccess(plan.id);
                                     }}
-                                    className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                                    className="w-full py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF8E8E] hover:from-[#FF5252] hover:to-[#FF7676] shadow-lg shadow-primary/30 transform transition-all duration-200 hover:scale-[1.02] text-white rounded-lg flex items-center justify-center"
                                   >
+                                    <ShoppingCart className="mr-2 h-5 w-5" />
                                     Get Free Plan
                                   </button>
                                 )}

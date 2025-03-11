@@ -11,6 +11,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import Login from './pages/Login';
 import PayfastTest from './pages/PayfastTest';
+import Contact from './pages/Contact';
 import Footer from './components/Footer';
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/login" element={<Login />} />
             <Route path="/payfast-test" element={<PayfastTest />} />
+            <Route path="/contact" element={<Contact />} />
           </Routes>
         </main>
         <Footer />
