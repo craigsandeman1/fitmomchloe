@@ -7,9 +7,9 @@ import beanSalad from '../assets/images/bean-salad.webp';
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-screen w-full overflow-hidden bg-background">
-      {/* Background Image Grid - Fixed height, only one image on mobile */}
-      <div className="absolute inset-0 h-[85vh]">
+    <section className="relative w-full overflow-hidden bg-background">
+      {/* Background Image Grid - Changed from fixed height to responsive */}
+      <div className="absolute inset-0 h-full min-h-[85vh]">
         {/* First image - visible on all screen sizes, takes full width on mobile */}
         <div className="absolute inset-0 md:w-1/4 md:left-0">
           <img 
@@ -60,12 +60,12 @@ const HeroSection = () => {
         </Link>
       </div>
 
-      {/* Main Content Container */}
-      <div className="relative w-full min-h-screen flex flex-col justify-center items-center">
+      {/* Main Content Container - Made more responsive */}
+      <div className="relative w-full min-h-[90vh] flex flex-col justify-center items-center pb-16">
         {/* Text Container */}
         <div className="relative z-10 w-full px-4 sm:px-6 md:px-8 max-w-5xl mx-auto pt-16">
           <div className="text-center">
-            <h1 className="font-playfair text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl mb-4 sm:mb-6 md:mb-8 text-white drop-shadow-lg">
+            <h1 className="font-playfair text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl mb-4 sm:mb-6 md:mb-8 text-white drop-shadow-lg">
               You deserve to live in<br className="sm:hidden" /> a body you <span className="text-primary">love</span>
             </h1>
             <p className="text-lg sm:text-xl md:text-xl mb-8 md:mb-10 text-white drop-shadow-md max-w-xl mx-auto">
@@ -75,7 +75,7 @@ const HeroSection = () => {
             <div className="flex justify-center mt-2 md:mt-4">
               <Link 
                 to="/meal-plans" 
-                className="bg-gradient-to-r from-[#FF6B6B] to-[#FF8E8E] hover:from-[#FF5252] hover:to-[#FF7676] shadow-lg shadow-primary/30 transform transition-all duration-200 hover:scale-[1.02] text-white rounded-lg text-base sm:text-lg md:text-xl px-6 sm:px-8 md:px-10 py-3 sm:py-3 inline-flex items-center justify-center"
+                className="bg-gradient-to-r from-[#FF6B6B] to-[#FF8E8E] hover:from-[#FF5252] hover:to-[#FF7676] shadow-lg shadow-primary/30 transform transition-all duration-200 hover:scale-[1.02] text-white rounded-lg text-base sm:text-lg md:text-xl px-5 sm:px-8 md:px-10 py-3 sm:py-3 inline-flex items-center justify-center"
               >
                 Explore Meal Plans
                 <ArrowRight className="ml-2 md:ml-3" size={20} />
@@ -85,7 +85,7 @@ const HeroSection = () => {
         </div>
 
         {/* Feature Cards - Only show on larger screens */}
-        <div className="relative z-10 w-full px-4 max-w-5xl mx-auto mt-16 md:mt-20 mb-16">
+        <div className="relative z-10 w-full px-4 max-w-5xl mx-auto mt-16 md:mt-20">
           <div className="hidden sm:grid md:grid-cols-3 gap-4 md:gap-8">
             <div className="bg-white p-6 md:p-8 rounded-lg shadow-lg">
               <h3 className="font-playfair text-xl md:text-2xl mb-3 text-gray-800">Personalized Plans</h3>
