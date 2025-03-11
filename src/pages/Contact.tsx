@@ -128,7 +128,7 @@ const Contact = () => {
         {/* Background Image */}
         <div className="absolute inset-0 w-full h-full">
           <img 
-            src={contactImage1} 
+            src="/chloe-fitness-contact-1.webp" 
             alt="Fit Mom Chloe Contact" 
             className="w-full h-full object-cover"
           />
@@ -155,7 +155,7 @@ const Contact = () => {
           <div className="space-y-8">
             <div className="relative rounded-lg overflow-hidden h-80 mb-8">
               <img 
-                src={contactImage2}
+                src="/chloe-fitness-contact.webp"
                 alt="Fit Mom Chloe" 
                 className="w-full h-full object-cover"
               />
