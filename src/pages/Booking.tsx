@@ -222,6 +222,11 @@ const Booking = () => {
         // Reset form
         setSelectedDate('');
         setSelectedTime('');
+        
+        // Keep success message visible for 5 seconds
+        setTimeout(() => {
+          setSuccessMessage('');
+        }, 5000);
       }
     } catch (error) {
       console.error('Error creating booking:', error);
@@ -579,7 +584,7 @@ const Booking = () => {
                 <button
                   type="submit"
                   disabled={!selectedDate || !selectedTime || submitting}
-                  className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${
+                  className={`btn-primary w-full ${
                     (!selectedDate || !selectedTime || submitting) && 'opacity-70 cursor-not-allowed'
                   }`}
                 >
@@ -593,6 +598,13 @@ const Booking = () => {
                   </div>
                 )}
               </form>
+            )}
+            
+            {successMessage && (
+              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700 flex items-center">
+                <CheckCircle className="w-5 h-5 mr-2" />
+                <span>{successMessage}</span>
+              </div>
             )}
           </div>
           
@@ -648,7 +660,7 @@ const Booking = () => {
                         </div>
                         <button
                           onClick={() => handleCancelBookingInitiate(booking.id)}
-                          className="text-red-500 hover:text-red-700 text-sm"
+                          className="text-sm px-3 py-1 border border-red-300 text-red-500 rounded hover:bg-red-50"
                         >
                           Cancel
                         </button>
@@ -707,7 +719,7 @@ const Booking = () => {
               </button>
               <button
                 onClick={handleCancelBookingConfirm}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                className="btn-primary"
               >
                 Yes, Cancel
               </button>
@@ -739,7 +751,7 @@ const Booking = () => {
                   setSelectedTime('');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
+                className="btn-primary"
               >
                 Yes, Reschedule
               </button>
