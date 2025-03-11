@@ -25,6 +25,10 @@ body {
   position: relative;
 }
 
+html {
+  overflow-x: hidden; /* Additional prevention of horizontal scrolling */
+}
+
 .font-playfair {
   font-family: 'Playfair Display', serif;
 }
