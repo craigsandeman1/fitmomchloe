@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
 
 // Import the contact images
-import contactImage1 from '../assets/images/Chloe fitness-contact-1.webp';
+import contactImage1 from '../assets/images/chloe-fitness-contact-1.webp';
 import contactImage2 from '../assets/images/chloe-fitness-contact.webp';
 
 const Contact = () => {
