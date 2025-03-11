@@ -71,19 +71,19 @@ const Navbar = () => {
       className={`bg-white ${isScrolled ? 'shadow-lg' : 'shadow-md'} fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'py-2' : 'py-0'}`}
     >
       <div className="section-container">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-14 md:h-16">
           <Link to="/" className="flex items-center space-x-2" onClick={() => window.scrollTo(0, 0)}>
             <img 
               src={logoImage}
               alt="Fit Mom Chloe Logo" 
-              className={`${isScrolled ? 'h-10' : 'h-12'} w-auto transition-all duration-300`}
+              className={`${isScrolled ? 'h-8 md:h-10' : 'h-10 md:h-12'} w-auto transition-all duration-300`}
               onError={(e) => {
                 console.error('Error loading logo:', e);
                 setImgError(true);
               }}
               style={{ display: imgError ? 'none' : 'block' }}
             />
-            <span className={`font-playfair ${isScrolled ? 'text-xl' : 'text-2xl'} text-primary transition-all duration-300`}>
+            <span className={`font-playfair ${isScrolled ? 'text-lg md:text-xl' : 'text-xl md:text-2xl'} text-primary transition-all duration-300`}>
               Fit Mom Chloe
             </span>
           </Link>
@@ -129,29 +129,29 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         {isOpen && (
-          <div className="md:hidden pb-4">
-            <div className="flex flex-col space-y-4">
-              <Link to="/" className="text-gray-700 hover:text-primary transition-colors" onClick={() => {setIsOpen(false); window.scrollTo(0, 0)}}>
+          <div className="md:hidden pb-2">
+            <div className="flex flex-col space-y-3 pt-2">
+              <Link to="/" className="text-gray-700 hover:text-primary transition-colors px-2 py-1" onClick={() => {setIsOpen(false); window.scrollTo(0, 0)}}>
                 Home
               </Link>
-              <Link to="/meal-plans" className="text-gray-700 hover:text-primary transition-colors" onClick={() => {setIsOpen(false); window.scrollTo(0, 0)}}>
+              <Link to="/meal-plans" className="text-gray-700 hover:text-primary transition-colors px-2 py-1" onClick={() => {setIsOpen(false); window.scrollTo(0, 0)}}>
                 Meal Plans
               </Link>
-              <Link to="/contact" className="text-gray-700 hover:text-primary transition-colors" onClick={() => {setIsOpen(false); window.scrollTo(0, 0)}}>
+              <Link to="/contact" className="text-gray-700 hover:text-primary transition-colors px-2 py-1" onClick={() => {setIsOpen(false); window.scrollTo(0, 0)}}>
                 Contact
               </Link>
-              <Link to="/book" className="btn-primary inline-block text-center" onClick={() => {setIsOpen(false); window.scrollTo(0, 0)}}>
+              <Link to="/book" className="btn-primary inline-block text-center px-2 py-1" onClick={() => {setIsOpen(false); window.scrollTo(0, 0)}}>
                 Book a Session
               </Link>
               {isAdmin && (
-                <Link to="/admin" className="text-gray-700 hover:text-primary transition-colors" onClick={() => {setIsOpen(false); window.scrollTo(0, 0)}}>
+                <Link to="/admin" className="text-gray-700 hover:text-primary transition-colors px-2 py-1" onClick={() => {setIsOpen(false); window.scrollTo(0, 0)}}>
                   Admin Dashboard
                 </Link>
               )}
               {user && (
                 <button
                   onClick={() => {handleSignOut(); setIsOpen(false);}}
-                  className="flex items-center text-gray-700 hover:text-primary transition-colors"
+                  className="flex items-center text-gray-700 hover:text-primary transition-colors px-2 py-1"
                 >
                   <LogOut size={20} className="mr-2" />
                   Sign Out

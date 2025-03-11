@@ -508,7 +508,7 @@ const MealPlans = () => {
         </div>
 
         {/* Available Meal Plans Section */}
-        <div className="bg-gray-50 py-24 w-full">
+        <div id="available-plans" className="bg-gray-50 py-24 w-full">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center mb-16">
               <h2 className="font-playfair text-4xl text-center">Available Meal Plans</h2>

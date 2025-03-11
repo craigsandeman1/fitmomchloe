@@ -17,7 +17,7 @@ const PrivacyPolicy = () => {
         <p>
           I, Chloe, the owner and operator of Fit Mom Chloe ("I", "me", "my"), am committed to protecting your privacy. 
           This Privacy Policy explains how I collect, use, disclose, and safeguard your information when you visit my website 
-          and use my services, including my meal plans, workout videos, and personal training sessions.
+          and use my services, including my meal plans and personal training sessions.
         </p>
         
         <h2>Information I Collect</h2>
@@ -126,6 +126,32 @@ const PrivacyPolicy = () => {
           Email: chloefitness@gmail.com<br />
           Phone: +27 123 456 789<br />
           Address: Cape Town, South Africa
+        </p>
+
+        <h2>Protection of Personal Information Act (POPIA) Compliance</h2>
+        <p>
+          As a South African business, I am committed to complying with the Protection of Personal Information Act (POPIA). 
+          This means I will:
+        </p>
+        <ul>
+          <li>Only collect information that is necessary for the specified purpose</li>
+          <li>Process your personal information lawfully and in a reasonable manner</li>
+          <li>Not retain your information for longer than is necessary to fulfill the purpose for which it was collected</li>
+          <li>Take reasonable technical and organizational measures to secure your information</li>
+          <li>Promptly notify you and the Information Regulator in case of a data breach</li>
+        </ul>
+        <p>
+          As a data subject under POPIA, you have the right to:
+        </p>
+        <ul>
+          <li>Request access to your personal information</li>
+          <li>Request correction or deletion of your personal information</li>
+          <li>Object to the processing of your personal information</li>
+          <li>Submit a complaint to the Information Regulator regarding alleged interference with your information</li>
+          <li>Institute civil proceedings regarding alleged interference with your personal information</li>
+        </ul>
+        <p>
+          To exercise any of these rights, please contact me at chloefitness@gmail.com.
         </p>
       </div>
     </div>

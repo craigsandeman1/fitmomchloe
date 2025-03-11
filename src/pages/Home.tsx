@@ -55,7 +55,7 @@ const Home = () => {
             <div className="bg-white/40 md:bg-white/70 backdrop-blur-sm md:backdrop-blur p-6 md:p-8 rounded-lg text-center shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1">
               <h3 className="font-playfair text-xl md:text-2xl mb-3 md:mb-4">Workout Videos</h3>
               <p className="mb-6 text-sm md:text-base">Access to premium workout content and training programs</p>
-              <Link to="/workouts" className="btn-primary">View Library</Link>
+              <button disabled className="btn-primary opacity-70 cursor-not-allowed">Coming Soon</button>
             </div>
             <div className="bg-white/40 md:bg-white/70 backdrop-blur-sm md:backdrop-blur p-6 md:p-8 rounded-lg text-center shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1">
               <h3 className="font-playfair text-xl md:text-2xl mb-3 md:mb-4">Meal Plans</h3>
@@ -68,7 +68,7 @@ const Home = () => {
 
       {/* Instagram Feed Section */}
       <section className="bg-[#F7F2F0]">
-        <h2 className="font-playfair text-3xl md:text-4xl text-center pt-32 pb-8">Follow My Journey</h2>
+        <h2 className="font-playfair text-4xl text-center pt-32 pb-8">Follow My Journey</h2>
         <div 
           className="elfsight-app-bc1ab87c-9801-4a3d-b414-c409d1543e51" 
           data-elfsight-app-lazy

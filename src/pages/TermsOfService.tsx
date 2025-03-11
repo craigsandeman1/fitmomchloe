@@ -16,7 +16,7 @@ const TermsOfService = () => {
         <h2>Introduction</h2>
         <p>
           Welcome to Fit Mom Chloe. These Terms of Service ("Terms") govern your use of my website and services, 
-          including my meal plans, workout videos, and personal training sessions. By accessing or using my services, 
+          including my meal plans and personal training sessions. By accessing or using my services, 
           you agree to be bound by these Terms. If you do not agree to these Terms, please do not use my services.
         </p>
         
@@ -137,6 +137,22 @@ const TermsOfService = () => {
           Email: chloefitness@gmail.com<br />
           Phone: +27 123 456 789<br />
           Address: Cape Town, South Africa
+        </p>
+
+        <h2>Refund Policy</h2>
+        <p>
+          <strong>Meal Plans:</strong> Due to the digital nature of our meal plans, all purchases are final and non-refundable 
+          once the digital content has been downloaded or accessed. If you have technical issues accessing your purchased 
+          meal plan, please contact us within 24 hours of purchase, and we will assist you with access.
+        </p>
+        <p>
+          <strong>Personal Training Sessions:</strong> Cancellations made at least 24 hours before a scheduled session may be 
+          rescheduled or refunded. Cancellations with less than 24 hours notice will not be refunded. 
+          No-shows will be charged the full session fee.
+        </p>
+        <p>
+          If you believe you are entitled to a refund due to exceptional circumstances, please contact us at
+          chloefitness@gmail.com, and we will review your case individually.
         </p>
       </div>
     </div>
