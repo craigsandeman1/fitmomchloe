@@ -4,8 +4,7 @@ import { Mail, Phone, MapPin, Send } from 'lucide-react';
 
 // Import the contact images
 import contactImage1 from '../assets/images/chloe-fitness-contact-1.webp';
-// Using direct path for the second image instead of import
-// import contactImage2 from '../assets/images/chloe-fitness-contact.webp';
+import contactImage2 from '../assets/images/chloe-fitness-contact.webp';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -156,7 +155,7 @@ const Contact = () => {
           <div className="space-y-8">
             <div className="relative rounded-lg overflow-hidden h-80 mb-8">
               <img 
-                src="chloe-fitness-contact.webp" 
+                src={contactImage2}
                 alt="Fit Mom Chloe" 
                 className="w-full h-full object-cover"
               />
