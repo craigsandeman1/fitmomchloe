@@ -135,7 +135,7 @@ const TermsOfService = () => {
         </p>
         <p>
           Email: chloefitness@gmail.com<br />
-          Phone: +27 123 456 789<br />
+          Phone: 082 959 6069<br />
           Address: Cape Town, South Africa
         </p>
 
