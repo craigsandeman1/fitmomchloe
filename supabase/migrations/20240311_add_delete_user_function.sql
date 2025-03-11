@@ -1,6 +1,5 @@
--- Create a function to delete users
--- This function should only be callable by authenticated users with admin privileges
-CREATE OR REPLACE FUNCTION delete_user(user_id uuid)
+-- Create a function to soft-delete users by marking them as inactive
+CREATE OR REPLACE FUNCTION public.soft_delete_user(user_id uuid)
 RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -17,19 +16,42 @@ BEGIN
   FROM public.profiles p
   WHERE p.id = calling_user_id;
   
-  -- Only admins can delete users
+  -- Only admins can deactivate users
   IF is_admin IS NOT TRUE THEN
-    RAISE EXCEPTION 'Only administrators can delete users';
+    RAISE EXCEPTION 'Only administrators can deactivate users';
   END IF;
   
-  -- Cannot delete yourself
+  -- Cannot deactivate yourself
   IF calling_user_id = user_id THEN
-    RAISE EXCEPTION 'Administrators cannot delete their own accounts';
+    RAISE EXCEPTION 'Administrators cannot deactivate their own accounts';
   END IF;
   
-  -- Delete from auth.users (this will cascade to profiles due to RLS)
-  -- This requires the 'supabase_auth_admin' role
-  DELETE FROM auth.users
+  -- Cannot deactivate other admins
+  DECLARE
+    target_is_admin boolean;
+  BEGIN
+    SELECT p.is_admin INTO target_is_admin
+    FROM public.profiles p
+    WHERE p.id = user_id;
+    
+    IF target_is_admin THEN
+      RAISE EXCEPTION 'Cannot deactivate administrator accounts';
+    END IF;
+  END;
+  
+  -- Add is_active column if it doesn't exist
+  BEGIN
+    ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true;
+    ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS deactivated_at timestamptz;
+  EXCEPTION 
+    WHEN duplicate_column THEN
+      -- Column already exists, do nothing
+  END;
+  
+  -- Mark user as inactive
+  UPDATE public.profiles
+  SET is_active = false,
+      deactivated_at = now()
   WHERE id = user_id;
   
   RETURN TRUE;
@@ -37,8 +59,29 @@ END;
 $$;
 
 -- Set appropriate permissions
-GRANT EXECUTE ON FUNCTION delete_user(uuid) TO authenticated;
-REVOKE EXECUTE ON FUNCTION delete_user(uuid) FROM anon, service_role;
+GRANT EXECUTE ON FUNCTION public.soft_delete_user(uuid) TO authenticated;
+
+-- Create table column if not exists
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+    AND table_name = 'profiles'
+    AND column_name = 'is_active'
+  ) THEN
+    ALTER TABLE public.profiles ADD COLUMN is_active boolean DEFAULT true;
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+    AND table_name = 'profiles'
+    AND column_name = 'deactivated_at'
+  ) THEN
+    ALTER TABLE public.profiles ADD COLUMN deactivated_at timestamptz;
+  END IF;
+END $$;
 
 -- Update RLS policies on profiles table to ensure cascading delete works
 ALTER TABLE public.profiles
@@ -49,4 +92,4 @@ ALTER TABLE public.profiles
     ON DELETE CASCADE;
 
 -- Ensure the correct role for the function
-ALTER FUNCTION delete_user(uuid) OWNER TO supabase_auth_admin; 
+ALTER FUNCTION public.soft_delete_user(uuid) OWNER TO supabase_auth_admin; 
