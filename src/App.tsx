@@ -55,9 +55,9 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col w-full max-w-[100vw] overflow-x-hidden">
         <Navbar />
-        <main className="flex-grow pt-16">
+        <main className="flex-grow pt-16 w-full max-w-[100vw] overflow-x-hidden">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/meal-plans" element={<MealPlans />} />
