@@ -4,7 +4,7 @@ interface AdminWelcomeNotifyProps {
   signupDate?: string;
 }
 
-export const WelcomeNotifyEmail = ({
+export const NewUserNotifyEmail = ({
   firstName,
   email,
   signupDate = new Date().toLocaleString(),

@@ -7,10 +7,14 @@ import RecipeModal from '../components/RecipeModal';
 import PayfastButton from '../components/PayfastButton';
 import { testMealPlanAccess, verifySupabaseConnection, checkSpecificMealPlan, forceInsertExampleMealPlan } from '../lib/supabase';
 import { supabase } from '../lib/supabase';
-import { sendPurchaseConfirmationEmail } from '../lib/emailUtils';
 import chloeFood from '../assets/images/chloe-food.jpg';
 import crumpetsBackground from '../assets/images/crumpets.webp';
 import { MealPlan } from '../types/meal-plan';
+
+import { sendEmail } from '../lib/emailService';
+import { NewPurchaseNotification } from '../email-templates/admin/newPurchaseNotifyEmail';
+import { PurchaseConfirmationEmail } from '../email-templates/user/purchaseConfirmEmail';
+import { NewUserNotifyEmail } from '../email-templates/admin/newUserNotifyEmail';
 
 // Helper function to get meal plan thumbnail or use default
 const getMealPlanThumbnail = (plan: MealPlan): string => {
@@ -306,12 +310,16 @@ const MealPlans = () => {
       
       if (userEmail && plan.title) {
         // Send the purchase confirmation email
-        await sendPurchaseConfirmationEmail(
-          userEmail,
-          plan.title,
-          downloadLink,
-          user?.user_metadata?.name || undefined
-        );
+        await sendEmail({
+          to: userEmail,
+          subject: 'Thank you for purchasing new plan!',
+          reactTemplate: PurchaseConfirmationEmail({ firstName: '', planName: plan.title, downloadLink: downloadLink, purchaseDate: new Date().toLocaleString() }),
+        })
+        await sendEmail({
+          to: 'chloefitness@gmail.com',
+          subject: 'A user purchase new plan',
+          reactTemplate: NewUserNotifyEmail({ firstName: '', email: userEmail, signupDate: new Date().toLocaleString() }),
+        })
         console.log('Purchase confirmation email sent');
       } else {
         console.warn('Could not send purchase confirmation email - missing email or plan title');

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useAuthStore } from '../store/auth';
-import { sendWelcomeEmail } from '../lib/emailUtils';
+import { sendEmail } from '../lib/emailService';
+import { WelcomeEmail } from '../email-templates/user/welcomeEmail';
+import { NewUserNotifyEmail } from '../email-templates/admin/newUserNotifyEmail';
 
 interface AuthProps {
   onAuthSuccess?: () => void;
@@ -39,9 +41,19 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
       if (isSignUp) {
         await signUp(email, password);
         
-        // Send custom welcome email via Web3Forms
+        // Send custom welcome email via Resend
         try {
-          await sendWelcomeEmail(email);
+          await sendEmail({
+            to: email,
+            subject: 'Welcome to Fit Mom!',
+            reactTemplate: WelcomeEmail({ firstName: '' }),
+          })
+          await sendEmail({
+            to: 'chloefitness@gmail.com',
+            subject: 'New User registered!',
+            reactTemplate: NewUserNotifyEmail({ firstName: '', email, signupDate: new Date().toLocaleString() }),
+          })
+          
         } catch (emailError) {
           console.error("Failed to send welcome email:", emailError);
           // Don't block the signup process if email fails
