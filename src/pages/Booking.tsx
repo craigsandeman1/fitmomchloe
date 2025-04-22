@@ -7,6 +7,11 @@ import { AlertCircle, CheckCircle, Calendar, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Auth } from '../components/Auth';
 import { type Booking as BookingType, BookingStatus } from '../types/booking';
+import { sendEmail } from '../lib/emailService';
+import { UserBookingScheduleEmail } from '../email-templates/user/bookingScheduleEmail';
+import { AdminNewBookingNotifyEmail } from '../email-templates/admin/newBookingNotifyEmail';
+import { UserCancelBookingEmail } from '../email-templates/user/bookingCancelEmail';
+import { AdminCancelBookingEmail } from '../email-templates/admin/cancelbookingNotifyEmail';
 
 const Booking = () => {
   const { user } = useAuthStore();
@@ -31,25 +36,6 @@ const Booking = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [showSignUp, setShowSignUp] = useState(false);
   const [allSystemBookings, setAllSystemBookings] = useState<BookingType[]>([]);
-  
-  // Web3Forms setup
-  const { submit } = useWeb3Forms({
-    access_key: '396876a7-1dbb-48d5-9c8c-74ef7ff0e872',
-    settings: {
-      from_name: 'Fit Mom Chloe Booking',
-      subject: 'New Booking Notification',
-      to: 'chloefitness@gmail.com',
-      bcc: 'fitmomchloe@gmail.com,sandemancraig@gmail.com',
-      html: true,
-    },
-    onSuccess: () => {
-      setIsSendingEmail(false);
-    },
-    onError: () => {
-      setEmailError(true);
-      setIsSendingEmail(false);
-    },
-  });
 
   // Use useCallback for fetchAllSystemBookings to avoid dependency loops
   const fetchAllSystemBookings = useCallback(async () => {
@@ -248,61 +234,38 @@ const Booking = () => {
       setIsSendingEmail(true);
       setEmailError(false);
       
-      await submit({
-        name: bookingInfo.name,
-        email: bookingInfo.email,
-        message: `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>New Booking Notification</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    h1 {
-      color: #FF6B6B;
-      margin-bottom: 20px;
-    }
-    .booking-details {
-      background-color: #f9f9f9;
-      border-left: 4px solid #FF6B6B;
-      padding: 15px;
-      margin-bottom: 20px;
-    }
-    .label {
-      font-weight: bold;
-      width: 100px;
-      display: inline-block;
-    }
-    p {
-      margin: 8px 0;
-    }
-  </style>
-</head>
-<body>
-  <h1>New Personal Training Session Booked!</h1>
-  
-  <div class="booking-details">
-    <p><span class="label">Name:</span> ${bookingInfo.name}</p>
-    <p><span class="label">Email:</span> ${bookingInfo.email}</p>
-    <p><span class="label">Date:</span> ${bookingInfo.date}</p>
-    <p><span class="label">Time:</span> ${bookingInfo.time}</p>
-    <p><span class="label">Notes:</span> ${bookingInfo.notes || 'None'}</p>
-    <p><span class="label">Booking ID:</span> ${bookingInfo.bookingId}</p>
-  </div>
-  
-  <p>This booking has been confirmed and added to your calendar.</p>
-</body>
-</html>`,
-        botcheck: '',
-      });
+      const { name, email, date, time, notes, bookingId } = bookingInfo;
+
+      // Send user email
+      await sendEmail({
+        to: email || '',
+        subject: 'New Booking Scheduled!',
+        reactTemplate: UserBookingScheduleEmail({
+          booking: {
+            name,
+            date,
+            time,
+            notes,
+          }
+        }),
+      })
+
+      // Send admin email
+      await sendEmail({
+        to: import.meta.env.VITE_ADMIN_EMAILS.split(',') || [],
+        subject: 'New Booking Scheduled!',
+        reactTemplate: AdminNewBookingNotifyEmail({ 
+          bookingInfo: {
+            name,
+            email,
+            date,
+            time,
+            notes,
+            bookingId
+          }
+         }),
+      })
+      
     } catch (err) {
       console.error('Error sending email notification:', err);
       setEmailError(true);
@@ -345,66 +308,37 @@ const Booking = () => {
       setIsSendingEmail(true);
       setEmailError(false);
       
-      const bookingDate = parseISO(booking.date);
+      const { name, email, date, time, notes, bookingId } = booking;
       
-      await submit({
-        name: booking.name || user?.user_metadata?.full_name || 'User',
-        email: user?.email || '',
-        message: `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Booking Cancellation</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    h1 {
-      color: #FF6B6B;
-      margin-bottom: 20px;
-    }
-    .booking-details {
-      background-color: #f9f9f9;
-      border-left: 4px solid #e74c3c;
-      padding: 15px;
-      margin-bottom: 20px;
-    }
-    .label {
-      font-weight: bold;
-      width: 120px;
-      display: inline-block;
-    }
-    p {
-      margin: 8px 0;
-    }
-    .cancelled {
-      color: #e74c3c;
-      font-weight: bold;
-    }
-  </style>
-</head>
-<body>
-  <h1><span class="cancelled">CANCELLED:</span> Personal Training Session</h1>
-  
-  <div class="booking-details">
-    <p><span class="label">Name:</span> ${booking.name || user?.user_metadata?.full_name || 'Not provided'}</p>
-    <p><span class="label">Email:</span> ${user?.email || 'Not provided'}</p>
-    <p><span class="label">Original Date:</span> ${format(bookingDate, 'PPPP')}</p>
-    <p><span class="label">Original Time:</span> ${format(bookingDate, 'p')}</p>
-    <p><span class="label">Booking ID:</span> ${booking.id}</p>
-  </div>
-  
-  <p>This booking has been cancelled and removed from your calendar.</p>
-</body>
-</html>`,
-        botcheck: '',
-      });
+      await sendEmail({
+        to: email || '',
+        subject: 'A Booking Cancelled!',
+        reactTemplate: UserCancelBookingEmail({
+          booking: {
+            name,
+            date,
+            time,
+            bookingId,
+            email
+          }
+        }),
+      })
+
+      // Send admin email
+      await sendEmail({
+        to: import.meta.env.VITE_ADMIN_EMAILS.split(',') || [],
+        subject: 'A Booking Cancelled!',
+        reactTemplate: AdminCancelBookingEmail({ 
+          bookingInfo: {
+            name,
+            email,
+            date,
+            time,
+            bookingId
+          }
+         }),
+      })
+
     } catch (err) {
       console.error('Error sending cancellation notification:', err);
       setEmailError(true);

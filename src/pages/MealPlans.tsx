@@ -316,7 +316,7 @@ const MealPlans = () => {
           reactTemplate: PurchaseConfirmationEmail({ firstName: '', planName: plan.title, downloadLink: downloadLink, purchaseDate: new Date().toLocaleString() }),
         })
         await sendEmail({
-          to: 'chloefitness@gmail.com',
+          to: import.meta.env.VITE_ADMIN_EMAILS.split(',') || [],
           subject: 'A user purchase new plan',
           reactTemplate: NewUserNotifyEmail({ firstName: '', email: userEmail, signupDate: new Date().toLocaleString() }),
         })

@@ -21,6 +21,9 @@ import AdminTimeSlots from '../components/admin/AdminTimeSlots';
 import { Booking, BookingStatus } from '../types/booking';
 import { MealPlan } from '../types/meal-plan';
 import { Video as VideoType, VideoCategory } from '../types/video';
+import { sendEmail } from '../lib/emailService';
+import { UserBookingConfirmationEmail } from '../email-templates/user/bookingConfirmEmail';
+import { AdminBookingNotificationEmail } from '../email-templates/admin/bookingNotifyEmail';
 
 const AdminDashboard = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -38,25 +41,6 @@ const AdminDashboard = () => {
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const navigate = useNavigate();
-  
-  // Web3Forms setup for email notifications
-  const { submit } = useWeb3Forms({
-    access_key: '396876a7-1dbb-48d5-9c8c-74ef7ff0e872',
-    settings: {
-      from_name: 'Fit Mom Chloe Booking',
-      subject: 'Booking Status Update',
-      to: 'chloefitness@gmail.com',
-      bcc: 'fitmomchloe@gmail.com,sandemancraig@gmail.com',
-      html: true,
-    },
-    onSuccess: () => {
-      setIsSendingEmail(false);
-    },
-    onError: (error) => {
-      console.error('Error sending email:', error);
-      setIsSendingEmail(false);
-    },
-  });
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -201,91 +185,42 @@ const AdminDashboard = () => {
     try {
       setIsSendingEmail(true);
       
-      const bookingDate = parseISO(booking.date);
-      const formattedDate = format(bookingDate, 'EEEE, MMMM d, yyyy');
-      const formattedTime = format(bookingDate, 'h:mm a');
-      
       // Choose the appropriate subject based on status
       const emailSubject = status === 'confirmed' 
         ? 'Your Booking Has Been Confirmed!' 
-        : 'Your Booking Status Has Been Updated';
+        : 'Your Booking Status Has Been Updated!';
+      const adminEmailSubject = status === 'confirmed'
+        ? 'A booking has been Confirmed!'
+        : 'A booking status has been Updated!';
       
-      // Configure email settings for this specific email
-      const emailSettings = {
-        from_name: 'Fit Mom Chloe',
+      // Send user email
+      await sendEmail({
+        to: booking?.email || '',
         subject: emailSubject,
-        to: booking.email,
-        html: true,
-      };
-      
-      // HTML content for confirmed bookings
-      const confirmedHTML = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Booking Confirmed</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    h1 {
-      color: #FF6B6B;
-      margin-bottom: 20px;
-    }
-    .booking-details {
-      background-color: #f9f9f9;
-      border-left: 4px solid #4CAF50;
-      padding: 15px;
-      margin-bottom: 20px;
-    }
-    .label {
-      font-weight: bold;
-      width: 100px;
-      display: inline-block;
-    }
-    p {
-      margin: 8px 0;
-    }
-    .confirmed {
-      color: #4CAF50;
-      font-weight: bold;
-    }
-  </style>
-</head>
-<body>
-  <h1><span class="confirmed">CONFIRMED:</span> Your Personal Training Session</h1>
-  
-  <div class="booking-details">
-    <p><span class="label">Name:</span> ${booking.name}</p>
-    <p><span class="label">Date:</span> ${formattedDate}</p>
-    <p><span class="label">Time:</span> ${formattedTime}</p>
-    <p><span class="label">Notes:</span> ${booking.notes || 'None'}</p>
-  </div>
-  
-  <p>Your booking has been confirmed! Looking forward to seeing you.</p>
-  <p>Please arrive 5-10 minutes early to prepare for your session.</p>
-  
-  <p>If you need to cancel or reschedule, please do so at least 24 hours in advance.</p>
-</body>
-</html>`;
-      
-      // Send the email with custom settings and HTML content
-      await submit({
-        name: booking.name,
-        email: booking.email,
-        message: confirmedHTML,
-        botcheck: '',
-        subject: emailSubject,
-        from_name: 'Fit Mom Chloe',
-        replyTo: booking.email
-      });
-      
+        reactTemplate: UserBookingConfirmationEmail({
+          booking: {
+            name: booking.name || '',
+            date: booking.date,
+            time: booking.date,
+            notes: booking.notes,
+          }
+        }),
+      })
+
+      // Send admin email
+      await sendEmail({
+        to: import.meta.env.VITE_ADMIN_EMAILS.split(',') || [],
+        subject: adminEmailSubject,
+        reactTemplate: AdminBookingNotificationEmail({ 
+          booking: {
+            name: booking.name || '',
+            date: booking.date,
+            time: booking.date,
+            notes: booking.notes,
+          }
+         }),
+      })
+
       console.log(`Notification sent to ${booking.email} about booking ${status}`);
     } catch (err) {
       console.error('Error sending status update notification:', err);
