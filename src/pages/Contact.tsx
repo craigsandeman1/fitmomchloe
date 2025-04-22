@@ -4,6 +4,8 @@ import { Mail, Phone, MapPin, Send } from 'lucide-react';
 
 // Import the contact image
 import contactImage1 from '../assets/images/chloe-fitness-contact-1.webp';
+import { sendEmail } from '../lib/emailService';
+import { ContactFormEmail } from '../email-templates/admin/contactEmail';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -15,8 +17,6 @@ const Contact = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<{ success: boolean; message: string } | null>(null);
 
-  // Add the Web3Forms API key from environment variables
-  const apiKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || 'YOUR-WEB3FORMS-API-KEY';
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -29,70 +29,19 @@ const Contact = () => {
     setSubmitResult(null);
 
     try {
-      const response = await fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          access_key: apiKey,
-          ...formData,
-          subject: formData.subject || 'New Contact Form Submission',
-          to: 'chloefitness@gmail.com',
-          bcc: 'fitmomchloe@gmail.com,sandemancraig@gmail.com',
-          html: true,
-          message: `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>New Contact Form Submission</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    h1 {
-      color: #FF6B6B;
-      margin-bottom: 20px;
-    }
-    .section {
-      margin-bottom: 20px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #eee;
-    }
-    .label {
-      font-weight: bold;
-      margin-right: 10px;
-    }
-  </style>
-</head>
-<body>
-  <h1>New Contact Form Submission</h1>
-
-  <div class="section">
-    <p><span class="label">Name:</span> ${formData.name}</p>
-    <p><span class="label">Email:</span> ${formData.email}</p>
-    <p><span class="label">Subject:</span> ${formData.subject || 'Not specified'}</p>
-  </div>
-
-  <div class="section">
-    <p><span class="label">Message:</span></p>
-    <p>${formData.message.replace(/\n/g, '<br>')}</p>
-  </div>
-</body>
-</html>`
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
+      
+      await sendEmail({
+        to: import.meta.env.VITE_ADMIN_EMAILS.split(',') || [],
+        subject: formData.subject || 'New Contact Form Submission',
+        reactTemplate: ContactFormEmail({ 
+          formData: {
+            name: formData.name,
+            email: formData.email,
+            subject: formData.subject,
+            message: formData.message
+          }
+         }),
+      })
         setSubmitResult({
           success: true,
           message: 'Thank you for your message! We will get back to you soon.'
@@ -104,12 +53,6 @@ const Contact = () => {
           subject: '',
           message: ''
         });
-      } else {
-        setSubmitResult({
-          success: false,
-          message: 'Something went wrong. Please try again later.'
-        });
-      }
     } catch (error) {
       setSubmitResult({
         success: false,
