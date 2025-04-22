@@ -2,9 +2,8 @@
 import { useState } from 'react';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
 
-// Import the contact images
+// Import the contact image
 import contactImage1 from '../assets/images/chloe-fitness-contact-1.webp';
-import contactImage2 from '../assets/images/chloe-fitness-contact.webp';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -75,13 +74,13 @@ const Contact = () => {
 </head>
 <body>
   <h1>New Contact Form Submission</h1>
-  
+
   <div class="section">
     <p><span class="label">Name:</span> ${formData.name}</p>
     <p><span class="label">Email:</span> ${formData.email}</p>
     <p><span class="label">Subject:</span> ${formData.subject || 'Not specified'}</p>
   </div>
-  
+
   <div class="section">
     <p><span class="label">Message:</span></p>
     <p>${formData.message.replace(/\n/g, '<br>')}</p>
@@ -90,9 +89,9 @@ const Contact = () => {
 </html>`
         })
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         setSubmitResult({
           success: true,
@@ -122,27 +121,27 @@ const Contact = () => {
   };
 
   return (
-    <div className="pt-10">
+    <div className="mt-0"> {/* Remove margin-top as it's causing extra space */}
       {/* Hero Section */}
-      <section className="relative h-[60vh] overflow-hidden">
+      <section className="relative h-[60vh] overflow-hidden pt-14 md:pt-16">
         {/* Background Image */}
         <div className="absolute inset-0 w-full h-full">
-          <img 
-            src="/chloe-fitness-contact-1.webp" 
-            alt="Fit Mom Chloe Contact" 
+          <img
+            src={contactImage1}
+            alt="Fit Mom Chloe Contact"
             className="w-full h-full object-cover"
           />
           {/* Overlay */}
           <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         </div>
-        
+
         {/* Content */}
         <div className="relative z-10 h-full flex flex-col justify-center items-center text-center px-4">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-playfair text-white mb-4">
             Get In Touch
           </h1>
           <p className="text-xl text-white max-w-2xl">
-            Have questions about our services or want to start your fitness journey? 
+            Have questions about our services or want to start your fitness journey?
             We're here to help you achieve your goals.
           </p>
         </div>
@@ -158,20 +157,15 @@ const Contact = () => {
               <p className="text-gray-600">
                 Reach out to us through any of these channels, and we'll get back to you as soon as possible.
               </p>
-              
+
               <div className="space-y-4 mt-6">
-                <div className="flex items-center space-x-3">
-                  <Phone className="text-primary h-5 w-5" />
-                  <span className="text-gray-700">082 959 6069</span>
-                </div>
-                
                 <div className="flex items-center space-x-3">
                   <Mail className="text-primary h-5 w-5" />
                   <a href="mailto:chloefitness@gmail.com" className="text-gray-700 hover:text-primary">
                     chloefitness@gmail.com
                   </a>
                 </div>
-                
+
                 <div className="flex items-start space-x-3">
                   <MapPin className="text-primary h-5 w-5 mt-1" />
                   <span className="text-gray-700">Cape Town, South Africa</span>
@@ -179,20 +173,20 @@ const Contact = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Contact Form */}
           <div className="bg-white p-6 md:p-8 rounded-lg shadow-lg">
             <h2 className="text-3xl font-playfair text-primary mb-4">Send a Message</h2>
             <p className="text-gray-600 mb-6">
               Fill out the form below, and we'll respond to your inquiry as soon as possible.
             </p>
-            
+
             {submitResult && (
               <div className={`p-4 mb-6 rounded-md ${submitResult.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
                 {submitResult.message}
               </div>
             )}
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
@@ -209,7 +203,7 @@ const Contact = () => {
                   placeholder="Jane Doe"
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   Email Address
@@ -225,7 +219,7 @@ const Contact = () => {
                   placeholder="jane@example.com"
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
                   Subject
@@ -244,7 +238,7 @@ const Contact = () => {
                   <option value="Other">Other</option>
                 </select>
               </div>
-              
+
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
                   Message
@@ -260,7 +254,7 @@ const Contact = () => {
                   placeholder="How can we help you?"
                 />
               </div>
-              
+
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -283,4 +277,4 @@ const Contact = () => {
   );
 };
 
-export default Contact; 
+export default Contact;

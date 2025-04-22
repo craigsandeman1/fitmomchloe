@@ -13,22 +13,22 @@ const Footer = () => {
               <img src={logo} alt="Fit Mom Chloe" className="h-16" />
             </Link>
             <p className="text-gray-600 max-w-sm">
-              Empowering moms to achieve their fitness goals with personalized 
+              Empowering individuals to achieve their fitness goals with personalized
               meal plans and training programs.
             </p>
             <div className="flex space-x-4">
-              <a 
-                href="https://www.facebook.com/fitmomcapetown/" 
-                target="_blank" 
+              <a
+                href="https://www.facebook.com/fitmomcapetown/"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-500 hover:text-primary transition-colors"
                 aria-label="Facebook"
               >
                 <Facebook size={24} />
               </a>
-              <a 
-                href="https://www.instagram.com/fit_mom_chloe/" 
-                target="_blank" 
+              <a
+                href="https://www.instagram.com/fit_mom_chloe/"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-500 hover:text-primary transition-colors"
                 aria-label="Instagram"
@@ -37,7 +37,7 @@ const Footer = () => {
               </a>
             </div>
           </div>
-          
+
           {/* Quick Links */}
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-900">Quick Links</h3>
@@ -64,14 +64,11 @@ const Footer = () => {
               </li>
             </ul>
           </div>
-          
+
           {/* Contact Info */}
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-900">Contact Us</h3>
             <ul className="space-y-3">
-              <li className="text-gray-600">
-                <span className="font-medium">Phone:</span> 082 959 6069
-              </li>
               <li className="text-gray-600">
                 <span className="font-medium">Email:</span>{' '}
                 <a href="mailto:chloefitness@gmail.com" className="hover:text-primary transition-colors">
@@ -93,7 +90,7 @@ const Footer = () => {
             </ul>
           </div>
         </div>
-        
+
         <div className="mt-12 pt-6 border-t border-gray-200 text-center">
           <p className="text-gray-500 text-sm">
             © {new Date().getFullYear()} Fit Mom Chloe. All rights reserved.

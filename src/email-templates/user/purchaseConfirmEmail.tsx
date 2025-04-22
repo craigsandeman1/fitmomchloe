@@ -16,7 +16,7 @@ type PurchaseConfirmationProps = {
     return (
       <div style={{ fontFamily: 'Arial, sans-serif', fontSize: '16px', padding: '20px' }}>
         <h2>🎉 Thank you for your purchase, {firstName}!</h2>
-        <p>We're excited to have you on board with the <strong>{planName}</strong> plan.</p>
+        <p>I'm excited for you to see the results with the <strong>{planName}</strong> plan.</p>
   
         <table style={{ marginTop: '20px' }}>
           <tbody>

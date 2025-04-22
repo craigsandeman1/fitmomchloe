@@ -49,7 +49,7 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
             reactTemplate: WelcomeEmail({ firstName: '' }),
           })
           await sendEmail({
-            to: 'chloefitness@gmail.com',
+            to: ['chloefitness@gmail.com', 'sandemancraig@gmail.com'],
             subject: 'New User registered!',
             reactTemplate: NewUserNotifyEmail({ firstName: '', email, signupDate: new Date().toLocaleString() }),
           })
