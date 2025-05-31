@@ -4,9 +4,10 @@ import { useAuthStore } from '../store/auth';
 interface AuthProps {
   onAuthSuccess?: () => void;
   purchaseFlow?: boolean;
+  allowGuestCheckout?: boolean;
 }
 
-export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
+export const Auth = ({ onAuthSuccess, purchaseFlow = false, allowGuestCheckout = true }: AuthProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -15,7 +16,8 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
-  const { signIn, signUp, resetPasswordCustom } = useAuthStore();
+  const [guestCheckout, setGuestCheckout] = useState(purchaseFlow && allowGuestCheckout);
+  const { signIn, signUp, resetPasswordCustom, createGuestSession } = useAuthStore();
 
   const validatePassword = (password: string) => {
     if (password.length < 6) {
@@ -31,8 +33,6 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
     setIsLoading(true);
 
     try {
-      // Use our custom email service for password reset
-      console.log('Sending password reset email...');
       await resetPasswordCustom(resetEmail);
       setSuccess('Password reset email sent! Please check your inbox and follow the instructions to reset your password.');
       setShowForgotPassword(false);
@@ -45,18 +45,52 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
     }
   };
 
+  const handleGuestCheckout = async () => {
+    setError('');
+    setSuccess('');
+    setIsLoading(true);
+
+    try {
+      // Create a guest session with just email
+      await createGuestSession(email);
+      setSuccess('Ready to complete your purchase!');
+      
+      // Clear form
+      setEmail('');
+      
+      // Call success callback immediately
+      if (onAuthSuccess) {
+        setTimeout(() => {
+          onAuthSuccess();
+        }, 500);
+      }
+    } catch (err: any) {
+      console.error('Guest checkout error:', err);
+      setError('Unable to proceed with guest checkout. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
     setIsLoading(true);
 
-    // Validate password
-    const passwordError = validatePassword(password);
-    if (passwordError) {
-      setError(passwordError);
-      setIsLoading(false);
-      return;
+    // For guest checkout, just proceed with email
+    if (guestCheckout) {
+      return handleGuestCheckout();
+    }
+
+    // Validate password only if not guest checkout
+    if (!guestCheckout) {
+      const passwordError = validatePassword(password);
+      if (passwordError) {
+        setError(passwordError);
+        setIsLoading(false);
+        return;
+      }
     }
 
     try {
@@ -65,15 +99,13 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
         const signupResult = await signUp(email, password);
         
         if (signupResult.data.user) {
-          // Success! User is immediately signed up and can use the app
           setSuccess('Account created successfully! You can now access all features.');
           
           // Clear form
           setEmail('');
           setPassword('');
-          setIsSignUp(false); // Switch to login view
+          setIsSignUp(false);
           
-          // Call success callback if provided
           if (onAuthSuccess) {
             setTimeout(() => {
               onAuthSuccess();
@@ -85,20 +117,17 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
         try {
           await signIn(email, password);
           
-          // Clear form and show success
           setEmail('');
           setPassword('');
           setError('');
           setSuccess('Successfully signed in!');
           
-          // Call success callback if provided
           if (onAuthSuccess) {
             setTimeout(() => {
               onAuthSuccess();
             }, 1000);
           }
         } catch (signInError: any) {
-          // Handle specific auth errors
           if (signInError.message?.includes('Invalid login credentials')) {
             setError('Invalid email or password. Please check your credentials and try again.');
           } else {
@@ -109,7 +138,6 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
     } catch (err: any) {
       console.error('Authentication error:', err);
       
-      // Handle specific signup errors
       if (err.message?.includes('User already registered')) {
         setError('An account with this email already exists. Please sign in instead.');
         setIsSignUp(false);
@@ -178,95 +206,180 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <h2 className="text-2xl font-playfair text-gray-800 mb-6">
-        {isSignUp ? 'Create Account' : 'Sign In'}
-      </h2>
-      
-      {error && (
-        <div className="p-3 rounded mb-4 bg-red-100 text-red-800">
-          {error}
+    <div className="space-y-6">
+      {/* Guest Checkout - Primary option for purchases */}
+      {purchaseFlow && allowGuestCheckout && (
+        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
+          <div className="text-center mb-4">
+            <h2 className="text-2xl font-playfair text-gray-800 mb-2">Quick Checkout</h2>
+            <p className="text-gray-600">Enter your email to complete your purchase - no account required!</p>
+          </div>
+          
+          {error && guestCheckout && (
+            <div className="p-3 rounded mb-4 bg-red-100 text-red-800">
+              {error}
+            </div>
+          )}
+          
+          {success && guestCheckout && (
+            <div className="p-3 rounded mb-4 bg-green-100 text-green-800">
+              {success}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="guest-email" className="block text-sm font-medium text-gray-700 mb-1">
+                Email Address
+              </label>
+              <input
+                id="guest-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                placeholder="Enter your email to continue"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading || !email}
+              className="w-full bg-primary text-white py-3 px-4 rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            >
+              {isLoading ? 'Processing...' : 'Continue to Payment'}
+            </button>
+
+            <p className="text-xs text-gray-500 text-center">
+              We'll send your purchase confirmation to this email address.
+            </p>
+          </form>
+
+          {allowGuestCheckout && (
+            <div className="mt-4 pt-4 border-t border-gray-200 text-center">
+              <button
+                onClick={() => setGuestCheckout(false)}
+                className="text-sm text-gray-600 hover:text-gray-800 underline"
+              >
+                Have an account? Sign in instead
+              </button>
+            </div>
+          )}
         </div>
       )}
-      
-      {success && (
-        <div className="p-3 rounded mb-4 bg-green-100 text-green-800">
-          {success}
-        </div>
-      )}
 
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-          Email Address
-        </label>
-        <input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-          placeholder="Enter your email"
-        />
-      </div>
+      {/* Regular Auth Form - Secondary option or non-purchase flows */}
+      {(!guestCheckout || !purchaseFlow) && (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <h2 className="text-2xl font-playfair text-gray-800 mb-6">
+            {isSignUp ? 'Create Account' : 'Sign In'}
+          </h2>
+          
+          {error && !guestCheckout && (
+            <div className="p-3 rounded mb-4 bg-red-100 text-red-800">
+              {error}
+            </div>
+          )}
+          
+          {success && !guestCheckout && (
+            <div className="p-3 rounded mb-4 bg-green-100 text-green-800">
+              {success}
+            </div>
+          )}
 
-      <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-          Password
-        </label>
-        <input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-          placeholder="Enter your password"
-        />
-      </div>
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email Address
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+              placeholder="Enter your email"
+            />
+          </div>
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {isLoading ? 'Please wait...' : (isSignUp ? 'Create Account' : 'Sign In')}
-      </button>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+              placeholder="Enter your password"
+            />
+          </div>
 
-      <div className="text-center space-y-2">
-        <button
-          type="button"
-          onClick={() => {
-            setIsSignUp(!isSignUp);
-            setError('');
-            setSuccess('');
-          }}
-          className="text-primary hover:text-primary/80 underline"
-        >
-          {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
-        </button>
-        
-        {!isSignUp && (
           <button
-            type="button"
-            onClick={() => {
-              setShowForgotPassword(true);
-              setError('');
-              setSuccess('');
-            }}
-            className="block w-full text-gray-600 hover:text-gray-800 underline"
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Forgot your password?
+            {isLoading ? 'Please wait...' : (isSignUp ? 'Create Account' : 'Sign In')}
           </button>
-        )}
-      </div>
 
-      {isSignUp && (
-        <div className="text-xs text-gray-500 text-center">
-          By creating an account, you agree to our terms of service and privacy policy.
-        </div>
+          <div className="text-center space-y-2">
+            <button
+              type="button"
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setError('');
+                setSuccess('');
+              }}
+              className="text-primary hover:text-primary/80 underline"
+            >
+              {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
+            </button>
+            
+            {!isSignUp && (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForgotPassword(true);
+                  setError('');
+                  setSuccess('');
+                }}
+                className="block w-full text-gray-600 hover:text-gray-800 underline"
+              >
+                Forgot your password?
+              </button>
+            )}
+          </div>
+
+          {isSignUp && (
+            <div className="text-xs text-gray-500 text-center">
+              By creating an account, you agree to our terms of service and privacy policy.
+            </div>
+          )}
+
+          {/* Quick Checkout Option for Purchase Flow */}
+          {purchaseFlow && allowGuestCheckout && !guestCheckout && (
+            <div className="mt-6 pt-6 border-t border-gray-200 text-center">
+              <p className="text-sm text-gray-600 mb-3">Want to checkout faster?</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setGuestCheckout(true);
+                  setError('');
+                  setSuccess('');
+                }}
+                className="text-primary hover:text-primary/80 underline font-medium"
+              >
+                Continue as guest with email only
+              </button>
+            </div>
+          )}
+        </form>
       )}
-    </form>
+    </div>
   );
 };
 

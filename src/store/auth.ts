@@ -10,6 +10,7 @@ interface AuthState {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   resetPasswordCustom: (email: string) => Promise<void>;
+  createGuestSession: (email: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -84,6 +85,31 @@ export const useAuthStore = create<AuthState>((set) => ({
         resetLink: resetLink
       }),
     });
+  },
+  createGuestSession: async (email: string) => {
+    // Create a temporary guest session for purchase flow
+    // Store guest email in localStorage for the purchase process
+    localStorage.setItem('guestEmail', email);
+    localStorage.setItem('guestSession', 'true');
+    localStorage.setItem('guestSessionTimestamp', Date.now().toString());
+    
+    // Create a mock user object for the purchase flow
+    const guestUser = {
+      id: `guest_${Date.now()}`,
+      email: email,
+      email_confirmed_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      role: 'guest',
+      user_metadata: { isGuest: true },
+      app_metadata: {},
+      aud: 'authenticated'
+    } as unknown as User;
+    
+    // Set the guest user in state temporarily
+    set({ user: guestUser, loading: false });
+    
+    console.log('Guest session created for:', email);
   },
 }));
 
