@@ -96,6 +96,9 @@ const Navbar = () => {
             <Link to="/meal-plans" className="text-gray-700 hover:text-primary transition-colors" onClick={() => window.scrollTo(0, 0)}>
               Meal Plans
             </Link>
+            <Link to="/workout-plans" className="text-gray-700 hover:text-primary transition-colors" onClick={() => window.scrollTo(0, 0)}>
+              Workout Plans
+            </Link>
             <Link to="/contact" className="text-gray-700 hover:text-primary transition-colors" onClick={() => window.scrollTo(0, 0)}>
               Contact
             </Link>
@@ -137,6 +140,9 @@ const Navbar = () => {
               </Link>
               <Link to="/meal-plans" className="text-gray-700 hover:text-primary transition-colors px-2 py-1" onClick={() => {setIsOpen(false); window.scrollTo(0, 0)}}>
                 Meal Plans
+              </Link>
+              <Link to="/workout-plans" className="text-gray-700 hover:text-primary transition-colors px-2 py-1" onClick={() => {setIsOpen(false); window.scrollTo(0, 0)}}>
+                Workout Plans
               </Link>
               <Link to="/contact" className="text-gray-700 hover:text-primary transition-colors px-2 py-1" onClick={() => {setIsOpen(false); window.scrollTo(0, 0)}}>
                 Contact

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, UserCircle, Calendar, LucideClipboardList, LogOut, Clock, Users, FileText } from 'lucide-react';
+import { Plus, UserCircle, Calendar, LucideClipboardList, LogOut, Clock, Users, FileText, Dumbbell } from 'lucide-react';
 import { useAuthStore } from '../store/auth';
 import { supabase } from '../lib/supabase';
 import { adminSupabase } from '../lib/adminSupabase';
@@ -12,6 +12,8 @@ import { format, parseISO } from 'date-fns';
 import BookingsList from '../components/admin/BookingsList';
 import MealPlanForm from '../components/admin/MealPlanForm';
 import MealPlansList from '../components/admin/MealPlansList';
+import WorkoutPlanForm from '../components/admin/WorkoutPlanForm';
+import WorkoutPlansList from '../components/admin/WorkoutPlansList';
 import VideoForm from '../components/admin/VideoForm';
 import VideosList from '../components/admin/VideosList';
 import UsersList from '../components/admin/UsersList';
@@ -20,6 +22,7 @@ import AdminTimeSlots from '../components/admin/AdminTimeSlots';
 // Import types
 import { Booking, BookingStatus } from '../types/booking';
 import { MealPlan } from '../types/meal-plan';
+import { WorkoutPlan } from '../types/workout-plan';
 import { Video as VideoType, VideoCategory } from '../types/video';
 import { sendEmail } from '../lib/emailService';
 import { UserBookingConfirmationEmail } from '../email-templates/user/bookingConfirmEmail';
@@ -28,12 +31,14 @@ import { AdminBookingNotificationEmail } from '../email-templates/admin/bookingN
 const AdminDashboard = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
+  const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>([]);
   const [videos, setVideos] = useState<VideoType[]>([]);
   const [videoCategories, setVideoCategories] = useState<VideoCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'users' | 'mealPlans' | 'bookings' | 'timeSlots'>('mealPlans');
+  const [activeTab, setActiveTab] = useState<'users' | 'mealPlans' | 'workoutPlans' | 'bookings' | 'timeSlots'>('mealPlans');
   const [editingMealPlan, setEditingMealPlan] = useState<MealPlan | null>(null);
+  const [editingWorkoutPlan, setEditingWorkoutPlan] = useState<WorkoutPlan | null>(null);
   const [editingVideo, setEditingVideo] = useState<VideoType | null>(null);
   const { user, signOut } = useUserStore();
   const { user: authUser } = useAuthStore();
@@ -128,6 +133,15 @@ const AdminDashboard = () => {
       }
       
       setMealPlans(mealPlansData || []);
+
+      // Fetch workout plans
+      const { data: workoutPlansData, error: workoutPlansError } = await supabase
+        .from('workout_plans')
+        .select('*')
+        .order('title');
+
+      if (workoutPlansError) throw workoutPlansError;
+      setWorkoutPlans(workoutPlansData || []);
 
       // Fetch videos
       const { data: videosData, error: videosError } = await supabase
@@ -490,6 +504,228 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleWorkoutPlanSubmit = async (workoutPlan: WorkoutPlan, files?: { pdfFile?: File, thumbnailFile?: File }) => {
+    try {
+      let pdf_url = (workoutPlan as any).pdf_url;
+      let thumbnail_url = (workoutPlan as any).thumbnail_url;
+      
+      console.log('Original workout plan before processing:', JSON.stringify(workoutPlan));
+      
+      // Upload PDF file if provided
+      if (files?.pdfFile) {
+        const pdfFileName = `workout-pdfs/${Date.now()}-${files.pdfFile.name}`;
+        
+        try {
+          const { error: pdfUploadError } = await adminSupabase.storage
+            .from('Images') // Use 'Images' bucket for all files
+            .upload(pdfFileName, files.pdfFile, {
+              cacheControl: '3600',
+              upsert: true
+            });
+            
+          if (pdfUploadError) {
+            console.error('PDF upload error:', pdfUploadError);
+            throw pdfUploadError;
+          }
+          
+          // Get the public URL
+          const { data: pdfData } = adminSupabase.storage
+            .from('Images')
+            .getPublicUrl(pdfFileName);
+            
+          pdf_url = pdfData.publicUrl;
+          console.log('PDF uploaded successfully:', pdf_url);
+        } catch (uploadError) {
+          console.error('Error uploading PDF:', uploadError);
+          setError('Failed to upload PDF file.');
+          return;
+        }
+      }
+      
+      // Upload thumbnail if provided
+      if (files?.thumbnailFile) {
+        const thumbnailFileName = `workout-plans/${Date.now()}-${files.thumbnailFile.name}`;
+        
+        try {
+          const { error: thumbnailUploadError } = await adminSupabase.storage
+            .from('Images')
+            .upload(thumbnailFileName, files.thumbnailFile, {
+              cacheControl: '3600',
+              upsert: true
+            });
+            
+          if (thumbnailUploadError) {
+            console.error('Thumbnail upload error:', thumbnailUploadError);
+            throw thumbnailUploadError;
+          }
+          
+          // Get the public URL
+          const { data: thumbnailData } = adminSupabase.storage
+            .from('Images')
+            .getPublicUrl(thumbnailFileName);
+            
+          thumbnail_url = thumbnailData.publicUrl;
+          console.log('Thumbnail uploaded successfully:', thumbnail_url);
+        } catch (uploadError) {
+          console.error('Error uploading thumbnail:', uploadError);
+          setError('Failed to upload thumbnail file.');
+          return;
+        }
+      }
+
+      // Only include fields that exist in the database
+      const {
+        id,
+        title,
+        description,
+        price,
+        content,
+        fitness_type,
+        difficulty_level,
+        workout_duration,
+        duration_weeks,
+        estimated_calories_burned,
+        includes_equipment_list,
+        includes_exercise_descriptions,
+        target_muscle_groups
+      } = workoutPlan;
+
+      // Create a new content object with the file URLs stored in metadata
+      const existingContent = content || { weeks: [] };
+      
+      // Store the file URLs in the metadata field
+      const contentWithFiles = {
+        ...existingContent,
+        metadata: {
+          ...(existingContent.metadata || {}),
+          pdfUrl: pdf_url,  // Store PDF URL in metadata
+          thumbnailUrl: thumbnail_url  // Store thumbnail URL in metadata
+        }
+      };
+      
+      console.log('Modified content with files:', JSON.stringify(contentWithFiles));
+
+      // Create the workout plan object to save to database
+      const workoutPlanToSave = {
+        title,
+        description,
+        price,
+        content: contentWithFiles, // Use the modified content with file URLs
+        fitness_type,
+        difficulty_level,
+        workout_duration,
+        duration_weeks,
+        estimated_calories_burned,
+        includes_equipment_list,
+        includes_exercise_descriptions,
+        target_muscle_groups
+      };
+      
+      console.log('Workout plan to save to database:', JSON.stringify(workoutPlanToSave));
+
+      // For UI purposes, create an object with all fields including URLs
+      const workoutPlanWithFiles = {
+        ...workoutPlanToSave,
+        id,
+        pdf_url,
+        thumbnail_url // Store for UI but not in database
+      };
+
+      if (workoutPlan.id) {
+        // Update existing workout plan
+        const { error } = await supabase
+          .from('workout_plans')
+          .update(workoutPlanToSave)
+          .eq('id', workoutPlan.id);
+
+        if (error) throw error;
+
+        // For UI purposes only - include both URLs in the state
+        setWorkoutPlans(workoutPlans.map(wp => 
+          wp.id === workoutPlan.id ? workoutPlanWithFiles : wp
+        ));
+      } else {
+        // Create new workout plan
+        const { data, error } = await supabase
+          .from('workout_plans')
+          .insert([{
+            ...workoutPlanToSave,
+            is_active: true
+          }])
+          .select();
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          // For UI purposes only - include both URLs in the state
+          setWorkoutPlans([...workoutPlans, {...data[0], pdf_url, thumbnail_url}]);
+        }
+      }
+
+      setEditingWorkoutPlan(null);
+    } catch (err) {
+      console.error('Error saving workout plan:', err);
+      setError('Failed to save workout plan.');
+    }
+  };
+
+  const deleteWorkoutPlan = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('workout_plans')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setWorkoutPlans(workoutPlans.filter(wp => wp.id !== id));
+    } catch (err) {
+      console.error('Error deleting workout plan:', err);
+      setError('Failed to delete workout plan.');
+    }
+  };
+
+  const toggleWorkoutPlanVisibility = async (id: string, isHidden: boolean) => {
+    try {
+      // Find the workout plan to update
+      const workoutPlan = workoutPlans.find(wp => wp.id === id);
+      if (!workoutPlan) {
+        setError('Workout plan not found.');
+        return;
+      }
+
+      // Create a copy of the content and update the visibility
+      const updatedContent = {
+        ...workoutPlan.content,
+        metadata: {
+          ...workoutPlan.content.metadata,
+          isHidden: !isHidden
+        }
+      };
+
+      // Update the workout plan with the modified content
+      const { error } = await supabase
+        .from('workout_plans')
+        .update({ content: updatedContent })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error toggling workout plan visibility:', error);
+        setError('Failed to update workout plan visibility.');
+        return;
+      }
+
+      // Update the state locally
+      setWorkoutPlans(workoutPlans.map(wp => 
+        wp.id === id ? { ...wp, content: updatedContent, is_hidden: !isHidden } : wp
+      ));
+      
+    } catch (err) {
+      console.error('Error toggling workout plan visibility:', err);
+      setError('Failed to update workout plan visibility.');
+    }
+  };
+
   const handleVideoSubmit = async (video: VideoType) => {
     try {
       if (video.id) {
@@ -614,6 +850,15 @@ const AdminDashboard = () => {
                 Meal Plans
               </button>
               <button
+                onClick={() => setActiveTab('workoutPlans')}
+                className={`px-4 py-2 rounded-md ${
+                  activeTab === 'workoutPlans' ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Dumbbell className="mr-2 h-5 w-5" />
+                Workout Plans
+              </button>
+              <button
                 onClick={() => setActiveTab('bookings')}
                 className={`px-4 py-2 rounded-md ${
                   activeTab === 'bookings' ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100'
@@ -677,6 +922,46 @@ const AdminDashboard = () => {
                     editingMealPlan={editingMealPlan}
                     onSubmit={handleMealPlanSubmit}
                     onCancel={() => setEditingMealPlan(null)}
+                  />
+                )}
+              </div>
+            )}
+            {activeTab === 'workoutPlans' && (
+              <div>
+                {!editingWorkoutPlan ? (
+                  <div className="mb-4 flex justify-between items-center">
+                    <h2 className="text-2xl font-semibold">Workout Plans</h2>
+                    <button
+                      onClick={() => setEditingWorkoutPlan({ 
+                        id: null,
+                        title: '', 
+                        description: '', 
+                        price: 0, 
+                        content: { 
+                          weeks: [] 
+                        } 
+                      } as any)}
+                      className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
+                    >
+                      Add New Workout Plan
+                    </button>
+                  </div>
+                ) : null}
+                
+                {!editingWorkoutPlan ? (
+                  <WorkoutPlansList
+                    workoutPlans={workoutPlans}
+                    onEdit={(workoutPlan) => {
+                      setEditingWorkoutPlan(workoutPlan);
+                    }}
+                    onDelete={deleteWorkoutPlan}
+                    onToggleVisibility={toggleWorkoutPlanVisibility}
+                  />
+                ) : (
+                  <WorkoutPlanForm
+                    editingWorkoutPlan={editingWorkoutPlan}
+                    onSubmit={handleWorkoutPlanSubmit}
+                    onCancel={() => setEditingWorkoutPlan(null)}
                   />
                 )}
               </div>

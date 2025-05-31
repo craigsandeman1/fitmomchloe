@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import MealPlans from './pages/MealPlans';
 import MealPlansSimple from './pages/MealPlansSimple';
 import Workouts from './pages/Workouts';
+import WorkoutPlans from './pages/WorkoutPlans';
 import Booking from './pages/Booking';
 import AdminDashboard from './pages/AdminDashboard';
 import PaymentResult from './pages/PaymentResult';
@@ -63,6 +64,7 @@ function App() {
             <Route path="/meal-plans" element={<MealPlans />} />
             <Route path="/meal-plans-simple" element={<MealPlansSimple />} />
             <Route path="/workouts" element={<Workouts />} />
+            <Route path="/workout-plans" element={<WorkoutPlans />} />
             <Route path="/book" element={<Booking />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/*" element={<AdminDashboard />} />
