@@ -4,7 +4,7 @@ import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/', // Change from './' to '/' for proper absolute paths
+  base: '/', // Ensures proper absolute paths for deployment
   server: {
     port: 3000,
     host: true
@@ -15,14 +15,33 @@ export default defineConfig({
     }
   },
   build: {
-    assetsInlineLimit: 0,
+    assetsInlineLimit: 4096, // Inline small assets, process larger ones properly
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
           supabase: ['@supabase/supabase-js']
-        }
+        },
+        // Ensure ALL assets go to proper locations
+        assetFileNames: (assetInfo) => {
+          const info = assetInfo.name.split('.');
+          const ext = info[info.length - 1];
+          // All images go to assets/ with hash for cache busting
+          if (/png|jpe?g|svg|gif|tiff|bmp|ico|webp/i.test(ext)) {
+            return `assets/[name]-[hash][extname]`;
+          }
+          // Other assets
+          if (/css/i.test(ext)) {
+            return `assets/[name]-[hash][extname]`;
+          }
+          return `assets/[name]-[hash][extname]`;
+        },
+        chunkFileNames: 'assets/[name]-[hash].js'
       }
-    }
-  }
+    },
+    // Ensure source maps for debugging
+    sourcemap: false
+  },
+  // Ensure proper asset handling
+  assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.webp', '**/*.svg', '**/*.gif', '**/*.mp4']
 });
