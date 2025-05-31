@@ -51,18 +51,28 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false, allowGuestCheckout =
     setIsLoading(true);
 
     try {
+      console.log('Auth: Starting guest checkout for email:', email);
+      
       // Create a guest session with just email
       await createGuestSession(email);
+      
+      console.log('Auth: Guest session created, checking user state...');
+      
+      // Verify the user was set in the store
+      const { user: currentUser } = useAuthStore.getState();
+      console.log('Auth: Current user after guest session:', currentUser);
+      
       setSuccess('Ready to complete your purchase!');
       
       // Clear form
       setEmail('');
       
-      // Call success callback immediately
+      // Call success callback after a short delay to ensure store updates propagate
       if (onAuthSuccess) {
+        console.log('Auth: Calling onAuthSuccess callback...');
         setTimeout(() => {
           onAuthSuccess();
-        }, 500);
+        }, 100); // Reduced delay to make it feel more immediate
       }
     } catch (err: any) {
       console.error('Guest checkout error:', err);

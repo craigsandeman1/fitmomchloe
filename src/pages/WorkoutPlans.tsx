@@ -392,11 +392,15 @@ const WorkoutPlans = () => {
     console.log('WorkoutPlans: Authentication successful');
     console.log('Pending purchase:', pendingPurchase);
     
+    // Get current user state
+    const { user: currentUser } = useAuthStore.getState();
+    console.log('WorkoutPlans: Current user state:', currentUser);
+    
     // Close the auth modal
     setShowAuthModal(false);
     
     // If there was a pending purchase and user is now authenticated, proceed with purchase
-    if (pendingPurchase && user) {
+    if (pendingPurchase && currentUser) {
       console.log('WorkoutPlans: Proceeding with pending purchase for:', pendingPurchase.title);
       
       // Check if they already purchased this plan (in case they logged into an account that already owns it)
@@ -411,11 +415,53 @@ const WorkoutPlans = () => {
         }
       } else {
         console.log('WorkoutPlans: User authenticated, triggering payment...');
-        // The payment will automatically proceed since user is now authenticated
-        // We could trigger a click on the PayfastButton here if needed
+        
+        // For a more reliable approach, try multiple methods to trigger the payment
+        setTimeout(() => {
+          // Method 1: Try to click the PayFast button directly
+          const paymentButton = document.querySelector(`[data-plan-id="${pendingPurchase.id}"] button`);
+          console.log('WorkoutPlans: Looking for payment button with selector:', `[data-plan-id="${pendingPurchase.id}"] button`);
+          console.log('WorkoutPlans: Found payment button:', paymentButton);
+          
+          if (paymentButton) {
+            console.log('WorkoutPlans: Clicking PayFast button automatically...');
+            (paymentButton as HTMLButtonElement).click();
+          } else {
+            console.warn('WorkoutPlans: Could not find PayFast button, trying alternative approach...');
+            
+            // Method 2: Try to find any PayFast button for this plan
+            const allButtons = document.querySelectorAll('button');
+            console.log('WorkoutPlans: Found buttons on page:', allButtons.length);
+            
+            // Look for button containing "Buy Now" text within the plan card
+            const planCards = document.querySelectorAll(`[data-plan-id="${pendingPurchase.id}"]`);
+            console.log('WorkoutPlans: Found plan cards:', planCards.length);
+            
+            if (planCards.length > 0) {
+              const buyButton = planCards[0].querySelector('button');
+              if (buyButton) {
+                console.log('WorkoutPlans: Found buy button in plan card, clicking...');
+                buyButton.click();
+              } else {
+                console.warn('WorkoutPlans: No button found in plan card');
+                alert('Payment flow ready! Please click "Buy Now" to complete your purchase.');
+              }
+            } else {
+              console.warn('WorkoutPlans: Plan card not found on page');
+              alert('Payment flow ready! Please click "Buy Now" to complete your purchase.');
+            }
+          }
+        }, 300); // Slightly longer delay to ensure DOM updates
       }
       
       setPendingPurchase(null);
+    } else {
+      if (!pendingPurchase) {
+        console.log('WorkoutPlans: No pending purchase to process');
+      }
+      if (!currentUser) {
+        console.log('WorkoutPlans: No current user found after auth success');
+      }
     }
   };
   
@@ -662,14 +708,16 @@ const WorkoutPlans = () => {
                           ) : (
                             <>
                               {plan.price > 0 ? (
-                                <PayfastButton
-                                  plan={plan as any} // Cast to bypass TypeScript type checking
-                                  customStr2={user?.id} // Pass user ID for webhook
-                                  onSuccess={handlePurchaseSuccess}
-                                  onCancel={handlePurchaseCancel}
-                                  handlePurchaseAttempt={handlePurchaseAttempt as any} // Cast to bypass TypeScript type checking
-                                  className="bg-gradient-to-r from-[#FF6B6B] to-[#FF8E8E] hover:from-[#FF5252] hover:to-[#FF7676] shadow-lg shadow-primary/30 transform transition-all duration-200 hover:scale-[1.02]"
-                                />
+                                <div data-plan-id={plan.id}>
+                                  <PayfastButton
+                                    plan={plan as any} // Cast to bypass TypeScript type checking
+                                    customStr2={user?.id} // Pass user ID for webhook
+                                    onSuccess={handlePurchaseSuccess}
+                                    onCancel={handlePurchaseCancel}
+                                    handlePurchaseAttempt={handlePurchaseAttempt as any} // Cast to bypass TypeScript type checking
+                                    className="bg-gradient-to-r from-[#FF6B6B] to-[#FF8E8E] hover:from-[#FF5252] hover:to-[#FF7676] shadow-lg shadow-primary/30 transform transition-all duration-200 hover:scale-[1.02]"
+                                  />
+                                </div>
                               ) : (
                                 <button
                                   onClick={() => handlePurchaseAttempt(plan)}

@@ -229,6 +229,7 @@ const PayfastButton = ({
     
     // Check if a purchase attempt handler exists and call it
     if (handlePurchaseAttempt && plan) {
+      console.log('PayfastButton: Calling handlePurchaseAttempt for plan:', plan.title);
       const shouldBlock = handlePurchaseAttempt(plan);
       if (shouldBlock) {
         console.log('PayfastButton: Purchase attempt blocked by parent handler');
@@ -238,6 +239,7 @@ const PayfastButton = ({
     
     // Get current user
     const { user } = useAuthStore.getState();
+    console.log('PayfastButton: Current user state:', user);
     
     // Validate user is authenticated
     if (!user) {
@@ -257,12 +259,14 @@ const PayfastButton = ({
     // For now, allowing purchases for logged-in users
     
     console.log('PayfastButton: User authenticated and email confirmed:', user.email);
+    console.log('PayfastButton: User is guest?', (user as any).isGuest);
     
     console.log('PayfastButton: User state:', {
       id: user.id,
       email: user.email,
       email_confirmed_at: user.email_confirmed_at,
-      user_metadata: user.user_metadata
+      user_metadata: user.user_metadata,
+      isGuest: (user as any).isGuest
     });
     
     // Prepare payment data
@@ -272,11 +276,13 @@ const PayfastButton = ({
       return;
     }
     
+    console.log('PayfastButton: Payment data prepared successfully');
     setPaymentData(paymentData);
     
     onClick?.();
     setShowPaymentModal(true);
     setPaymentStep('details');
+    console.log('PayfastButton: Payment modal opened');
   };
   
   const proceedToPayment = () => {
