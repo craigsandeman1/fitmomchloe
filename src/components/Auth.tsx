@@ -1,9 +1,5 @@
 import { useState } from 'react';
 import { useAuthStore } from '../store/auth';
-import { sendEmail } from '../lib/emailService';
-import { WelcomeEmail } from '../email-templates/user/welcomeEmail';
-import { NewUserNotifyEmail } from '../email-templates/admin/newUserNotifyEmail';
-import { generateConfirmationToken, storeConfirmationToken, sendConfirmationEmail } from '../lib/confirmationService';
 
 interface AuthProps {
   onAuthSuccess?: () => void;
@@ -19,7 +15,7 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
-  const { signIn, signUp, resetPassword, resetPasswordCustom } = useAuthStore();
+  const { signIn, signUp, resetPasswordCustom } = useAuthStore();
 
   const validatePassword = (password: string) => {
     if (password.length < 6) {
@@ -35,26 +31,15 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
     setIsLoading(true);
 
     try {
-      // First try our custom email service (more reliable)
-      console.log('Trying custom password reset first...');
+      // Use our custom email service for password reset
+      console.log('Sending password reset email...');
       await resetPasswordCustom(resetEmail);
-      setSuccess('Password reset email sent via our email service! Please check your inbox and follow the instructions to reset your password.');
+      setSuccess('Password reset email sent! Please check your inbox and follow the instructions to reset your password.');
       setShowForgotPassword(false);
       setResetEmail('');
     } catch (err: any) {
-      console.error('Custom password reset error:', err);
-      
-      try {
-        // Fallback to Supabase's built-in password reset
-        console.log('Trying Supabase password reset as fallback...');
-        await resetPassword(resetEmail);
-        setSuccess('Password reset email sent! Please check your inbox and follow the instructions to reset your password.');
-        setShowForgotPassword(false);
-        setResetEmail('');
-      } catch (supabaseErr: any) {
-        console.error('Supabase password reset error:', supabaseErr);
-        setError('Failed to send password reset email. Please try again or contact support if the problem persists.');
-      }
+      console.error('Password reset error:', err);
+      setError('Failed to send password reset email. Please try again or contact support if the problem persists.');
     } finally {
       setIsLoading(false);
     }
@@ -76,50 +61,23 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
 
     try {
       if (isSignUp) {
-        // Sign up flow with custom confirmation
+        // Simple signup flow - no email verification required
         const signupResult = await signUp(email, password);
         
         if (signupResult.data.user) {
-          // Generate and store custom confirmation token
-          try {
-            const token = generateConfirmationToken();
-            await storeConfirmationToken(signupResult.data.user.id, email, token);
-            
-            // Send custom confirmation email
-            await sendConfirmationEmail(email, '', token);
-            
-            // Send welcome email (optional - can be sent after confirmation)
-            try {
-              await sendEmail({
-                to: email,
-                subject: 'Welcome to Fit Mom!',
-                reactTemplate: WelcomeEmail({ firstName: '' }),
-              });
-              await sendEmail({
-                to: import.meta.env.VITE_ADMIN_EMAILS?.split(',') || [],
-                subject: 'New User registered!',
-                reactTemplate: NewUserNotifyEmail({ 
-                  firstName: '', 
-                  email, 
-                  signupDate: new Date().toLocaleString() 
-                }),
-              });
-            } catch (emailError) {
-              console.error("Failed to send welcome email:", emailError);
-              // Don't block the signup process if welcome email fails
-            }
-            
-            // Show success message
-            if (purchaseFlow) {
-              setSuccess('Account created! Please check your email and click the confirmation link to continue with your purchase.');
-            } else {
-              setSuccess('Account created successfully! Please check your email and click the confirmation link to complete your registration.');
-            }
-            setIsSignUp(false); // Switch to login view
-            
-          } catch (confirmationError) {
-            console.error('Error setting up confirmation:', confirmationError);
-            setError('Account created, but there was an issue sending the confirmation email. Please contact support.');
+          // Success! User is immediately signed up and can use the app
+          setSuccess('Account created successfully! You can now access all features.');
+          
+          // Clear form
+          setEmail('');
+          setPassword('');
+          setIsSignUp(false); // Switch to login view
+          
+          // Call success callback if provided
+          if (onAuthSuccess) {
+            setTimeout(() => {
+              onAuthSuccess();
+            }, 1500);
           }
         }
       } else {
@@ -135,13 +93,13 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
           
           // Call success callback if provided
           if (onAuthSuccess) {
-            onAuthSuccess();
+            setTimeout(() => {
+              onAuthSuccess();
+            }, 1000);
           }
         } catch (signInError: any) {
           // Handle specific auth errors
-          if (signInError.message?.includes('Email not confirmed')) {
-            setError('Please check your email and click the confirmation link before signing in. If you didn\'t receive the email, try signing up again.');
-          } else if (signInError.message?.includes('Invalid login credentials')) {
+          if (signInError.message?.includes('Invalid login credentials')) {
             setError('Invalid email or password. Please check your credentials and try again.');
           } else {
             setError(signInError.message || 'Failed to sign in. Please try again.');
@@ -163,16 +121,10 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
     }
   };
 
-  // Forgot Password Form
   if (showForgotPassword) {
     return (
-      <div className="max-w-md mx-auto">
-        <div className="mb-4 text-center">
-          <h2 className="text-2xl font-playfair mb-2">Reset Password</h2>
-          <p className="text-gray-600">
-            Enter your email address and we'll send you a link to reset your password.
-          </p>
-        </div>
+      <form onSubmit={handleForgotPassword} className="space-y-4">
+        <h2 className="text-2xl font-playfair text-gray-800 mb-6">Reset Password</h2>
         
         {error && (
           <div className="p-3 rounded mb-4 bg-red-100 text-red-800">
@@ -185,61 +137,51 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
             {success}
           </div>
         )}
-        
-        <form onSubmit={handleForgotPassword} className="space-y-4">
-          <div>
-            <label htmlFor="resetEmail" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              id="resetEmail"
-              type="email"
-              value={resetEmail}
-              onChange={(e) => setResetEmail(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-              placeholder="your@email.com"
-            />
-          </div>
-          
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#FF6B6B] to-[#FF8E8E] hover:from-[#FF5252] hover:to-[#FF7676] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? 'Sending...' : 'Send Reset Email'}
-            </button>
-          </div>
-        </form>
-        
-        <div className="mt-4 text-center">
-          <button
-            type="button"
-            onClick={() => {
-              setShowForgotPassword(false);
-              setError('');
-              setSuccess('');
-            }}
-            className="text-sm text-primary hover:text-primary-dark"
-          >
-            Back to Sign In
-          </button>
+
+        <div>
+          <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700 mb-1">
+            Email Address
+          </label>
+          <input
+            id="reset-email"
+            type="email"
+            value={resetEmail}
+            onChange={(e) => setResetEmail(e.target.value)}
+            required
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            placeholder="Enter your email address"
+          />
         </div>
-      </div>
+
+        <button
+          type="submit"
+          disabled={isLoading || !resetEmail}
+          className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isLoading ? 'Sending...' : 'Send Reset Link'}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setShowForgotPassword(false);
+            setError('');
+            setSuccess('');
+            setResetEmail('');
+          }}
+          className="w-full text-gray-600 hover:text-gray-800 underline"
+        >
+          Back to Sign In
+        </button>
+      </form>
     );
   }
 
   return (
-    <div className="max-w-md mx-auto">
-      <div className="mb-4 text-center">
-        <h2 className="text-2xl font-playfair mb-2">{isSignUp ? 'Create Account' : 'Sign In'}</h2>
-        <p className="text-gray-600">
-          {isSignUp 
-            ? 'Create an account to access your purchases' 
-            : 'Sign in to access your account'}
-        </p>
-      </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <h2 className="text-2xl font-playfair text-gray-800 mb-6">
+        {isSignUp ? 'Create Account' : 'Sign In'}
+      </h2>
       
       {error && (
         <div className="p-3 rounded mb-4 bg-red-100 text-red-800">
@@ -252,63 +194,46 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
           {success}
         </div>
       )}
-      
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-            placeholder="your@email.com"
-          />
-        </div>
-        
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-            placeholder={isSignUp ? 'Create a password (min. 6 characters)' : 'Enter your password'}
-          />
-        </div>
-        
-        {/* Forgot Password Link - Only show for Sign In */}
-        {!isSignUp && (
-          <div className="text-right">
-            <button
-              type="button"
-              onClick={() => setShowForgotPassword(true)}
-              className="text-sm text-primary hover:text-primary-dark"
-            >
-              Forgot your password?
-            </button>
-          </div>
-        )}
-        
-        <div>
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#FF6B6B] to-[#FF8E8E] hover:from-[#FF5252] hover:to-[#FF7676] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? 'Processing...' : isSignUp ? 'Create Account' : 'Sign In'}
-          </button>
-        </div>
-      </form>
-      
-      <div className="mt-4 text-center">
+
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+          Email Address
+        </label>
+        <input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+          placeholder="Enter your email"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+          Password
+        </label>
+        <input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+          placeholder="Enter your password"
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={isLoading}
+        className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {isLoading ? 'Please wait...' : (isSignUp ? 'Create Account' : 'Sign In')}
+      </button>
+
+      <div className="text-center space-y-2">
         <button
           type="button"
           onClick={() => {
@@ -316,11 +241,33 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
             setError('');
             setSuccess('');
           }}
-          className="text-sm text-primary hover:text-primary-dark"
+          className="text-primary hover:text-primary/80 underline"
         >
-          {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
+          {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
         </button>
+        
+        {!isSignUp && (
+          <button
+            type="button"
+            onClick={() => {
+              setShowForgotPassword(true);
+              setError('');
+              setSuccess('');
+            }}
+            className="block w-full text-gray-600 hover:text-gray-800 underline"
+          >
+            Forgot your password?
+          </button>
+        )}
       </div>
-    </div>
+
+      {isSignUp && (
+        <div className="text-xs text-gray-500 text-center">
+          By creating an account, you agree to our terms of service and privacy policy.
+        </div>
+      )}
+    </form>
   );
 };
+
+export default Auth;

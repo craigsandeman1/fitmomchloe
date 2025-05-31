@@ -32,14 +32,22 @@ export const useAuthStore = create<AuthState>((set) => ({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        // Disable email confirmation requirement
+        data: {
+          email_confirm: false
+        }
       }
     });
     if (error) throw error;
     
-    // Note: User will need email verification before they can sign in
-    // The user object will be returned but email_confirmed_at will be null
-    console.log('User signup successful:', data.user?.email, 'Email confirmed:', !!data.user?.email_confirmed_at);
+    // User can now sign in immediately without email verification
+    console.log('User signup successful:', data.user?.email, 'Ready to use app immediately');
+    
+    // If user is created successfully, update the auth state immediately
+    if (data.user) {
+      set({ user: data.user, loading: false });
+    }
     
     return { data, error };
   },

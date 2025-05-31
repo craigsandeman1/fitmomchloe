@@ -19,7 +19,6 @@ import EmailPayfastTest from './pages/EmailPayfastTest';
 import EmailTest from './pages/EmailTest';
 import Contact from './pages/Contact';
 import AuthTest from './pages/AuthTest';
-import ConfirmEmail from './pages/ConfirmEmail';
 import Footer from './components/Footer';
 import { supabase } from './lib/supabase';
 import { useAuthStore } from './store/auth';
@@ -188,7 +187,6 @@ function App() {
             <Route path="/email-test" element={<EmailTest />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/auth-test" element={<AuthTest />} />
-            <Route path="/confirm-email" element={<ConfirmEmail />} />
           </Routes>
         </main>
         <Footer />
