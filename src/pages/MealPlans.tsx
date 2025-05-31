@@ -272,6 +272,10 @@ const MealPlans = () => {
     // Find the plan to get its details
     const plan = mealPlans.find(p => p.id === planId);
     if (!plan) return;
+
+    // Instead of handling everything here, redirect to the dedicated success page
+    // The success page will handle all the processing including emails and downloads
+    const successUrl = `/purchase/success?planId=${planId}&type=meal_plan&amount=${plan.price}&payment_id=payfast_${Date.now()}`;
     
     // Record the purchase in the database
     if (user && planId) {
@@ -294,45 +298,13 @@ const MealPlans = () => {
         
         // Refresh the user's purchases list
         fetchUserPurchases();
+        
+        // Redirect to success page for complete automated handling
+        window.location.href = successUrl;
       } catch (err) {
         console.error('Error recording purchase:', err);
       }
     }
-    
-    // Send purchase confirmation email
-    try {
-      // Create a download link for the plan
-      // Note: In production, this should be a secure, time-limited link
-      const downloadLink = `${window.location.origin}/meal-plans?download=${planId}`;
-
-      // Get user's email (from user object or session)
-      const userEmail = user?.email;
-      
-      if (userEmail && plan.title) {
-        // Send the purchase confirmation email
-        await sendEmail({
-          to: userEmail,
-          subject: 'Thank you for purchasing new plan!',
-          reactTemplate: PurchaseConfirmationEmail({ firstName: '', planName: plan.title, downloadLink: downloadLink, purchaseDate: new Date().toLocaleString() }),
-        })
-        await sendEmail({
-          to: import.meta.env.VITE_ADMIN_EMAILS.split(',') || [],
-          subject: 'A user purchase new plan',
-          reactTemplate: NewUserNotifyEmail({ firstName: '', email: userEmail, signupDate: new Date().toLocaleString() }),
-        })
-        console.log('Purchase confirmation email sent');
-      } else {
-        console.warn('Could not send purchase confirmation email - missing email or plan title');
-      }
-    } catch (emailError) {
-      console.error('Error sending purchase confirmation email:', emailError);
-      // Don't block the purchase process if email fails
-    }
-    
-    // Trigger download for the purchased plan
-    setTimeout(() => {
-      downloadPurchasedPlan(planId);
-    }, 1000);
   };
   
   // Helper function for handling free plan acquisition
@@ -373,40 +345,54 @@ const MealPlans = () => {
     console.log('Purchase was cancelled');
   };
   
-  // Handle purchase attempt - check if user is logged in first
+  // Handle purchase attempt - REQUIRE authentication for all purchases
   const handlePurchaseAttempt = (plan: MealPlan) => {
     console.log('MealPlans: handlePurchaseAttempt called for plan', plan.title);
+    console.log('Current user:', user ? `${user.email} (ID: ${user.id})` : 'Not logged in');
     
-    // No longer requiring authentication to purchase
-    // Just check if the user has already purchased (if logged in)
-    if (user && hasPurchased(plan.id)) {
-      // Already purchased, just download it
-      downloadPurchasedPlan(plan.id || '');
-    } else {
-      // Either not logged in or hasn't purchased, proceed with Payfast
-      console.log('MealPlans: Proceeding with payment...');
-      
-      // Let PayfastButton handle it
-      return false;
+    // STEP 1: Check if user is authenticated
+    if (!user) {
+      console.log('MealPlans: User not authenticated, showing login modal');
+      setPendingPurchase(plan);
+      setShowAuthModal(true);
+      return true; // Block the payment
     }
+    
+    // STEP 2: Check if already purchased
+    if (hasPurchased(plan.id)) {
+      console.log('MealPlans: User already purchased this plan, downloading...');
+      downloadPurchasedPlan(plan.id || '');
+      return true; // Block the payment (already owned)
+    }
+    
+    // STEP 3: User is authenticated and hasn't purchased - proceed with payment
+    console.log('MealPlans: User authenticated, proceeding with PayFast payment...');
+    return false; // Allow PayfastButton to proceed
   };
   
   // Handle when user successfully authenticates from the auth modal
   const handleAuthModalSuccess = () => {
+    console.log('MealPlans: Authentication successful');
+    console.log('Pending purchase:', pendingPurchase);
+    
     // Close the auth modal
     setShowAuthModal(false);
     
     // If there was a pending purchase and user is now authenticated, proceed with purchase
     if (pendingPurchase && user) {
-      console.log('User authenticated, proceeding with purchase:', pendingPurchase.title);
+      console.log('MealPlans: Proceeding with pending purchase for:', pendingPurchase.title);
       
-      // For paid plans, the PayfastButton will handle the purchase
-      // This is triggered automatically because the modal is closed and user is logged in
-      
-      // For free plans, we need to handle it directly
-      if (pendingPurchase.price === 0 && pendingPurchase.id) {
-        handlePurchaseSuccess(pendingPurchase.id);
+      // Check if they already purchased this plan (in case they logged into an account that already owns it)
+      if (hasPurchased(pendingPurchase.id)) {
+        console.log('MealPlans: User already owns this plan, downloading...');
+        downloadPurchasedPlan(pendingPurchase.id || '');
+      } else {
+        console.log('MealPlans: User authenticated, triggering payment...');
+        // The payment will automatically proceed since user is now authenticated
+        // We could trigger a click on the PayfastButton here if needed
       }
+      
+      setPendingPurchase(null);
     }
   };
   
@@ -545,8 +531,58 @@ const MealPlans = () => {
         {/* Available Meal Plans Section */}
         <div id="available-plans" className="bg-gray-50 py-24 w-full">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            {/* Purchased Plans Section - Show at top if user has purchases */}
+            {user && userPurchases.length > 0 && (
+              <div className="mb-16">
+                <h2 className="font-playfair text-3xl text-center mb-8 text-green-600">Your Purchased Meal Plans</h2>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {mealPlans
+                    .filter(plan => hasPurchased(plan.id))
+                    .map((plan) => (
+                      <div key={plan.id} className="bg-white rounded-xl overflow-hidden shadow-lg border-2 border-green-200">
+                        <div className="relative aspect-[4/3] overflow-hidden">
+                          <img 
+                            src={getMealPlanThumbnail(plan)} 
+                            alt={plan.title} 
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full font-medium flex items-center">
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Purchased
+                          </div>
+                        </div>
+                        
+                        <div className="p-6">
+                          <h3 className="font-playfair text-xl mb-3">{plan.title}</h3>
+                          <p className="text-gray-600 mb-4 line-clamp-2">
+                            {plan.description || "Your purchased meal plan is ready for download."}
+                          </p>
+                          
+                          <button
+                            onClick={() => downloadPurchasedPlan(plan.id || '')}
+                            className="w-full py-3 bg-gradient-to-r from-[#4CAF50] to-[#66BB6A] hover:from-[#43A047] hover:to-[#5CB860] shadow-lg shadow-green-500/30 transform transition-all duration-200 hover:scale-[1.02] text-white rounded-lg flex items-center justify-center font-semibold"
+                          >
+                            <FileDown className="mr-2 h-5 w-5" />
+                            Download Your Plan
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+                <div className="mt-8 text-center">
+                  <div className="inline-flex items-center px-4 py-2 bg-green-50 border border-green-200 rounded-lg text-green-800">
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                    <span className="font-medium">You can download your purchased plans anytime!</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <div className="flex justify-between items-center mb-16">
-              <h2 className="font-playfair text-4xl text-center">Available Meal Plans</h2>
+              <h2 className="font-playfair text-4xl text-center">
+                {user && userPurchases.length > 0 ? 'More Meal Plans' : 'Available Meal Plans'}
+              </h2>
             </div>
             
             {loading ? (

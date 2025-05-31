@@ -17,13 +17,47 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
   const [success, setSuccess] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signUp } = useAuthStore();
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const { signIn, signUp, resetPassword, resetPasswordCustom } = useAuthStore();
 
   const validatePassword = (password: string) => {
     if (password.length < 6) {
       return 'Password must be at least 6 characters long';
     }
     return null;
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setIsLoading(true);
+
+    try {
+      // First try our custom email service (more reliable)
+      console.log('Trying custom password reset first...');
+      await resetPasswordCustom(resetEmail);
+      setSuccess('Password reset email sent via our email service! Please check your inbox and follow the instructions to reset your password.');
+      setShowForgotPassword(false);
+      setResetEmail('');
+    } catch (err: any) {
+      console.error('Custom password reset error:', err);
+      
+      try {
+        // Fallback to Supabase's built-in password reset
+        console.log('Trying Supabase password reset as fallback...');
+        await resetPassword(resetEmail);
+        setSuccess('Password reset email sent! Please check your inbox and follow the instructions to reset your password.');
+        setShowForgotPassword(false);
+        setResetEmail('');
+      } catch (supabaseErr: any) {
+        console.error('Supabase password reset error:', supabaseErr);
+        setError('Failed to send password reset email. Please try again or contact support if the problem persists.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -129,6 +163,73 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
     }
   };
 
+  // Forgot Password Form
+  if (showForgotPassword) {
+    return (
+      <div className="max-w-md mx-auto">
+        <div className="mb-4 text-center">
+          <h2 className="text-2xl font-playfair mb-2">Reset Password</h2>
+          <p className="text-gray-600">
+            Enter your email address and we'll send you a link to reset your password.
+          </p>
+        </div>
+        
+        {error && (
+          <div className="p-3 rounded mb-4 bg-red-100 text-red-800">
+            {error}
+          </div>
+        )}
+        
+        {success && (
+          <div className="p-3 rounded mb-4 bg-green-100 text-green-800">
+            {success}
+          </div>
+        )}
+        
+        <form onSubmit={handleForgotPassword} className="space-y-4">
+          <div>
+            <label htmlFor="resetEmail" className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <input
+              id="resetEmail"
+              type="email"
+              value={resetEmail}
+              onChange={(e) => setResetEmail(e.target.value)}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+              placeholder="your@email.com"
+            />
+          </div>
+          
+          <div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#FF6B6B] to-[#FF8E8E] hover:from-[#FF5252] hover:to-[#FF7676] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? 'Sending...' : 'Send Reset Email'}
+            </button>
+          </div>
+        </form>
+        
+        <div className="mt-4 text-center">
+          <button
+            type="button"
+            onClick={() => {
+              setShowForgotPassword(false);
+              setError('');
+              setSuccess('');
+            }}
+            className="text-sm text-primary hover:text-primary-dark"
+          >
+            Back to Sign In
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-md mx-auto">
       <div className="mb-4 text-center">
@@ -182,6 +283,19 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
             placeholder={isSignUp ? 'Create a password (min. 6 characters)' : 'Enter your password'}
           />
         </div>
+        
+        {/* Forgot Password Link - Only show for Sign In */}
+        {!isSignUp && (
+          <div className="text-right">
+            <button
+              type="button"
+              onClick={() => setShowForgotPassword(true)}
+              className="text-sm text-primary hover:text-primary-dark"
+            >
+              Forgot your password?
+            </button>
+          </div>
+        )}
         
         <div>
           <button

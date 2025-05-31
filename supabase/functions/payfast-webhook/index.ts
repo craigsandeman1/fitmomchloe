@@ -183,8 +183,127 @@ async function processPayment(data: PayFastITNData): Promise<void> {
   
   console.log('Purchase recorded successfully:', insertedData);
   
-  // Optional: Send confirmation email or other post-purchase actions
-  // You could call another Edge Function here for email notifications
+  // Send confirmation email to user
+  try {
+    console.log('Sending purchase confirmation email...');
+    
+    // Get user's first name from payment data or email
+    const userFirstName = data.name_first || data.email_address?.split('@')[0] || 'Customer';
+    const userEmail = data.email_address;
+    
+    if (userEmail) {
+      // Create download link (in production, this should be a secure, time-limited link)
+      const downloadLink = `${Deno.env.get('SUPABASE_URL')?.replace('/rest/v1', '')}/purchase-download/${planId}?user=${userId}`;
+      
+      // Call the send-email edge function
+      const emailResponse = await fetch(`${Deno.env.get('SUPABASE_URL')?.replace('/rest/v1', '')}/functions/v1/send-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+        },
+        body: JSON.stringify({
+          to: userEmail,
+          subject: `🎉 Your ${data.item_name} is ready for download!`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
+              <div style="background: linear-gradient(135deg, #E6827C 0%, #D4756F 100%); padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
+                <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Thank You for Your Purchase!</h1>
+                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Your ${purchaseType.replace('_', ' ')} is ready to download</p>
+              </div>
+              
+              <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <h2 style="color: #374151; margin-top: 0;">Hi ${userFirstName}! 👋</h2>
+                
+                <p style="color: #6B7280; line-height: 1.6; margin: 16px 0;">
+                  Thank you for purchasing <strong>${data.item_name}</strong>! Your payment has been successfully processed and your plan is ready for download.
+                </p>
+                
+                <div style="background: #F3F4F6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                  <h3 style="color: #374151; margin-top: 0;">Purchase Details:</h3>
+                  <ul style="color: #6B7280; margin: 0; padding-left: 20px;">
+                    <li><strong>Plan:</strong> ${data.item_name}</li>
+                    <li><strong>Amount Paid:</strong> R${data.amount_gross}</li>
+                    <li><strong>Payment ID:</strong> ${data.pf_payment_id}</li>
+                    <li><strong>Date:</strong> ${new Date().toLocaleDateString()}</li>
+                  </ul>
+                </div>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                  <a href="${downloadLink}" style="display: inline-block; background: linear-gradient(135deg, #E6827C 0%, #D4756F 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                    📥 Download Your Plan
+                  </a>
+                </div>
+                
+                <div style="border-top: 1px solid #E5E7EB; padding-top: 20px; margin-top: 30px;">
+                  <p style="color: #9CA3AF; font-size: 14px; margin: 0;">
+                    You can always access your purchased plans by logging into your account at <a href="${Deno.env.get('SUPABASE_URL')?.replace('/rest/v1', '')}" style="color: #E6827C;">fitmomchloe.com</a>
+                  </p>
+                  <p style="color: #9CA3AF; font-size: 14px; margin: 10px 0 0 0;">
+                    Questions? Reply to this email or contact us anytime.
+                  </p>
+                </div>
+              </div>
+              
+              <div style="text-align: center; margin-top: 20px;">
+                <p style="color: #9CA3AF; font-size: 12px; margin: 0;">
+                  © ${new Date().getFullYear()} Fit Mom Chloe. All rights reserved.
+                </p>
+              </div>
+            </div>
+          `
+        })
+      });
+      
+      if (emailResponse.ok) {
+        const emailResult = await emailResponse.json();
+        console.log('Purchase confirmation email sent successfully:', emailResult);
+      } else {
+        const emailError = await emailResponse.text();
+        console.error('Failed to send purchase confirmation email:', emailError);
+      }
+    } else {
+      console.warn('No email address provided in payment data, skipping email notification');
+    }
+    
+    // Send admin notification
+    const adminEmails = Deno.env.get('VITE_ADMIN_EMAILS')?.split(',') || ['admin@fitmomchloe.com'];
+    
+    if (adminEmails.length > 0) {
+      const adminEmailResponse = await fetch(`${Deno.env.get('SUPABASE_URL')?.replace('/rest/v1', '')}/functions/v1/send-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+        },
+        body: JSON.stringify({
+          to: adminEmails,
+          subject: `💰 New Purchase: ${data.item_name}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2>New Purchase Notification</h2>
+              <p><strong>Customer:</strong> ${userFirstName} (${userEmail})</p>
+              <p><strong>Plan:</strong> ${data.item_name}</p>
+              <p><strong>Amount:</strong> R${data.amount_gross}</p>
+              <p><strong>Payment ID:</strong> ${data.pf_payment_id}</p>
+              <p><strong>Date:</strong> ${new Date().toISOString()}</p>
+              <p><strong>Purchase Type:</strong> ${purchaseType}</p>
+            </div>
+          `
+        })
+      });
+      
+      if (adminEmailResponse.ok) {
+        console.log('Admin notification sent successfully');
+      } else {
+        console.error('Failed to send admin notification');
+      }
+    }
+    
+  } catch (emailError) {
+    console.error('Error sending emails:', emailError);
+    // Don't fail the webhook if email sending fails
+  }
 }
 
 Deno.serve(async (req: Request) => {

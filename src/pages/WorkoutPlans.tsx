@@ -331,33 +331,38 @@ const WorkoutPlans = () => {
     console.log('Purchase was cancelled');
   };
   
-  // Handle purchase attempt - updated to work with PayfastButton
+  // Handle purchase attempt - REQUIRE authentication for all purchases
   const handlePurchaseAttempt = (plan: WorkoutPlan) => {
     console.log('WorkoutPlans: handlePurchaseAttempt called for plan', plan.title);
+    console.log('Current user:', user ? `${user.email} (ID: ${user.id})` : 'Not logged in');
     
+    // STEP 1: Check if user is authenticated
     if (!user) {
-      // Show auth modal
+      console.log('WorkoutPlans: User not authenticated, showing login modal');
       setPendingPurchase(plan);
       setShowAuthModal(true);
-      return true; // Return true to indicate we handled it
+      return true; // Block the payment
     }
 
+    // STEP 2: Check if already purchased
     if (hasPurchased(plan.id)) {
-      // Already purchased, just download it
+      console.log('WorkoutPlans: User already purchased this plan, downloading...');
       downloadPurchasedPlan(plan.id || '');
-      return true; // Return true to indicate we handled it
-    } else {
-      // For free plans, handle directly
-      if (plan.price === 0) {
-        if (plan.id) {
-          handlePurchaseSuccess(plan.id);
-        }
-        return true; // Return true to indicate we handled it
-      }
-      
-      // For paid plans, return false to let PayfastButton handle the payment flow
-      return false;
+      return true; // Block the payment (already owned)
     }
+
+    // STEP 3: Handle free plans immediately
+    if (plan.price === 0) {
+      console.log('WorkoutPlans: Free plan, processing immediately...');
+      if (plan.id) {
+        handlePurchaseSuccess(plan.id);
+      }
+      return true; // Block PayfastButton (handled directly)
+    }
+    
+    // STEP 4: User is authenticated and hasn't purchased paid plan - proceed with payment
+    console.log('WorkoutPlans: User authenticated, proceeding with PayFast payment...');
+    return false; // Allow PayfastButton to proceed
   };
 
   const toggleVideo = () => {
@@ -384,26 +389,34 @@ const WorkoutPlans = () => {
 
   // Handle when user successfully authenticates from the auth modal
   const handleAuthModalSuccess = () => {
+    console.log('WorkoutPlans: Authentication successful');
+    console.log('Pending purchase:', pendingPurchase);
+    
     // Close the auth modal
     setShowAuthModal(false);
     
     // If there was a pending purchase and user is now authenticated, proceed with purchase
     if (pendingPurchase && user) {
-      console.log('User authenticated, proceeding with purchase:', pendingPurchase.title);
+      console.log('WorkoutPlans: Proceeding with pending purchase for:', pendingPurchase.title);
       
-      // For free plans, we need to handle it directly
-      if (pendingPurchase.price === 0 && pendingPurchase.id) {
-        handlePurchaseSuccess(pendingPurchase.id);
-      }
-      // For paid plans, would trigger payment flow
-      else {
-        console.log('Would proceed with payment for:', pendingPurchase.title);
+      // Check if they already purchased this plan (in case they logged into an account that already owns it)
+      if (hasPurchased(pendingPurchase.id)) {
+        console.log('WorkoutPlans: User already owns this plan, downloading...');
+        downloadPurchasedPlan(pendingPurchase.id || '');
+      } else if (pendingPurchase.price === 0) {
+        // Handle free plans immediately
+        console.log('WorkoutPlans: Free plan, processing immediately...');
         if (pendingPurchase.id) {
           handlePurchaseSuccess(pendingPurchase.id);
         }
+      } else {
+        console.log('WorkoutPlans: User authenticated, triggering payment...');
+        // The payment will automatically proceed since user is now authenticated
+        // We could trigger a click on the PayfastButton here if needed
       }
+      
+      setPendingPurchase(null);
     }
-    setPendingPurchase(null);
   };
   
   // Auth modal component

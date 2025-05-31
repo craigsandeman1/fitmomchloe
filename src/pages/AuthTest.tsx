@@ -1,10 +1,26 @@
 import { useState } from 'react';
 import { debugAuth } from '../lib/authDebug';
+import PayfastButton from '../components/PayfastButton';
+import { useAuthStore } from '../store/auth';
 
 const AuthTest = () => {
+  const { user } = useAuthStore();
   const [email, setEmail] = useState('ngcobomthunzi389@gmail.com');
   const [password, setPassword] = useState('');
   const [results, setResults] = useState<string>('');
+
+  // Test meal plan for PayFast testing
+  const testPlan = {
+    id: 'test-plan-001',
+    title: 'Test Meal Plan',
+    description: 'A test meal plan for debugging PayFast integration',
+    price: 10.00,
+    content: {
+      weeks: []
+    },
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
 
   const addResult = (message: string) => {
     setResults(prev => prev + '\n' + new Date().toLocaleTimeString() + ': ' + message);
@@ -87,6 +103,19 @@ const AuthTest = () => {
     } catch (error: any) {
       addResult(`❌ Token validation failed: ${error.message}`);
     }
+  };
+
+  // PayFast test functions
+  const handlePaymentSuccess = (planId: string) => {
+    addResult(`✅ PayFast payment successful for plan: ${planId}`);
+  };
+
+  const handlePaymentCancel = () => {
+    addResult(`❌ PayFast payment cancelled by user`);
+  };
+
+  const handlePaymentClick = () => {
+    addResult(`🔄 PayFast button clicked, preparing payment...`);
   };
 
   const clearResults = () => {
@@ -175,6 +204,33 @@ const AuthTest = () => {
                       >
                         Check Session
                       </button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium text-gray-900">PayFast Tests</h3>
+                    <div className="bg-gray-50 p-3 rounded border">
+                      <p className="text-sm text-gray-600 mb-2">
+                        Current user: {user ? `${user.email} (${user.id})` : 'Not logged in'}
+                      </p>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Test Plan: {testPlan.title} - R{testPlan.price.toFixed(2)}
+                      </p>
+                      {user ? (
+                        <PayfastButton
+                          plan={testPlan}
+                          customStr2={user.id}
+                          customStr3="meal_plan"
+                          onSuccess={handlePaymentSuccess}
+                          onCancel={handlePaymentCancel}
+                          onClick={handlePaymentClick}
+                          className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded text-sm w-full"
+                        >
+                          🧪 Test PayFast Payment
+                        </PayfastButton>
+                      ) : (
+                        <div className="text-red-500 text-sm">Please log in first to test PayFast</div>
+                      )}
                     </div>
                   </div>
                   

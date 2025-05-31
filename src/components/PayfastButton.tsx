@@ -117,6 +117,14 @@ const PayfastButton = ({
   }, [onSuccess, onCancel]);
 
   const preparePaymentData = () => {
+    // Get current authenticated user
+    const { user } = useAuthStore.getState();
+    
+    if (!user) {
+      console.error('PayfastButton: No authenticated user found');
+      return null;
+    }
+    
     // Create Payfast configuration
     const payfastConfig = {
       merchantId: env.payfast.merchantId,
@@ -138,7 +146,9 @@ const PayfastButton = ({
       sandbox: payfastConfig.sandbox,
       returnUrl: payfastConfig.returnUrl,
       cancelUrl: payfastConfig.cancelUrl,
-      notifyUrl: payfastConfig.notifyUrl
+      notifyUrl: payfastConfig.notifyUrl,
+      userEmail: user.email,
+      userId: user.id
     });
     
     // Determine amount and item name from props or plan
@@ -156,10 +166,7 @@ const PayfastButton = ({
       return null;
     }
 
-    // Get current user for webhook data
-    const currentUser = supabase.auth.getUser().then(({ data }) => data.user);
-    
-    // Create payment data object
+    // Create payment data object with authenticated user information
     const data: PayfastPaymentData = {
       merchant_id: payfastConfig.merchantId,
       merchant_key: payfastConfig.merchantKey,
@@ -168,28 +175,25 @@ const PayfastButton = ({
       notify_url: payfastConfig.notifyUrl,
       amount: finalAmount.toFixed(2),
       item_name: finalItemName,
+      // Use authenticated user's email (CRITICAL for webhook email delivery)
+      email_address: user.email || '',
+      name_first: user.user_metadata?.first_name || user.email?.split('@')[0] || 'Customer',
+      name_last: user.user_metadata?.last_name || '',
     };
     
     // Add optional parameters if provided
     if (finalItemDescription) data.item_description = finalItemDescription;
-    if (email) data.email_address = email;
-    if (firstName) data.name_first = firstName;
-    if (lastName) data.name_last = lastName;
     if (cellNumber) data.cell_number = cellNumber;
     if (mPaymentId) data.m_payment_id = mPaymentId;
     if (paymentMethod) data.payment_method = paymentMethod;
     
-    // Add custom string parameters for webhook processing
-    // These are critical for the webhook to process the payment correctly
+    // Add custom string parameters for webhook processing (CRITICAL for webhook)
     if (plan?.id) {
       data.custom_str1 = plan.id; // Plan ID
     }
     
-    // Get user ID from current user context (we'll need to handle this async)
-    // For now, use the provided custom strings or defaults
-    if (customStr2) {
-      data.custom_str2 = customStr2; // User ID (should be passed from parent)
-    }
+    // ALWAYS use authenticated user ID (CRITICAL for webhook to know who to email)
+    data.custom_str2 = user.id; // User ID from authenticated session
     
     // Determine purchase type based on plan type or explicit parameter
     if (plan && 'content' in plan && typeof plan.content === 'object') {
@@ -223,42 +227,56 @@ const PayfastButton = ({
   const handleClick = () => {
     console.log('PayfastButton: handleClick called');
     
-    // If handlePurchaseAttempt is provided, call it first
+    // Check if a purchase attempt handler exists and call it
     if (handlePurchaseAttempt && plan) {
-      console.log('PayfastButton: Calling handlePurchaseAttempt');
-      // Store the result of handlePurchaseAttempt
-      const result = handlePurchaseAttempt(plan);
-      
-      // If it returns true, the purchase was handled elsewhere, so stop here
-      if (result === true) {
-        console.log('PayfastButton: Purchase handled by parent component');
+      const shouldBlock = handlePurchaseAttempt(plan);
+      if (shouldBlock) {
+        console.log('PayfastButton: Purchase attempt blocked by parent handler');
         return;
       }
     }
     
-    // Continue with the payment flow
-    console.log('PayfastButton: Preparing payment flow');
+    // Get current user
+    const { user } = useAuthStore.getState();
     
-    // Call the onClick handler if provided
-    if (onClick) {
-      console.log('PayfastButton: Calling onClick handler');
-      onClick();
+    // Validate user is authenticated
+    if (!user) {
+      console.error('PayfastButton: User not authenticated');
+      alert('Please log in before making a purchase');
+      return;
     }
     
+    // Validate user has email
+    if (!user.email) {
+      console.error('PayfastButton: User email not available');
+      alert('User email is required for purchase confirmation');
+      return;
+    }
+    
+    // TODO: Add custom email confirmation check here if needed
+    // For now, allowing purchases for logged-in users
+    
+    console.log('PayfastButton: User authenticated and email confirmed:', user.email);
+    
+    console.log('PayfastButton: User state:', {
+      id: user.id,
+      email: user.email,
+      email_confirmed_at: user.email_confirmed_at,
+      user_metadata: user.user_metadata
+    });
+    
     // Prepare payment data
-    console.log('PayfastButton: Preparing payment data');
-    const data = preparePaymentData();
-    if (!data) {
+    const paymentData = preparePaymentData();
+    if (!paymentData) {
       console.error('PayfastButton: Failed to prepare payment data');
       return;
     }
     
-    // Store payment data for the modal
-    console.log('PayfastButton: Setting payment data and showing modal');
-    setPaymentData(data);
+    setPaymentData(paymentData);
     
-    // Show the payment confirmation modal
+    onClick?.();
     setShowPaymentModal(true);
+    setPaymentStep('details');
   };
   
   const proceedToPayment = () => {

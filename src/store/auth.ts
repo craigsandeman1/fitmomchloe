@@ -8,6 +8,8 @@ interface AuthState {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<AuthResponse>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  resetPasswordCustom: (email: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -45,6 +47,35 @@ export const useAuthStore = create<AuthState>((set) => ({
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     set({ user: null });
+  },
+  resetPassword: async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`
+    });
+    if (error) throw error;
+  },
+  resetPasswordCustom: async (email: string) => {
+    // Custom password reset using your email service
+    const { sendEmail } = await import('../lib/emailService');
+    const { PasswordResetEmail } = await import('../email-templates/user/passwordResetEmail');
+    
+    // Generate a temporary reset token (in production, you'd want a more secure implementation)
+    const resetToken = btoa(email + Date.now());
+    const resetLink = `${window.location.origin}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+    
+    // Store the reset token temporarily (you'd want to use a more secure storage in production)
+    localStorage.setItem(`reset_token_${email}`, resetToken);
+    localStorage.setItem(`reset_token_expires_${email}`, (Date.now() + 24 * 60 * 60 * 1000).toString()); // 24 hours
+    
+    // Send custom password reset email
+    await sendEmail({
+      to: email,
+      subject: 'Reset Your Password - Fit Mom Chloe',
+      reactTemplate: PasswordResetEmail({
+        firstName: 'Valued Customer',
+        resetLink: resetLink
+      }),
+    });
   },
 }));
 

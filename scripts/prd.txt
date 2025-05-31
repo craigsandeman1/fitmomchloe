@@ -1,0 +1,185 @@
+# Fit Mom Chloe - Meal Plan Purchase Flow Testing & Validation Project
+
+<context>
+# Overview  
+This project focuses on comprehensive end-to-end testing and validation of the Fit Mom Chloe meal plan purchase flow. The system currently allows users to purchase meal plans through PayFast payment gateway, receive confirmation emails with download links, and access their purchased content. We need to systematically test and document this flow to ensure it works reliably for customers.
+
+The testing will validate the complete user journey from meal plan selection through payment processing, email notifications, and content delivery. This includes verifying sandbox payment integration, email delivery systems, database record keeping, and user experience optimization.
+
+# Core Features to Test & Validate
+**Payment Flow Integration**
+- PayFast sandbox payment processing
+- Authentication requirement enforcement
+- Purchase attempt validation and blocking for already-owned plans
+- Payment success/failure handling
+- Database purchase record creation
+
+**Email Notification System**
+- Purchase confirmation emails to customers
+- Admin notification emails for new purchases
+- Email template rendering and content accuracy
+- Download link generation and validation
+
+**Content Delivery & Access**
+- PDF meal plan generation and download
+- Purchased content access control
+- Success page redirection after payment
+- User purchase history management
+
+**User Experience & Authentication**
+- Login/signup flow during purchase attempts
+- Already-purchased plan detection and download access
+- Purchase success state management
+- Error handling and user feedback
+
+# User Experience Testing Scenarios
+**Primary User Personas**
+- New customers purchasing their first meal plan
+- Returning customers with existing accounts
+- Users attempting to purchase already-owned plans
+- Admin users monitoring purchase activity
+
+**Key User Flows to Validate**
+1. Anonymous user attempts purchase → forced to authenticate → completes payment
+2. Authenticated user purchases new plan → receives email → downloads content
+3. User tries to purchase already-owned plan → redirected to download
+4. Payment failures and cancellations → proper error handling
+5. Email delivery validation and content accuracy testing
+</context>
+
+<PRD>
+# Technical Architecture Testing Requirements
+**Payment Integration Components**
+- PayFast sandbox configuration validation
+- Payment form generation and signature verification
+- Webhook endpoint functionality for payment notifications
+- Success/cancel page handling and popup window management
+
+**Database Layer Validation**
+- Purchase record creation in Supabase
+- User authentication state management
+- Meal plan data retrieval and access control
+- Purchase history querying and duplicate detection
+
+**Email Service Integration**
+- Supabase Edge Function email service testing
+- React email template rendering verification
+- SMTP/email delivery service functionality
+- Admin notification system validation
+
+**Frontend Application Testing**
+- React component state management during purchase flow
+- Authentication modal handling and user experience
+- Payment success feedback and download initiation
+- Error handling and user communication
+
+# Development Roadmap & Testing Phases
+
+**Phase 1: Environment Setup & Configuration Validation**
+- Verify PayFast sandbox credentials and configuration
+- Validate email service setup and API keys
+- Confirm database schema and permissions
+- Test basic authentication and user management
+
+**Phase 2: Core Purchase Flow Testing**
+- End-to-end payment processing with test user account
+- Email delivery verification and content validation
+- Database record creation and data integrity checks
+- Purchase success handling and content access
+
+**Phase 3: Edge Cases & Error Handling**
+- Duplicate purchase attempt handling
+- Payment failure and cancellation scenarios
+- Email delivery failure handling
+- Authentication edge cases and error states
+
+**Phase 4: User Experience Optimization**
+- Performance testing and optimization
+- Mobile responsiveness validation
+- Accessibility compliance checking
+- User feedback collection and analysis
+
+# Logical Dependency Chain & Testing Sequence
+
+**Foundation Layer (Must Test First)**
+- PayFast sandbox configuration verification
+- Email service connectivity and basic functionality
+- Database connection and basic CRUD operations
+- User authentication system validation
+
+**Core Functionality Layer**
+- Complete purchase flow with real test transaction
+- Email generation and delivery verification
+- PDF content generation and download validation
+- Purchase record creation and retrieval
+
+**Integration Layer**
+- Cross-system communication validation
+- Error handling and recovery scenarios
+- User experience flow optimization
+- Performance and reliability testing
+
+**Validation Layer**
+- Comprehensive test coverage documentation
+- User acceptance testing with real scenarios
+- Performance benchmarking and optimization
+- Production readiness validation
+
+# Testing Methodology & Tools
+
+**Automated Testing Requirements**
+- Unit tests for payment processing functions
+- Integration tests for email service functionality
+- End-to-end testing for complete purchase flow
+- Database testing for data integrity and performance
+
+**Manual Testing Scenarios**
+- Real user journey simulation with test email accounts
+- Cross-browser compatibility testing
+- Mobile device testing and responsiveness validation
+- Accessibility testing and compliance verification
+
+**Test Data & Environment Management**
+- Sandbox payment credentials and test card details
+- Test user accounts with known email addresses
+- Sample meal plan data for consistent testing
+- Clean database state management between tests
+
+# Risks and Mitigations
+
+**Technical Challenges**
+- PayFast sandbox integration complexity → Comprehensive documentation and step-by-step testing
+- Email delivery reliability → Multiple test scenarios and fallback verification methods
+- Database performance under load → Performance testing and optimization strategies
+
+**Integration Risks**
+- Third-party service dependencies → Backup testing methods and service monitoring
+- Environment configuration differences → Standardized setup procedures and validation scripts
+- Cross-browser compatibility issues → Comprehensive browser testing matrix
+
+**User Experience Risks**
+- Payment flow confusion or errors → Clear user feedback and error messaging
+- Email delivery delays or failures → Alternative communication methods and status tracking
+- Content access problems → Robust download mechanisms and customer support procedures
+
+# Appendix - Technical Specifications
+
+**Test User Details**
+- Email: ngcobomthunzi389@gmail.com (for manual email verification)
+- Payment environment: PayFast sandbox mode
+- Test amount: R10.00 minimum (sandbox requirements)
+
+**Expected System Behavior**
+1. User completes PayFast sandbox payment
+2. Webhook triggers purchase record creation
+3. Confirmation email sent to user with download link
+4. Admin notification email sent to configured addresses
+5. User redirected to success page with download access
+6. PDF meal plan immediately available for download
+
+**Integration Points**
+- PayFast payment gateway (sandbox.payfast.co.za)
+- Supabase database and authentication
+- Supabase Edge Functions for email service
+- React email templates for message formatting
+- PDF generation and file management system 
