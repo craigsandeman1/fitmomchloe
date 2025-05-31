@@ -53,9 +53,9 @@ const Home = () => {
               <Link to="/book" className="btn-primary text-sm md:text-base px-4 md:px-6 py-2 md:py-3">Book Now</Link>
             </div>
             <div className="bg-white/40 md:bg-white/70 backdrop-blur-sm md:backdrop-blur p-5 md:p-8 rounded-lg text-center shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1">
-              <h3 className="font-playfair text-lg md:text-2xl mb-2 md:mb-4">Workout Videos</h3>
+              <h3 className="font-playfair text-lg md:text-2xl mb-2 md:mb-4">Workout Plans</h3>
               <p className="mb-4 md:mb-6 text-sm md:text-base">Access to premium workout content and training programs</p>
-              <button disabled className="btn-primary opacity-70 cursor-not-allowed text-sm md:text-base px-4 md:px-6 py-2 md:py-3">Coming Soon</button>
+              <Link to="/workout-plans" className="btn-primary text-sm md:text-base px-4 md:px-6 py-2 md:py-3">Learn More</Link>
             </div>
             <div className="bg-white/40 md:bg-white/70 backdrop-blur-sm md:backdrop-blur p-5 md:p-8 rounded-lg text-center shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1">
               <h3 className="font-playfair text-lg md:text-2xl mb-2 md:mb-4">Meal Plans</h3>
