@@ -3,6 +3,7 @@ import { useAuthStore } from '../store/auth';
 import { sendEmail } from '../lib/emailService';
 import { WelcomeEmail } from '../email-templates/user/welcomeEmail';
 import { NewUserNotifyEmail } from '../email-templates/admin/newUserNotifyEmail';
+import { generateConfirmationToken, storeConfirmationToken, sendConfirmationEmail } from '../lib/confirmationService';
 
 interface AuthProps {
   onAuthSuccess?: () => void;
@@ -13,6 +14,7 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, signUp } = useAuthStore();
@@ -27,6 +29,7 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setIsLoading(true);
 
     // Validate password
@@ -39,68 +42,88 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
 
     try {
       if (isSignUp) {
-        await signUp(email, password);
+        // Sign up flow with custom confirmation
+        const signupResult = await signUp(email, password);
         
-        // Send custom welcome email via Resend
-        try {
-          await sendEmail({
-            to: email,
-            subject: 'Welcome to Fit Mom!',
-            reactTemplate: WelcomeEmail({ firstName: '' }),
-          })
-          await sendEmail({
-            to: import.meta.env.VITE_ADMIN_EMAILS.split(',') || [],
-            subject: 'New User registered!',
-            reactTemplate: NewUserNotifyEmail({ firstName: '', email, signupDate: new Date().toLocaleString() }),
-          })
-          
-        } catch (emailError) {
-          console.error("Failed to send welcome email:", emailError);
-          // Don't block the signup process if email fails
-        }
-        
-        if (purchaseFlow) {
-          // For purchase flow: automatically sign them in after sign up
-          // Don't make them wait for email verification
-          console.log('Signing up in purchase flow, proceeding to sign in automatically');
+        if (signupResult.data.user) {
+          // Generate and store custom confirmation token
           try {
-            await signIn(email, password);
+            const token = generateConfirmationToken();
+            await storeConfirmationToken(signupResult.data.user.id, email, token);
             
-            // If we successfully signed in, call the success callback
-            if (onAuthSuccess) {
-              onAuthSuccess();
+            // Send custom confirmation email
+            await sendConfirmationEmail(email, '', token);
+            
+            // Send welcome email (optional - can be sent after confirmation)
+            try {
+              await sendEmail({
+                to: email,
+                subject: 'Welcome to Fit Mom!',
+                reactTemplate: WelcomeEmail({ firstName: '' }),
+              });
+              await sendEmail({
+                to: import.meta.env.VITE_ADMIN_EMAILS?.split(',') || [],
+                subject: 'New User registered!',
+                reactTemplate: NewUserNotifyEmail({ 
+                  firstName: '', 
+                  email, 
+                  signupDate: new Date().toLocaleString() 
+                }),
+              });
+            } catch (emailError) {
+              console.error("Failed to send welcome email:", emailError);
+              // Don't block the signup process if welcome email fails
             }
-          } catch (signInError) {
-            console.error('Error signing in after sign up:', signInError);
-            setError('Account created successfully, but there was an issue signing you in automatically. Please try signing in manually.');
+            
+            // Show success message
+            if (purchaseFlow) {
+              setSuccess('Account created! Please check your email and click the confirmation link to continue with your purchase.');
+            } else {
+              setSuccess('Account created successfully! Please check your email and click the confirmation link to complete your registration.');
+            }
+            setIsSignUp(false); // Switch to login view
+            
+          } catch (confirmationError) {
+            console.error('Error setting up confirmation:', confirmationError);
+            setError('Account created, but there was an issue sending the confirmation email. Please contact support.');
           }
-        } else {
-          // Normal sign up flow
-          setError('');
-          setIsLoading(false);
-          if (!purchaseFlow) {
-            setIsSignUp(false); // Switch back to login view
-          }
-          // Show success message
-          setError('Account created successfully! Please check your email to verify your account.');
         }
       } else {
-        // Login flow
-        await signIn(email, password);
-        
-        // Clear form
-        setEmail('');
-        setPassword('');
-        setError('');
-        
-        // Call success callback if provided
-        if (onAuthSuccess) {
-          onAuthSuccess();
+        // Sign in flow
+        try {
+          await signIn(email, password);
+          
+          // Clear form and show success
+          setEmail('');
+          setPassword('');
+          setError('');
+          setSuccess('Successfully signed in!');
+          
+          // Call success callback if provided
+          if (onAuthSuccess) {
+            onAuthSuccess();
+          }
+        } catch (signInError: any) {
+          // Handle specific auth errors
+          if (signInError.message?.includes('Email not confirmed')) {
+            setError('Please check your email and click the confirmation link before signing in. If you didn\'t receive the email, try signing up again.');
+          } else if (signInError.message?.includes('Invalid login credentials')) {
+            setError('Invalid email or password. Please check your credentials and try again.');
+          } else {
+            setError(signInError.message || 'Failed to sign in. Please try again.');
+          }
         }
       }
     } catch (err: any) {
       console.error('Authentication error:', err);
-      setError(err.message || 'An error occurred');
+      
+      // Handle specific signup errors
+      if (err.message?.includes('User already registered')) {
+        setError('An account with this email already exists. Please sign in instead.');
+        setIsSignUp(false);
+      } else {
+        setError(err.message || 'An error occurred. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -118,8 +141,14 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
       </div>
       
       {error && (
-        <div className={`p-3 rounded mb-4 ${error.includes('success') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+        <div className="p-3 rounded mb-4 bg-red-100 text-red-800">
           {error}
+        </div>
+      )}
+      
+      {success && (
+        <div className="p-3 rounded mb-4 bg-green-100 text-green-800">
+          {success}
         </div>
       )}
       
@@ -158,7 +187,7 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#FF6B6B] to-[#FF8E8E] hover:from-[#FF5252] hover:to-[#FF7676] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#FF6B6B] to-[#FF8E8E] hover:from-[#FF5252] hover:to-[#FF7676] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Processing...' : isSignUp ? 'Create Account' : 'Sign In'}
           </button>
@@ -171,6 +200,7 @@ export const Auth = ({ onAuthSuccess, purchaseFlow = false }: AuthProps) => {
           onClick={() => {
             setIsSignUp(!isSignUp);
             setError('');
+            setSuccess('');
           }}
           className="text-sm text-primary hover:text-primary-dark"
         >

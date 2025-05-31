@@ -13,8 +13,13 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import Login from './pages/Login';
 import PayfastTest from './pages/PayfastTest';
+import EmailPayfastTest from './pages/EmailPayfastTest';
 import Contact from './pages/Contact';
+import AuthTest from './pages/AuthTest';
+import ConfirmEmail from './pages/ConfirmEmail';
 import Footer from './components/Footer';
+// Import debug utility for development
+import './lib/authDebug';
 
 // Cookie Consent Banner Component
 const CookieConsent = ({ onAccept }: { onAccept: () => void }) => {
@@ -74,7 +79,10 @@ function App() {
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/login" element={<Login />} />
             <Route path="/payfast-test" element={<PayfastTest />} />
+            <Route path="/email-payfast-test" element={<EmailPayfastTest />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/auth-test" element={<AuthTest />} />
+            <Route path="/confirm-email" element={<ConfirmEmail />} />
           </Routes>
         </main>
         <Footer />
