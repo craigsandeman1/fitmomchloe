@@ -1,0 +1,149 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# 🎯 Fit Mom Chloe - Roo Code Development Rules
+
+## 🔄 Project Awareness & Context
+- Always read PLANNING.md at the start of a new conversation to understand the project's architecture, goals, style, and constraints.
+- Check TASK.md before starting a new task. If the task isn't listed, add it with a brief description and today's date.
+- Use consistent naming conventions, file structure, and React/Vite architecture patterns as described in PLANNING.md.
+- Use Taskmaster MCP server to breakdown complex tasks into smaller manageable tasks
+- Use Supabase MCP server only when necessary
+- 🆕 Always verify the correct working directory before running commands - ensure you're in the project root (fit-mom-chloe/) not the parent directory
+- 🆕 Check environment variable consistency across all API files and components before making changes to avoid runtime errors
+
+## 🧱 Code Structure & Modularity
+- Never create a file longer than 500 lines of code. If a file approaches this limit, refactor by splitting it into modules or helper files.
+- Organize code into clearly separated modules, grouped by feature or responsibility.
+- Use React's recommended file/folder structure with `src/` containing components, pages, lib, and hooks.
+- Keep React components focused and use composition over inheritance.
+- Separate business logic into custom hooks or utility functions in `src/lib/` or `src/hooks/`.
+- Use TypeScript interfaces and types in `src/types/` for type definitions.
+- Follow the existing structure:
+  ```
+  src/
+  ├── components/ui/     # Reusable UI components
+  ├── pages/            # Route components
+  ├── lib/              # Utilities, API clients, constants
+  ├── hooks/            # Custom React hooks
+  ├── types/            # TypeScript definitions
+  ├── stores/           # Zustand state stores
+  └── styles/           # Global styles and Tailwind config
+  ```
+
+## 🧪 Testing & Reliability
+- Always create Vitest unit tests for new features (functions, components, routes, etc).
+- After updating any logic, check whether existing unit tests need to be updated. If so, do it.
+- Tests should live in a `/tests` folder or colocated with components as `.test.tsx` files.
+- Include at least:
+  1. 1 test for expected use
+  2. 1 edge case
+  3. 1 failure case
+- For React components, use React Testing Library to test behavior rather than implementation details.
+- Mock external dependencies like Supabase, PayFast, or API calls using Jest mocks or MSW.
+- Use Vite's testing configuration with Vitest for fast unit tests.
+- 🆕 Create integration tests for API endpoints and Supabase interactions
+- 🆕 Always clean up test data and temporary files after testing is complete
+- 🆕 Test React Router navigation and protected routes
+
+## ✅ Task Completion
+- Mark completed tasks in TASK.md immediately after finishing them.
+- Add new sub-tasks or TODOs discovered during development to TASK.md under a "Discovered During Work" section.
+
+## 📎 Style & Conventions
+- Use TypeScript for all JavaScript/React code.
+- Follow React functional component patterns with hooks.
+- Use Tailwind for styling following the existing design patterns with primary color `#E6827C`.
+- Create reusable UI components in the `src/components/ui/` directory.
+- Follow Supabase best practices for database access and authentication.
+- Use React Router for navigation and route protection.
+- Implement proper loading states and error boundaries.
+- Use Zustand for state management following existing store patterns.
+
+## 📚 Documentation & Explainability
+- Update README.md when new features are added, dependencies change, or setup steps are modified.
+- Comment non-obvious code and ensure everything is understandable to a mid-level developer.
+- Document Supabase RLS policies and other security-related code with clear explanations.
+- When writing complex logic, add an inline `// Reason:` comment explaining the why, not just the what.
+- Document React component props using TypeScript interfaces with JSDoc comments.
+
+## 💾 Database & API Guidelines
+- Never modify database structure without updating Supabase migrations.
+- Always follow existing RLS policy patterns for new tables.
+- Design API endpoints with consistent error handling and response formats.
+- Verify auth status at the beginning of protected components and routes.
+- Ensure joins and queries are optimized for performance.
+- Use Supabase client properly with proper error handling and loading states.
+- Implement proper data fetching patterns with React hooks.
+
+## 🔧 Environment & Configuration Management
+- 🆕 CRITICAL: Always verify environment variable names are consistent across all files before deployment
+- 🆕 Use Vite's environment variable naming pattern (`VITE_` prefix for client-side variables)
+- 🆕 Server-side variables (like `SUPABASE_SERVICE_ROLE_KEY`) should not have `VITE_` prefix
+- 🆕 Check that environment variables are properly set before running development server or tests
+- 🆕 Document all required environment variables in README.md with their exact names
+- 🆕 Never hardcode environment-specific values - always use environment variables
+- Environment file structure:
+  ```
+  .env.local          # Local development (gitignored)
+  .env.example        # Template file (committed)
+  ```
+
+## 🚨 Error Prevention & Debugging
+- 🆕 Always check for existing similar components/hooks to maintain consistency
+- 🆕 When encountering "Missing environment variables" errors, immediately check all related files for naming inconsistencies
+- 🆕 Test React components individually before testing complete user flows
+- 🆕 Use proper error boundaries and error handling that provide meaningful user feedback
+- 🆕 Log meaningful error messages that help identify the root cause quickly
+- 🆕 When fixing one component, search_files for similar patterns in other components that might have the same issue
+- 🆕 Use React DevTools and browser developer tools for debugging state and props
+
+## 🧠 AI Behavior Rules
+- Never assume missing context. Ask questions if uncertain.
+- Never hallucinate libraries or functions – only use known, verified dependencies from package.json.
+- Always confirm file paths and component names exist before referencing them in code.
+- Never delete or overwrite existing code unless explicitly instructed to or if part of a task from TASK.md.
+- 🆕 When encountering errors, systematically check related files for similar issues before proceeding
+- 🆕 Always verify the Vite dev server is running and accessible before testing functionality
+- 🆕 Create comprehensive test scripts to validate functionality end-to-end
+- 🆕 Document the testing process so issues can be reproduced and verified
+
+## 🔍 Quality Assurance Process
+- 🆕 Before marking any task complete, verify it works end-to-end with actual testing
+- 🆕 Check both frontend components and backend Supabase interactions when implementing new features
+- 🆕 Verify database changes are reflected correctly using Supabase dashboard or MCP server
+- 🆕 Test authentication flows thoroughly, especially for protected routes and admin features
+- 🆕 Ensure error messages are user-friendly and don't expose sensitive information
+- 🆕 Test responsive design across different screen sizes
+- 🆕 Verify PayFast integration works correctly in development and production modes
+
+## 🗄️ Supabase MCP Server
+- Use the Supabase MCP server only when needed for database operations
+- 🆕 Use Supabase MCP server to verify data integrity after implementing new features
+- 🆕 Leverage Supabase MCP server for database testing and validation during development
+
+## 🚀 Deployment & Performance
+- 🆕 Always test builds locally using `npm run build` before deployment
+- 🆕 Ensure Vercel deployment configuration is correct for SPA routing
+- 🆕 Optimize images and assets for web performance
+- 🆕 Use React.lazy() for code splitting on large components
+- 🆕 Implement proper loading states and skeleton screens for better UX
+- 🆕 Test payment flows thoroughly in both sandbox and production environments
+
+## 🎨 UI/UX Guidelines
+- 🆕 Follow the existing coral/pink theme (`#E6827C`) and design patterns
+- 🆕 Ensure accessibility with proper ARIA labels and keyboard navigation
+- 🆕 Use Lucide React icons consistently throughout the application
+- 🆕 Implement responsive design mobile-first approach
+- 🆕 Use React Helmet for proper SEO meta tags
+- 🆕 Maintain consistent spacing and typography using Tailwind utilities
+
+## 🔐 Security Guidelines
+- 🆕 Always validate user inputs and sanitize data before Supabase operations
+- 🆕 Implement proper route protection for admin and authenticated areas
+- 🆕 Never expose sensitive environment variables to the client side
+- 🆕 Use Supabase RLS policies correctly and test them thoroughly
+
+- 🆕 Validate payment data and handle PayFast webhooks securely

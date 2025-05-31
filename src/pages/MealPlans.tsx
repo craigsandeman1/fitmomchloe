@@ -630,6 +630,7 @@ const MealPlans = () => {
                                 {plan.price > 0 ? (
                                   <PayfastButton
                                     plan={plan}
+                                    customStr2={user?.id}
                                     onSuccess={handlePurchaseSuccess}
                                     onCancel={handlePurchaseCancel}
                                     handlePurchaseAttempt={handlePurchaseAttempt}

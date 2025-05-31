@@ -1,0 +1,5 @@
+[project]
+name = "fit-mom-chloe"
+
+[functions.payfast-webhook]
+verify_jwt = false 

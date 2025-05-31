@@ -4,6 +4,7 @@ import { env } from '../lib/env';
 import { MealPlan } from '../types/meal-plan';
 import { ShoppingCart, CreditCard, AlertCircle, CheckCircle, X, ArrowRight } from 'lucide-react';
 import { useAuthStore } from '../store/auth';
+import { supabase } from '../lib/supabase';
 
 interface PayfastButtonProps {
   amount?: number;
@@ -121,11 +122,10 @@ const PayfastButton = ({
       merchantId: env.payfast.merchantId,
       merchantKey: env.payfast.merchantKey,
       passPhrase: env.payfast.passPhrase,
-      // Use URLs that work with Vite's routing
       returnUrl: `${window.location.origin}/payment/success`,
       cancelUrl: `${window.location.origin}/payment/cancel`,
-      // For a Vite app, you'll need a publicly accessible webhook URL
-      notifyUrl: 'https://webhooks.fitmomchloe.com/api/payfast-webhook', // Updated to a more proper domain
+      // Updated webhook URL to use the new Edge Function
+      notifyUrl: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/payfast-webhook`,
       sandbox: env.payfast.sandbox
     };
     
@@ -155,6 +155,9 @@ const PayfastButton = ({
       alert('Payment configuration error: Missing required fields');
       return null;
     }
+
+    // Get current user for webhook data
+    const currentUser = supabase.auth.getUser().then(({ data }) => data.user);
     
     // Create payment data object
     const data: PayfastPaymentData = {
@@ -176,10 +179,30 @@ const PayfastButton = ({
     if (mPaymentId) data.m_payment_id = mPaymentId;
     if (paymentMethod) data.payment_method = paymentMethod;
     
-    // Add custom string parameters
-    if (customStr1) data.custom_str1 = customStr1;
-    if (customStr2) data.custom_str2 = customStr2;
-    if (customStr3) data.custom_str3 = customStr3;
+    // Add custom string parameters for webhook processing
+    // These are critical for the webhook to process the payment correctly
+    if (plan?.id) {
+      data.custom_str1 = plan.id; // Plan ID
+    }
+    
+    // Get user ID from current user context (we'll need to handle this async)
+    // For now, use the provided custom strings or defaults
+    if (customStr2) {
+      data.custom_str2 = customStr2; // User ID (should be passed from parent)
+    }
+    
+    // Determine purchase type based on plan type or explicit parameter
+    if (plan && 'content' in plan && typeof plan.content === 'object') {
+      // Workout plan (has content object)
+      data.custom_str3 = 'workout_plan';
+    } else if (plan) {
+      // Meal plan (simpler structure)
+      data.custom_str3 = 'meal_plan';
+    } else if (customStr3) {
+      data.custom_str3 = customStr3;
+    }
+    
+    // Add remaining custom parameters if provided
     if (customStr4) data.custom_str4 = customStr4;
     if (customStr5) data.custom_str5 = customStr5;
     
@@ -189,11 +212,6 @@ const PayfastButton = ({
     if (customInt3 !== undefined) data.custom_int3 = customInt3.toString();
     if (customInt4 !== undefined) data.custom_int4 = customInt4.toString();
     if (customInt5 !== undefined) data.custom_int5 = customInt5.toString();
-    
-    // If plan ID is available, add it as custom_str1 for tracking
-    if (plan?.id && !customStr1) {
-      data.custom_str1 = plan.id;
-    }
     
     // Generate the signature
     const signature = generateSignature(data, payfastConfig.passPhrase);

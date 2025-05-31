@@ -651,6 +651,7 @@ const WorkoutPlans = () => {
                               {plan.price > 0 ? (
                                 <PayfastButton
                                   plan={plan as any} // Cast to bypass TypeScript type checking
+                                  customStr2={user?.id} // Pass user ID for webhook
                                   onSuccess={handlePurchaseSuccess}
                                   onCancel={handlePurchaseCancel}
                                   handlePurchaseAttempt={handlePurchaseAttempt as any} // Cast to bypass TypeScript type checking
